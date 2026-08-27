@@ -1,6 +1,3 @@
-const layersPanel=document.getElementById("layersPanel");
-document.getElementById("showLayers").onclick=()=>layersPanel.classList.add("open");
-document.getElementById("hideLayers").onclick=()=>layersPanel.classList.remove("open");
 <!doctype html>
 <html lang="en">
 <head>
@@ -28,6 +25,9 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .legend{font-size:10px;color:var(--muted);margin-top:6px}
 @media(max-width:850px){main{grid-template-columns:1fr}#map{height:58vh;min-height:430px}.side{border-left:0}.layers{font-size:10px}.toolbar{position:sticky;top:0;z-index:900;background:#07101c}}
 </style>
+ const layersPanel=document.getElementById("layersPanel");
+document.getElementById("showLayers").onclick=()=>layersPanel.classList.add("open");
+document.getElementById("hideLayers").onclick=()=>layersPanel.classList.remove("open");
 </head>
 <body>
 <header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.3</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
