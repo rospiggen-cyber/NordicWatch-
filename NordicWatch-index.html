@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>NordicWatch</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#07101c;--panel:rgba(11,18,32,.94);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:#08111f}
+h1,h2{margin:0}.eye{font-size:10px;letter-spacing:1.4px;color:var(--muted);margin-bottom:4px}.score{border:1px solid var(--border);border-radius:12px;padding:7px 10px;color:var(--muted);font-size:11px}.score b{font-size:22px;color:var(--warn);margin-left:8px}
+.toolbar{padding:9px 10px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);overflow:auto}
+.ranges{display:flex;gap:5px}button{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);padding:8px 10px;border-radius:9px}button.on,.primary{border-color:rgba(97,218,251,.4);background:rgba(97,218,251,.13)}
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{height:calc(100vh - 122px);min-height:600px;background:#08111d}.mapwrap{position:relative}
+.layers{position:absolute;z-index:500;top:10px;left:10px;background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:9px 11px;font-size:11px}.layers label{display:block;margin:7px 0}
+.side{padding:10px;border-left:1px solid var(--border)}.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px}.head{display:flex;justify-content:space-between}.live{color:var(--danger)}
+.signal,.hot{padding:11px 0;border-top:1px solid var(--border)}.signal:first-of-type,.hot:first-of-type{border-top:0}.meta{font-size:10px;color:var(--muted);margin-bottom:4px}.title{font-size:13px;font-weight:700}.desc{font-size:11px;color:#b8c4d4;margin-top:4px;line-height:1.4}.hot{display:flex;justify-content:space-between;gap:8px}.hot b{font-size:13px}.hot small{display:block;color:var(--muted);margin-top:3px}.n{font-size:17px;font-weight:800}.hi{color:var(--danger)}.med{color:var(--warn)}.lo{color:var(--ok)}
+.drawer{display:none;position:fixed;z-index:2000;inset:0;background:rgba(0,0,0,.7);align-items:flex-end}.drawer.show{display:flex}.sheet{width:100%;max-height:72vh;overflow:auto;background:#0b1423;border-radius:18px 18px 0 0;padding:17px}.sheethead{display:flex;justify-content:space-between}.change{padding:12px 0;border-top:1px solid var(--border)}.change span{font-size:11px;color:var(--muted)}
+@media(max-width:850px){main{grid-template-columns:1fr}#map{height:58vh;min-height:430px}.side{border-left:0}.layers{font-size:10px}.toolbar{position:sticky;top:0;z-index:900;background:#07101c}}
+</style>
+</head>
+<body>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><button class="primary" id="changed">What changed?</button></div>
+<main>
+<section class="mapwrap"><div id="map"></div><div class="layers"><b>Layers</b><label><input type="checkbox" data-l="hotspots" checked> Hotspots</label><label><input type="checkbox" data-l="military" checked> Military</label><label><input type="checkbox" data-l="infra" checked> Infrastructure</label><label><input type="checkbox" data-l="gps" checked> GPS/GNSS</label></div></section>
+<aside class="side"><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
+</main>
+<div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const D={
+hotspots:[
+["Kaliningrad / Baltijsk",54.71,20.51,82,"Fleet, air-defence & readiness indicators"],
+["Suwałki corridor",54.10,23.20,74,"NATO-Russia/Belarus pressure point"],
+["Kola / Murmansk",68.97,33.07,69,"Northern Fleet strategic activity"],
+["Gulf of Finland",59.75,25.5,66,"Naval traffic, cables & GPS interference"],
+["Gotland",57.47,18.49,58,"Baltic air & maritime activity"],
+["Narva",59.38,28.19,52,"Border and information pressure"],
+["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
+["Norwegian energy zone",61,3,44,"Critical offshore infrastructure"]],
+signals:[
+["Baltic · 12 min ago","Unusual military-air concentration","Multiple ISR/support profiles in the Baltic operating area. Demo baseline deviation: +170%."],
+["Kaliningrad · 37 min ago","Baltijsk readiness signal","Pattern consistent with elevated local air-defence readiness and training."],
+["Finland · 1 h ago","GPS interference cluster","Navigation anomalies around the eastern Gulf of Finland corridor."],
+["Norway · 2 h ago","Infrastructure watch","No major outage detected in the demo dataset."]],
+changes:[
+["Baltic military-air activity increased","24h activity is above the recent demo baseline."],
+["Kaliningrad score +9","Exercise/readiness indicators raise the regional demo score."],
+["GPS layer expanded eastward","Interference markers extend into the Gulf of Finland monitoring area."],
+["No new major Nordic outage","Energy and telecom infrastructure remain stable in the current demo dataset."]]};
+const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({position:"bottomright"}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
+const G={hotspots:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
+function c(lat,lon,r,col,p,g){L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
+D.hotspots.forEach(h=>{let col=h[3]>=70?"#ff6b6b":h[3]>=50?"#f7c948":"#55d187";c(h[1],h[2],45000+h[3]*650,col,"<b>"+h[0]+"</b><br>Activity score: "+h[3]+"<br>"+h[4],"hotspots")});
+[[54.72,20.45,"Baltijsk"],[56.2,18.4,"Central Baltic ISR zone"],[59.7,24.8,"Gulf of Finland"]].forEach(x=>c(x[0],x[1],70000,"#61dafb","<b>"+x[2]+"</b><br>Military activity marker","military"));
+[[57.72,11.97,"Gothenburg"],[59.33,18.06,"Stockholm"],[60.39,5.32,"Bergen"],[55.67,12.57,"Øresund"]].forEach(x=>c(x[0],x[1],35000,"#55d187","<b>"+x[2]+"</b><br>Critical infrastructure watch","infra"));
+[[59.45,27.3,"Narva region"],[59.8,25.9,"Eastern Gulf of Finland"],[58.4,22.5,"Baltic anomaly zone"]].forEach(x=>c(x[0],x[1],85000,"#f7c948","<b>"+x[2]+"</b><br>GPS/GNSS interference indicator","gps"));
+document.getElementById("signals").innerHTML=D.signals.map(s=>'<div class="signal"><div class="meta">'+s[0]+'</div><div class="title">'+s[1]+'</div><div class="desc">'+s[2]+'</div></div>').join("");
+document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>b[3]-a[3]).map(h=>'<div class="hot"><div><b>'+h[0]+'</b><small>'+h[4]+'</small></div><div class="n '+(h[3]>=70?'hi':h[3]>=50?'med':'lo')+'">'+h[3]+'</div></div>').join("");
+document.getElementById("changes").innerHTML=D.changes.map(x=>'<div class="change"><b>'+x[0]+'</b><br><span>'+x[1]+'</span></div>').join("");
+document.querySelectorAll("[data-l]").forEach(e=>e.onchange=()=>e.checked?G[e.dataset.l].addTo(map):map.removeLayer(G[e.dataset.l]));
+document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
+changed.onclick=()=>drawer.classList.add("show");close.onclick=()=>drawer.classList.remove("show");drawer.onclick=e=>{if(e.target===drawer)drawer.classList.remove("show")};
+</script>
+</body></html>
