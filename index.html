@@ -253,7 +253,7 @@ async function fetchJSON(url){
 async function loadMilitary(){
  const st=document.getElementById("adsbStatus"),up=document.getElementById("adsbUpdated"); st.textContent="loading…";
  // Optional future proxy: set localStorage.NORDICWATCH_ADSB_PROXY to e.g. https://your-worker.example/mil
- const proxy=localStorage.getItem("NORDICWATCH_ADSB_PROXY");
+ const proxy="https://nordicwatch-proxy.rospiggen.workers.dev";
  const urls=[proxy,"https://api.adsb.lol/v2/mil"].filter(Boolean);
  let lastErr=null;
  for(const url of urls){
