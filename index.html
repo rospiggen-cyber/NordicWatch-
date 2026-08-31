@@ -279,7 +279,13 @@ document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>b[3]-a[
 document.getElementById("changes").innerHTML=D.changes.map(x=>'<div class="change"><b>'+x[0]+'</b><br><span>'+x[1]+'</span></div>').join("");
 document.querySelectorAll("[data-l]").forEach(e=>e.onchange=()=>e.checked?G[e.dataset.l].addTo(map):map.removeLayer(G[e.dataset.l]));
 document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
-changed.onclick=()=>drawer.classList.add("show");close.onclick=()=>drawer.classList.remove("show");drawer.onclick=e=>{if(e.target===drawer)drawer.classList.remove("show")};
+const changedBtn=document.getElementById("changed");
+const closeBtn=document.getElementById("close");
+const drawerEl=document.getElementById("drawer");
+
+changedBtn.onclick=()=>drawerEl.classList.add("show");
+closeBtn.onclick=()=>drawerEl.classList.remove("show");
+drawerEl.onclick=e=>{if(e.target===drawerEl)drawerEl.classList.remove("show")};
  const layersPanel=document.getElementById("layersPanel");
 const layersToggle=document.getElementById("layersToggle");
 
