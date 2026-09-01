@@ -79,17 +79,47 @@ const fmtNum=(v,u)=>Number.isFinite(+v)?Math.round(+v)+u:"n/a";
 const nordic=a=>Number.isFinite(+a.lat)&&Number.isFinite(+a.lon)&&+a.lat>=53&&+a.lat<=72.5&&+a.lon>=-12&&+a.lon<=34.5;
 
 function classify(a){
-  const s=((a.flight||"")+" "+(a.t||"")+" "+(a.desc||"")).toUpperCase();
+  const type=String(a.t||"")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g,"");
 
-  if(/\b(?:E3A?|E-3A?|E7A?|E-7A?|AWACS|AEW|GLOBAL\s?EYE|S100D|S\s?100D)\b/.test(s)) return "awacs";
+  const AWACS=new Set([
+    "E3A","E3B","E3C","E3D","E3F",
+    "E7A","E7T","A50"
+  ]);
 
-  if(/\b(?:KC135|KC-135|KC46|KC-46|A330MRTT|MRTT|TANKER|K35R|K35E)\b/.test(s)) return "tanker";
+  const TANKER=new Set([
+    "KC135","K35R","K35E",
+    "KC46","K46A"
+  ]);
 
-  if(/\b(?:RC135|RC-135|R135|IL20|IL-20|EP3|EP-3|P8|P-8|ARTEMIS|SIGINT|ELINT|ISR|COMPASS|EA37|EA-37)\b/.test(s)) return "isr";
+  const ISR=new Set([
+    "RC135","R135",
+    "P8","P8A",
+    "EP3","IL20",
+    "EA37"
+  ]);
 
-  if(/\b(?:C17A?|C-17A?|C130\w?|C-130\w?|A400M?|C5M?|C-5M?|CN35|C295|C-295|TRANSPORT)\b/.test(s)) return "transport";
+  const TRANSPORT=new Set([
+    "C17","C17A",
+    "C130","C30J",
+    "A400","A400M",
+    "C5","C5M",
+    "C295","CN35"
+  ]);
 
-  if(/\b(?:F16|F-16|F18|F-18|F35|F-35|GRIPEN|JAS|EUFI|TYPHOON|RAFALE|SU27|SU-27|SU30|SU-30|SU35|SU-35|MIG29|MIG-29)\b/.test(s)) return "fighter";
+  const FIGHTER=new Set([
+    "F15","F16","F18","F22","F35",
+    "JAS39","EUFI","RFAL",
+    "SU27","SU30","SU35",
+    "MG29","MIG29"
+  ]);
+
+  if(AWACS.has(type)) return "awacs";
+  if(TANKER.has(type)) return "tanker";
+  if(ISR.has(type)) return "isr";
+  if(TRANSPORT.has(type)) return "transport";
+  if(FIGHTER.has(type)) return "fighter";
 
   return "other";
 }
