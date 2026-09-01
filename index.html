@@ -69,7 +69,17 @@ const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
 const G={hotspots:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
 function c(lat,lon,r,col,p,g){L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
-D.hotspots.forEach(h=>{let col=h[3]>=70?"#ff6b6b":h[3]>=50?"#f7c948":"#55d187";c(h[1],h[2],45000+h[3]*650,col,"<b>"+h[0]+"</b><br>Activity score: "+h[3]+"<br>"+h[4],"hotspots")});
+D.hotspots.forEach(h=>{
+  let col=h[3]>=70?"#ff6b6b":h[3]>=50?"#f7c948":"#55d187";
+
+  let p="<b>"+h[0]+"</b><br>Activity score: "+h[3]+"<br>"+h[4];
+
+  if(h[5]) p+="<br><br><b>Why it matters</b><br>"+h[5];
+  if(h[6]) p+="<br><br><b>Watch for</b><br>"+h[6];
+  if(h[7]) p+="<br><br><b>Confidence:</b> "+h[7];
+
+  c(h[1],h[2],45000+h[3]*650,col,p,"hotspots");
+});
 [[57.72,11.97,"Gothenburg"],[59.33,18.06,"Stockholm"],[60.39,5.32,"Bergen"],[55.67,12.57,"Øresund"]].forEach(x=>c(x[0],x[1],35000,"#55d187","<b>"+x[2]+"</b><br>Critical infrastructure watch · demo","infra"));
 [[59.45,27.3,"Narva region"],[59.8,25.9,"Eastern Gulf of Finland"],[58.4,22.5,"Baltic anomaly zone"]].forEach(x=>c(x[0],x[1],85000,"#f7c948","<b>"+x[2]+"</b><br>GPS/GNSS indicator · demo","gps"));
 
