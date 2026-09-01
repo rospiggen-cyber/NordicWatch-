@@ -12,10 +12,11 @@ distribution or commercial use is prohibited.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
+<meta name="referrer" content="no-referrer">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.5</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>NordicWatch v0.6</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -34,11 +35,12 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .plane{font-size:22px;line-height:22px;text-shadow:0 0 5px #000}.leaflet-div-icon{background:transparent;border:0}
 .cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}
 .legend{font-size:10px;color:var(--muted);margin-top:6px}.alertctl{margin-top:8px;display:flex;gap:5px;align-items:center}.alertctl button{padding:6px 8px;font-size:10px}.alertstate{font-size:10px;color:var(--muted)}
+.news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
 @media(max-width:850px){main{grid-template-columns:1fr}#map{height:58vh;min-height:430px}.side{border-left:0}.layers{font-size:10px}.toolbar{position:sticky;top:0;z-index:900;background:#07101c}}
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.5</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.6</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><button class="primary" id="changed">What changed?</button></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
@@ -53,10 +55,10 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <div class="legend">Orange AWACS · Purple tanker · Red ISR · Blue transport · Yellow fighter</div>
 <div class="alertctl"><button id="alertsBtn">Enable alerts</button><span class="alertstate" id="alertState">off</span></div>
 </div></div></section>
-<aside class="side"><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
+<aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
 const D={
 hotspots:[
@@ -89,9 +91,11 @@ hotspots:[
 ["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
 ["Norwegian energy zone",61,3,44,"Critical offshore infrastructure","Major offshore oil and gas infrastructure linking Norway to European energy supply.","Unusual ISR or maritime patrol activity · GNSS anomalies · restricted zones · offshore incidents","HIGH"]],
 changes:[
+["Nordic–Baltic security news","Current security and defence reporting is matched to watch hotspots and assigned a transparent risk score."],
+["High-risk news alerts","New high-risk articles can trigger a device notification when alerts are armed."],
 ["Live-air classification added","Aircraft are grouped into AWACS, tanker, ISR, transport, fighter or other using public type/callsign metadata."],
 ["Interactive filters","Tap AWACS, tanker, ISR, transport or fighter to isolate that category."],
-["Safer data path","v0.3 supports a future proxy endpoint without exposing an API key in the page."],
+["Safer data path","A proxy endpoint can be used without exposing an API key in the page."],
 ["Alert engine added","High-interest military-air patterns can trigger device notifications with cooldown/deduplication."],
 ["Other layers remain demo","Hotspots, infrastructure and GNSS are still analysis/demo layers."]]};
 const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({position:"bottomright"}).addTo(map);
@@ -119,6 +123,7 @@ D.hotspots.forEach(h=>{
 [[59.45,27.3,"Narva region"],[59.8,25.9,"Eastern Gulf of Finland"],[58.4,22.5,"Baltic anomaly zone"]].forEach(x=>c(x[0],x[1],85000,"#f7c948","<b>"+x[2]+"</b><br>GPS/GNSS indicator · demo","gps"));
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const safeHttpUrl=value=>{try{const u=new URL(String(value));return u.protocol==="https:"?u.href:null}catch{return null}};
 const fmtAlt=a=>a==="ground"?"ground":(Number.isFinite(+a)?Math.round(+a).toLocaleString()+" ft":"n/a");
 const fmtNum=(v,u)=>Number.isFinite(+v)?Math.round(+v)+u:"n/a";
 const nordic=a=>Number.isFinite(+a.lat)&&Number.isFinite(+a.lon)&&+a.lat>=53&&+a.lat<=72.5&&+a.lon>=-12&&+a.lon<=34.5;
@@ -175,7 +180,7 @@ function iconFor(a,cat){
 
 
 
-// --- NordicWatch alert engine v0.4 ---
+// --- NordicWatch alert engine v0.6 ---
 const ALERT_COOLDOWN_MS=30*60*1000;
 const ALERT_KEY="NORDICWATCH_ALERTS_ENABLED";
 const SEEN_KEY="NORDICWATCH_ALERT_SEEN";
@@ -185,10 +190,14 @@ let swReg=null;
 
 const zones=[
  {name:"Kaliningrad / Baltijsk",lat:54.71,lon:20.51,r:430},
+ {name:"Suwałki corridor",lat:54.10,lon:23.20,r:350},
+ {name:"Gotland",lat:57.47,lon:18.49,r:350},
+ {name:"Murmansk",lat:68.97,lon:33.07,r:500},
  {name:"Polish Baltic coast",lat:54.60,lon:17.50,r:420},
  {name:"Central Baltic",lat:56.30,lon:18.50,r:500},
  {name:"Gulf of Finland",lat:59.75,lon:25.50,r:420},
- {name:"Suwałki corridor",lat:54.10,lon:23.20,r:350}
+ {name:"Narva",lat:59.38,lon:28.19,r:240},
+ {name:"Bornholm",lat:55.13,lon:14.92,r:300}
 ];
 
 function kmBetween(lat1,lon1,lat2,lon2){
@@ -331,8 +340,8 @@ function renderAircraft(){
 
 
 
-async function fetchJSON(url){
- const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),9000);
+async function fetchJSON(url,timeout=9000){
+ const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout);
  try{const r=await fetch(url,{cache:"no-store",signal:ctrl.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}
 }
    
@@ -358,6 +367,28 @@ function saveHistorySnapshot(ac){
     console.warn("history",e);
   }
 }
+// Current security and defence news. GDELT is queried directly; every returned
+// field is treated as untrusted and rendered as text or a validated HTTPS URL.
+const NEWS_SEEN_KEY="NORDICWATCH_NEWS_SEEN",NEWS_REFRESH_MS=10*60*1000,NEWS_HIGH_RISK=60;
+const NEWS_TERMS={drone:14,missile:18,sabotage:20,jamming:18,gnss:18,military:8,nato:8,submarine:16,attack:20};
+const NEWS_PLACES=[
+ {name:"Kaliningrad",lat:54.71,lon:20.51,terms:["kaliningrad","baltijsk"]},{name:"Suwałki",lat:54.10,lon:23.20,terms:["suwałki","suwalki"]},
+ {name:"Gotland",lat:57.47,lon:18.49,terms:["gotland"]},{name:"Murmansk",lat:68.97,lon:33.07,terms:["murmansk","kola"]},
+ {name:"Gulf of Finland",lat:59.75,lon:25.5,terms:["gulf of finland","finska viken"]},{name:"Narva",lat:59.38,lon:28.19,terms:["narva"]},{name:"Bornholm",lat:55.13,lon:14.92,terms:["bornholm"]}
+];
+const articleId=a=>{let h=2166136261;for(const ch of `${a.url}|${a.title}`){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(36)};
+function scoreNews(article){const text=`${article.title||""} ${article.description||""}`.toLocaleLowerCase("en");const places=NEWS_PLACES.filter(p=>p.terms.some(term=>text.includes(term)));const words=Object.keys(NEWS_TERMS).filter(term=>new RegExp(`\\b${term}\\b`,"i").test(text));const geographic=Math.min(55,places.length?35+(places.length-1)*10:0);return {score:Math.min(100,geographic+words.reduce((sum,term)=>sum+NEWS_TERMS[term],0)),places,words}}
+function parseNewsDate(value){const s=String(value||""),m=s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);const d=m?new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`):new Date(s);return Number.isNaN(d.getTime())?null:d}
+function relativeDate(d){if(!d)return "recent";const mins=Math.max(0,Math.round((Date.now()-d)/60000));return mins<60?`${mins} min ago`:mins<1440?`${Math.round(mins/60)} h ago`:`${Math.round(mins/1440)} d ago`}
+function normalizeArticle(raw){const url=safeHttpUrl(raw?.url),title=String(raw?.title||"").trim().slice(0,300);if(!url||!title)return null;const article={url,title,description:String(raw?.description||raw?.snippet||"").slice(0,500),domain:String(raw?.domain||new URL(url).hostname).slice(0,100),date:parseNewsDate(raw?.seendate)};article.id=articleId(article);article.risk=scoreNews(article);return article}
+function focusNews(article){const p=article.risk.places[0];if(p)map.flyTo([p.lat,p.lon],6,{duration:.8})}
+function renderNews(articles){
+ const box=document.getElementById("news");box.replaceChildren();if(!articles.length){const empty=document.createElement("div");empty.className="news-empty";empty.textContent="No matching current articles found.";box.append(empty);return}
+ for(const a of articles){const row=document.createElement("article");row.className="news-item";row.id=`news-${a.id}`;const top=document.createElement("div");top.className="news-top";const link=document.createElement("a");link.className="news-title";link.href=a.url;link.target="_blank";link.rel="noopener noreferrer nofollow";link.referrerPolicy="no-referrer";link.textContent=a.title;link.addEventListener("click",()=>focusNews(a));const risk=document.createElement("span");risk.className=`risk ${a.risk.score>=60?"hi":a.risk.score>=35?"med":"lo"}`;risk.textContent=`Risk ${a.risk.score}`;top.append(link,risk);const meta=document.createElement("div");meta.className="meta";meta.textContent=`${a.domain} · ${relativeDate(a.date)}`;const tags=document.createElement("div");tags.className="news-tags";[...a.risk.places.map(p=>p.name),...a.risk.words].forEach(t=>{const tag=document.createElement("span");tag.className="tag";tag.textContent=t;tags.append(tag)});row.append(top,meta,tags);row.addEventListener("dblclick",()=>focusNews(a));box.append(row)}
+ const selected=new URLSearchParams(location.search).get("news");if(selected&&/^[a-z0-9]+$/.test(selected)){const row=document.getElementById(`news-${selected}`);if(row){row.classList.add("selected");row.scrollIntoView({block:"center"})}}
+}
+async function notifyHighRiskNews(articles){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(NEWS_SEEN_KEY)||"{}")||{}}catch{}const now=Date.now();for(const [id,time] of Object.entries(seen))if(now-time>7*86400000)delete seen[id];for(const a of articles.filter(x=>x.risk.score>=NEWS_HIGH_RISK)){if(seen[a.id])continue;seen[a.id]=now;const appUrl=new URL(`?news=${encodeURIComponent(a.id)}#news-${encodeURIComponent(a.id)}`,location.href).href;const opts={body:`${a.risk.places.map(p=>p.name).join(", ")} · risk ${a.risk.score}`,tag:`nw-news-${a.id}`,data:{url:appUrl},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification("NordicWatch · high-risk news",opts);else new Notification("NordicWatch · high-risk news",opts)}catch(e){console.warn("news notification",e)}}localStorage.setItem(NEWS_SEEN_KEY,JSON.stringify(seen))}
+async function loadNews(){const status=document.getElementById("newsStatus");status.textContent="Loading current news…";const endpoint=new URL("https://api.gdeltproject.org/api/v2/doc/doc");endpoint.search=new URLSearchParams({query:'("Kaliningrad" OR "Suwalki" OR "Gotland" OR "Murmansk" OR "Gulf of Finland" OR "Narva" OR "Bornholm") (drone OR missile OR sabotage OR jamming OR GNSS OR military OR NATO OR submarine OR attack)',mode:"ArtList",maxrecords:"40",format:"json",sort:"DateDesc"});try{const data=await fetchJSON(endpoint.href,20000);const articles=(Array.isArray(data?.articles)?data.articles:[]).map(normalizeArticle).filter(Boolean).sort((a,b)=>b.risk.score-a.risk.score||(b.date?.getTime()||0)-(a.date?.getTime()||0));renderNews(articles);status.textContent=`${articles.length} current articles · refreshed ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;await notifyHighRiskNews(articles)}catch(e){status.textContent="News feed unavailable · retrying later";renderNews([]);console.warn("news",e)}}
 async function loadMilitary(){
  const st=document.getElementById("adsbStatus"),up=document.getElementById("adsbUpdated"); st.textContent="loading…";
  // Optional future proxy: set localStorage.NORDICWATCH_ADSB_PROXY to e.g. https://your-worker.example/mil
@@ -379,6 +410,7 @@ async function loadMilitary(){
  rawAircraft=[];G.military.clearLayers();st.textContent="feed unavailable";up.textContent="Map remains operational";console.error(lastErr);
 }
 loadMilitary();setInterval(loadMilitary,30000);
+loadNews();setInterval(loadNews,NEWS_REFRESH_MS);
 
 document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{
  document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("on"));b.classList.add("on");activeFilter=b.dataset.f;renderAircraft();
