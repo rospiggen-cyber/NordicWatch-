@@ -79,13 +79,19 @@ const fmtNum=(v,u)=>Number.isFinite(+v)?Math.round(+v)+u:"n/a";
 const nordic=a=>Number.isFinite(+a.lat)&&Number.isFinite(+a.lon)&&+a.lat>=53&&+a.lat<=72.5&&+a.lon>=-12&&+a.lon<=34.5;
 
 function classify(a){
- const s=((a.flight||"")+" "+(a.t||"")+" "+(a.desc||"")).toUpperCase();
- if(/E3|E-3|E7|E-7|AWACS|AEW|GLOBAL.?EYE|S100D|S 100D/.test(s)) return "awacs";
- if(/KC135|KC-135|KC46|KC-46|A330MRTT|MRTT|TANKER|K35R|K35E/.test(s)) return "tanker";
- if(/RC135|RC-135|R135|IL20|IL-20|IL 20|EP3|EP-3|P8|P-8|ARTEMIS|CL60|GLEX|SIGINT|ELINT|ISR|COMPASS|EA37|EA-37/.test(s)) return "isr";
- if(/C17|C-17|C130|C-130|A400|C5M|C-5|CN35|C295|C-295|TRANSPORT/.test(s)) return "transport";
- if(/F16|F-16|F18|F-18|F35|F-35|GRIPEN|JAS|EUFI|TYPHOON|RAFALE|SU27|SU-27|SU30|SU-30|SU35|SU-35|MIG29|MIG-29/.test(s)) return "fighter";
- return "other";
+  const s=((a.flight||"")+" "+(a.t||"")+" "+(a.desc||"")).toUpperCase();
+
+  if(/\b(?:E3A?|E-3A?|E7A?|E-7A?|AWACS|AEW|GLOBAL\s?EYE|S100D|S\s?100D)\b/.test(s)) return "awacs";
+
+  if(/\b(?:KC135|KC-135|KC46|KC-46|A330MRTT|MRTT|TANKER|K35R|K35E)\b/.test(s)) return "tanker";
+
+  if(/\b(?:RC135|RC-135|R135|IL20|IL-20|EP3|EP-3|P8|P-8|ARTEMIS|CL60|GLEX|SIGINT|ELINT|ISR|COMPASS|EA37|EA-37)\b/.test(s)) return "isr";
+
+  if(/\b(?:C17A?|C-17A?|C130\w?|C-130\w?|A400M?|C5M?|C-5M?|CN35|C295|C-295|TRANSPORT)\b/.test(s)) return "transport";
+
+  if(/\b(?:F16|F-16|F18|F-18|F35|F-35|GRIPEN|JAS|EUFI|TYPHOON|RAFALE|SU27|SU-27|SU30|SU-30|SU35|SU-35|MIG29|MIG-29)\b/.test(s)) return "fighter";
+
+  return "other";
 }
 function iconFor(a,cat){
  const deg=Number.isFinite(+a.track)?+a.track:0;
