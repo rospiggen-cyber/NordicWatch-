@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+8<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
 <link rel="manifest" href="manifest.webmanifest">
 <title>NordicWatch v0.4</title>
@@ -285,7 +285,7 @@ async function evaluateAlerts(ac){
  for(const a of ac){ const e=alertScore(a,ac); if(e && e.score>=58) await notifyEvent(a,e); }
 }
 async function initAlerts(){
- if("serviceWorker" in navigator){try{swReg=await navigator.serviceWorker.register("sw.js")}catch(e){console.warn("SW",e)}}
+ if("serviceWorker" in navigator){try{swReg=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}) }catch(e){console.warn("SW",e)}}
  const enabled=localStorage.getItem(ALERT_KEY)==="1";
  alertState.textContent=enabled&&Notification.permission==="granted"?"armed":Notification.permission==="denied"?"blocked":"off";
  alertsBtn.textContent=enabled?"Alerts on":"Enable alerts";
