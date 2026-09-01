@@ -90,6 +90,8 @@ const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
 const G={hotspots:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
 function c(lat,lon,r,col,p,g){L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
+ function renderHotspots(){
+  G.hotspots.clearLayers();
 D.hotspots.forEach(h=>{
  
   let col=h[3]>=70?"#ff6b6b":h[3]>=50?"#f7c948":"#55d187";
