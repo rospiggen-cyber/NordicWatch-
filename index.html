@@ -318,6 +318,9 @@ function renderAircraft(){
    L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(popup).addTo(G.military);
  });
  document.getElementById("adsbStatus").textContent=(activeFilter==="all"?rawAircraft.length:ac.length)+" shown";
+}
+
+
 
 
 async function fetchJSON(url){
@@ -325,7 +328,7 @@ async function fetchJSON(url){
  try{const r=await fetch(url,{cache:"no-store",signal:ctrl.signal});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}finally{clearTimeout(t)}
 }
    
- }const HISTORY_KEY="NORDICWATCH_HISTORY";
+ const HISTORY_KEY="NORDICWATCH_HISTORY";
 const HISTORY_INTERVAL=15*60*1000;
 const HISTORY_MAX_AGE=31*24*60*60*1000;
 
@@ -376,7 +379,7 @@ document.getElementById("signals").innerHTML='<div class="signal"><div class="me
 document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>b[3]-a[3]).map(h=>'<div class="hot"><div><b>'+h[0]+'</b><small>'+h[4]+'</small></div><div class="n '+(h[3]>=70?'hi':h[3]>=50?'med':'lo')+'">'+h[3]+'</div></div>').join("");
 document.getElementById("changes").innerHTML=D.changes.map(x=>'<div class="change"><b>'+x[0]+'</b><br><span>'+x[1]+'</span></div>').join("");
 document.querySelectorAll("[data-l]").forEach(e=>e.onchange=()=>e.checked?G[e.dataset.l].addTo(map):map.removeLayer(G[e.dataset.l]));
-docdocument.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
+document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
 const changedBtn=document.getElementById("changed");
 const closeBtn=document.getElementById("close");
 const drawerEl=document.getElementById("drawer");
