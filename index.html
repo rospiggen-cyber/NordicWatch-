@@ -85,7 +85,7 @@ function classify(a){
 
   if(/\b(?:KC135|KC-135|KC46|KC-46|A330MRTT|MRTT|TANKER|K35R|K35E)\b/.test(s)) return "tanker";
 
-  if(/\b(?:RC135|RC-135|R135|IL20|IL-20|EP3|EP-3|P8|P-8|ARTEMIS|CL60|GLEX|SIGINT|ELINT|ISR|COMPASS|EA37|EA-37)\b/.test(s)) return "isr";
+  if(/\b(?:RC135|RC-135|R135|IL20|IL-20|EP3|EP-3|P8|P-8|ARTEMIS|SIGINT|ELINT|ISR|COMPASS|EA37|EA-37)\b/.test(s)) return "isr";
 
   if(/\b(?:C17A?|C-17A?|C130\w?|C-130\w?|A400M?|C5M?|C-5M?|CN35|C295|C-295|TRANSPORT)\b/.test(s)) return "transport";
 
