@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.8",
+  "generatedAt": "2026-09-02T00:00:00Z",
+  "events": [
+    {
+      "id": "lv-mod-namejs-2026",
+      "title": "NAMEJS 2026",
+      "eventType": "military_exercise",
+      "startTime": "2026-09-01T21:00:00Z",
+      "endTime": "2026-10-08T20:59:59Z",
+      "latitude": 56.8796,
+      "longitude": 24.6032,
+      "radiusKm": 250,
+      "areaName": "Latvia",
+      "countries": ["Latvia", "Canada", "United States", "Estonia", "Lithuania"],
+      "organisations": ["NATO", "JEF", "Multinational Division North"],
+      "description": "Multinational comprehensive national defence exercise across Latvia. Elevated UAV, air-defence and allied air activity is expected.",
+      "sourceUrl": "https://www.mod.gov.lv/en/news/2-september-8-october-comprehensive-national-defence-exercise-namejs-2026-will-take-place",
+      "sourceName": "Latvian Ministry of Defence",
+      "confidence": "CONFIRMED",
+      "severity": "INFO",
+      "participants": 12000,
+      "expectedActivity": ["UAV", "fighters", "transports", "air defence", "ground forces", "naval"],
+      "seed": true,
+      "updatedAt": "2026-08-25T00:00:00Z"
+    }
+  ]
+}

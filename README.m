@@ -1,4 +1,4 @@
-# NordicWatch v0.7.2 — Maritime Signals and Coast Guard Behavior
+# NordicWatch v0.8 — Confirmed Event Context
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -7,6 +7,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - Leaflet/OpenStreetMap situational map
 - public ADS-B feed with evidence-based military and government classification
 - Swedish Coast Guard Q-300 track history and persistent-loiter observations
+- confirmed military Event Engine with geographic and expected-activity context
 - Nordic–Baltic GDELT security and defence reporting
 - device-local aircraft, news and maritime-signal history
 - Morning Brief and Evening Brief
@@ -26,13 +27,17 @@ Every accepted record must include source name, publisher, licence, retrieval ti
 
 See [MARITIME.md](MARITIME.md) for schemas, adapter instructions and limitations.
 
+## Event Engine
+
+The Events / Exercises layer keeps official event context separate from direct observations and NordicWatch inferences. Expected allied activity can reduce an anomaly assessment only when its role and actor match the event; contradictory activity such as Russian ISR near an active NATO exercise increases interest instead. The bundled NAMEJS 2026 record is marked as an official-source seed snapshot and remains available when the Worker feed is down. See [EVENT_ENGINE.md](EVENT_ENGINE.md) for the schema and Cloudflare ingestion boundary.
+
 ## Coast Guard behavior
 
 Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast Guard from corroborating operator, registration, callsign and ICAO identifiers. Device-local position history can identify persistent loiter from duration, confinement, speed and accumulated turns. The result is labelled as direct observation plus automatic interpretation; it becomes a confirmed operation only when supported by a confirmed rescue or emission report. Circling alone does not raise Activity unless it persists for at least 90 minutes.
 
 ## Authentication and data handling
 
-v0.7 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and history are stored in `localStorage` and must not be treated as access control.
+v0.8 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and history are stored in `localStorage` and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
