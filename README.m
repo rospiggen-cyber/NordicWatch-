@@ -10,6 +10,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - Nordic–Baltic GDELT security and defence reporting
 - device-local flight and news history
 - Morning Brief and Evening Brief generated from stored observations
+- dormant Maritime Intelligence layer for verified AIS data, time-limited tracks and transparent behavioural indicators
 - installable PWA and service-worker notification routing
 
 ## Daily Brief evidence labels
@@ -20,13 +21,13 @@ The brief deliberately separates:
 - **Automatic assessment** — a local heuristic or baseline comparison
 - **Confirmed external report** — a linked external publication
 
-Vessel and live GNSS feeds are not connected in v0.7. They are reported as unavailable and are not replaced with demo observations. Static hotspot scores provide analytical context only.
+The AIS layer is implemented but inactive until a provider, licence, endpoint and retention policy pass the gate in [MARITIME.md](MARITIME.md). Without a configured verified Worker it reports “AIS not configured” and produces no maritime assessment. Live GNSS is not connected. Static hotspot and infrastructure scores provide analytical context only.
 
 ## Authentication and data handling
 
 v0.7 does not yet implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and brief history are stored in `localStorage` and must not be treated as access control.
 
-API credentials must never be placed in `index.html`, the service worker or `localStorage`. Any future credential must remain in Cloudflare Worker secrets, with server-side session validation, rate limiting and role checks.
+API credentials must never be placed in `index.html`, the service worker or `localStorage`. The AIS Worker template requires `AIS_API_KEY` as a Cloudflare Worker Secret and remains disabled unless `AIS_ENABLED=1`. Future user credentials require server-side session validation, rate limiting and role checks.
 
 ## Limitations
 
