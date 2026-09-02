@@ -33,7 +33,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .signal,.hot{padding:11px 0;border-top:1px solid var(--border)}.signal:first-of-type,.hot:first-of-type{border-top:0}.meta{font-size:10px;color:var(--muted);margin-bottom:4px}.title{font-size:13px;font-weight:700}.desc{font-size:11px;color:#b8c4d4;margin-top:4px;line-height:1.4}.hot{display:flex;justify-content:space-between;gap:8px}.hot b{font-size:13px}.hot small{display:block;color:var(--muted);margin-top:3px}.n{font-size:17px;font-weight:800}.hi{color:var(--danger)}.med{color:var(--warn)}.lo{color:var(--ok)}
 .drawer{display:none;position:fixed;z-index:2000;inset:0;background:rgba(0,0,0,.7);align-items:flex-end}.drawer.show{display:flex}.sheet{width:100%;max-height:72vh;overflow:auto;background:#0b1423;border-radius:18px 18px 0 0;padding:17px}.sheethead{display:flex;justify-content:space-between}.change{padding:12px 0;border-top:1px solid var(--border)}.change span{font-size:11px;color:var(--muted)}
 .plane{font-size:22px;line-height:22px;text-shadow:0 0 5px #000}.leaflet-div-icon{background:transparent;border:0}
-.cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}
+.cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}.maritime-tools{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.maritime-tools button{padding:5px 7px;font-size:9px;margin-right:3px}.maritime-tools input[type=number]{width:54px;background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px}.signal-observation{color:var(--accent)}.signal-indicator{color:var(--warn)}.signal-confirmed{color:var(--ok)}
 .legend{font-size:10px;color:var(--muted);margin-top:6px}.alertctl{margin-top:8px;display:flex;gap:5px;align-items:center}.alertctl button{padding:6px 8px;font-size:10px}.alertstate{font-size:10px;color:var(--muted)}
 .news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
 .brief-actions{display:flex;gap:6px}.brief-actions button{font-size:11px}.brief-sheet{max-height:86vh}.brief-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.brief-stat{border:1px solid var(--border);border-radius:11px;padding:9px;background:rgba(255,255,255,.025)}.brief-stat small{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.brief-stat b{font-size:16px}.brief-section{margin-top:15px}.brief-item{border-top:1px solid var(--border);padding:10px 0}.brief-item button{margin-top:7px;padding:5px 8px;font-size:10px}.evidence{display:inline-block;border:1px solid currentColor;border-radius:7px;padding:2px 5px;font-size:8px;font-weight:800;letter-spacing:.5px;margin-bottom:5px}.evidence.obs{color:var(--accent)}.evidence.infer{color:var(--warn)}.evidence.external{color:var(--ok)}.brief-note{color:var(--muted);font-size:10px;line-height:1.45}.confidence{font-weight:800}.confidence.low{color:var(--danger)}.confidence.medium{color:var(--warn)}.confidence.high{color:var(--ok)}
@@ -48,13 +48,14 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
 <label><input type="checkbox" data-l="hotspots" checked> Hotspots</label>
 <label><input type="checkbox" data-l="military" checked> Live military ✈</label>
-<label><input type="checkbox" data-l="vessels" checked> Maritime AIS ◈</label>
+<label><input type="checkbox" data-l="vessels" checked> Maritime signals ◈</label>
 <label><input type="checkbox" data-l="infra" checked> Infrastructure</label>
 <label><input type="checkbox" data-l="gps" checked> GPS/GNSS</label>
 <div class="filterbar" id="filters">
 <button class="on" data-f="all">All</button><button data-f="awacs">AWACS</button><button data-f="tanker">Tanker</button><button data-f="isr">ISR</button><button data-f="transport">Transport</button><button data-f="fighter">Fighter</button>
 </div>
-<div class="status">ADSB: <b id="adsbStatus">loading…</b><br><span id="adsbUpdated"></span><br>AIS: <b id="aisStatus" class="maritime-status">not configured</b><br><span id="aisUpdated"></span></div>
+<div class="status">ADSB: <b id="adsbStatus">loading…</b><br><span id="adsbUpdated"></span><br>Maritime: <b id="aisStatus" class="maritime-status">local datasets only</b><br><span id="aisUpdated">No external AIS connected</span></div>
+<div class="maritime-tools"><button id="importMaritimeBtn">Import CSV/GeoJSON</button><button id="mockMaritimeBtn">Load mockdata</button><input id="maritimeFile" type="file" accept=".csv,.json,.geojson,text/csv,application/json,application/geo+json" hidden><div class="legend">Correlation <input id="corrKm" type="number" min="5" max="500" value="100"> km · <input id="corrHours" type="number" min="1" max="168" value="24"> h</div><div class="legend" id="importStatus"></div></div>
 <div class="legend">Orange AWACS · Purple tanker · Red ISR · Blue transport · Yellow fighter</div>
 <div class="alertctl"><button id="alertsBtn">Enable alerts</button><span class="alertstate" id="alertState">off</span></div>
 </div></div></section>
@@ -63,6 +64,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
 <div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.7</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="maritime-core.js"></script>
 <script>
 const D={
 hotspots:[
@@ -131,6 +133,12 @@ const MARITIME_CORRIDORS=[
  {name:"Gulf of Finland cable corridor",kind:"cable",points:[[59.45,24.75],[60.05,26.10],[59.85,27.20]]}
 ];
 MARITIME_CORRIDORS.forEach(x=>L.polyline(x.points,{color:x.kind==="pipeline"?"#55d187":"#61dafb",weight:2,opacity:.55,dashArray:"6 6"}).bindPopup("<b>"+x.name+"</b><br>Approximate analytical corridor · not navigational data").addTo(G.infra));
+const MARITIME_PORTS=[[57.70,11.95,"Port of Gothenburg"],[59.32,18.10,"Port of Stockholm"],[55.62,12.99,"Port of Malmö"],[54.67,20.10,"Kaliningrad port context"],[60.17,24.95,"Port of Helsinki"],[59.45,24.75,"Port of Tallinn"]];
+MARITIME_PORTS.forEach(x=>L.circleMarker([x[0],x[1]],{radius:5,color:"#8ed1a5",fillOpacity:.35}).bindPopup("<b>"+x[2]+"</b><br>Port context · verify against authoritative harbour data").addTo(G.infra));
+const MARITIME_FAIRWAYS=[{name:"Central Baltic fairway context",points:[[55.9,15.2],[57.2,17.8],[59.2,20.1]]},{name:"Gulf of Finland fairway context",points:[[59.4,24.4],[59.7,26.0],[59.8,27.3]]}];
+MARITIME_FAIRWAYS.forEach(x=>L.polyline(x.points,{color:"#8ed1a5",weight:2,opacity:.4}).bindPopup("<b>"+x.name+"</b><br>Approximate fairway context · not for navigation").addTo(G.infra));
+const MARITIME_WATCH_ZONES=[{name:"Gotland maritime watch",lat:57.5,lon:18.5,r:140000},{name:"Bornholm maritime watch",lat:55.13,lon:14.92,r:100000},{name:"Gulf of Finland maritime watch",lat:59.75,lon:25.5,r:150000}];
+MARITIME_WATCH_ZONES.forEach(x=>L.circle([x.lat,x.lon],{radius:x.r,color:"#b388ff",weight:1,fillOpacity:.03,dashArray:"4 6"}).bindPopup("<b>"+x.name+"</b><br>Configurable analytical watch zone").addTo(G.infra));
 [[59.45,27.3,"Narva region"],[59.8,25.9,"Eastern Gulf of Finland"],[58.4,22.5,"Baltic anomaly zone"]].forEach(x=>c(x[0],x[1],85000,"#f7c948","<b>"+x[2]+"</b><br>GPS/GNSS indicator · demo","gps"));
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -379,87 +387,104 @@ function saveHistorySnapshot(ac){
   }
 }
 
-// --- Maritime Intelligence v0.7 (inactive until a verified proxy is configured) ---
-const AIS_PROXY_KEY="NORDICWATCH_AIS_PROXY",VESSEL_HISTORY_KEY="NORDICWATCH_VESSEL_HISTORY",MARITIME_SEEN_KEY="NORDICWATCH_MARITIME_SEEN";
-const AIS_REFRESH_MS=60*1000,AIS_TRACK_MS=6*60*60*1000,AIS_GAP_MS=30*60*1000,MARITIME_ALERT_SCORE=65;
-let rawVessels=[],maritimeEvents=[];
-function vesselId(v){return String(v.mmsi||"").replace(/\D/g,"").slice(0,9)}
-function validVessel(v){return /^\d{9}$/.test(vesselId(v))&&Number.isFinite(+v.lat)&&Number.isFinite(+v.lon)&&+v.lat>=53&&+v.lat<=72.5&&+v.lon>=-12&&+v.lon<=34.5}
-function normalizeVessel(v){
- const stamp=Number(v.timestamp||v.time||Date.now());
- return {mmsi:vesselId(v),name:String(v.name||v.shipname||"Unknown vessel").trim().slice(0,80),lat:+v.lat,lon:+v.lon,sog:Number.isFinite(+v.sog)?+v.sog:null,cog:Number.isFinite(+v.cog)?+v.cog:null,heading:Number.isFinite(+v.heading)?+v.heading:null,type:String(v.type||v.ship_type||"unknown").slice(0,50),timestamp:stamp<1e12?stamp*1000:stamp,quality:String(v.quality||"reported").slice(0,30)}
+// --- Maritime Signals v0.7: local/imported licensed datasets only ---
+const MC=window.NordicWatchMaritime;
+if(!MC)throw new Error("NordicWatchMaritime core unavailable");
+const MARITIME_DATA_KEY="NORDICWATCH_MARITIME_DATA",MARITIME_HISTORY_KEY="NORDICWATCH_MARITIME_SIGNAL_HISTORY",MARITIME_QUARANTINE_KEY="NORDICWATCH_MARITIME_QUARANTINE",MARITIME_SEEN_KEY="NORDICWATCH_MARITIME_SEEN";
+const MARITIME_ALERT_SCORE=65;
+let maritimeRecords=[],maritimeEvents=[],rawVessels=[];
+function maritimeRead(key,fallback){try{const v=JSON.parse(localStorage.getItem(key)||"null");return v??fallback}catch{return fallback}}
+function maritimeConfig(){
+ const km=Math.max(5,Math.min(500,Number(document.getElementById("corrKm")?.value)||100));
+ const hours=Math.max(1,Math.min(168,Number(document.getElementById("corrHours")?.value)||24));
+ localStorage.setItem("NORDICWATCH_CORRELATION_KM",String(km));localStorage.setItem("NORDICWATCH_CORRELATION_HOURS",String(hours));
+ return {distanceKm:km,timeHours:hours}
 }
-function getVesselHistory(){try{const x=JSON.parse(localStorage.getItem(VESSEL_HISTORY_KEY)||"{}");return x&&typeof x==="object"?x:{}}catch{return {}}}
-function saveVesselHistory(vessels){
- const now=Date.now(),h=getVesselHistory();
- vessels.forEach(v=>{const a=Array.isArray(h[v.mmsi])?h[v.mmsi]:[];const last=a[a.length-1];if(!last||v.timestamp-last.t>=60*1000||kmBetween(last.lat,last.lon,v.lat,v.lon)>.1)a.push({t:v.timestamp,lat:v.lat,lon:v.lon,sog:v.sog,cog:v.cog});h[v.mmsi]=a.filter(p=>now-p.t<AIS_TRACK_MS).slice(-48)});
- Object.keys(h).forEach(id=>{h[id]=h[id].filter(p=>now-p.t<AIS_TRACK_MS);if(!h[id].length)delete h[id]});
- localStorage.setItem(VESSEL_HISTORY_KEY,JSON.stringify(h));return h
+function maritimeContext(){
+ const hotspots=D.hotspots.map(x=>({id:x[0],name:x[0],lat:x[1],lon:x[2],source:"NordicWatch hotspot context"}));
+ const aircraft=rawAircraft.map(x=>({id:x.hex||x.flight,lat:+x.lat,lon:+x.lon,timestamp:Date.now(),source:"Public military ADS-B"}));
+ const gnss=[{id:"Narva GNSS context",lat:59.45,lon:27.3,source:"GNSS context layer"},{id:"Gulf of Finland GNSS context",lat:59.8,lon:25.9,source:"GNSS context layer"}];
+ const news=currentArticles.flatMap(a=>a.risk.places.slice(0,1).map(p=>({id:a.id,title:a.title,lat:p.lat,lon:p.lon,timestamp:a.date?.getTime(),source:a.domain})));
+ return {hotspots,aircraft,gnss,news,maritime:maritimeRecords}
 }
-function pointSegmentKm(lat,lon,a,b){
- const mean=Math.cos(lat*Math.PI/180),x=lon*mean,y=lat,x1=a[1]*mean,y1=a[0],x2=b[1]*mean,y2=b[0];
- const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,((x-x1)*dx+(y-y1)*dy)/(dx*dx+dy*dy||1)));
- return kmBetween(lat,lon,y1+t*dy,(x1+t*dx)/mean)
+function analyzeMaritime(){
+ const context=maritimeContext(),cfg=maritimeConfig();
+ maritimeEvents=maritimeRecords.map(record=>{const correlations=MC.correlate(record,context,cfg),risk=MC.riskScore(record,correlations);return {record,correlations,risk}}).sort((a,b)=>b.risk.total-a.risk.total);
+ rawVessels=maritimeRecords.filter(x=>x.type==="vessel_position");
+ renderMaritimeSignals();saveMaritimeHistory();notifyMaritimeSignals()
 }
-function nearestCorridor(v){
- let best=null;MARITIME_CORRIDORS.forEach(c=>{for(let i=1;i<c.points.length;i++){const d=pointSegmentKm(v.lat,v.lon,c.points[i-1],c.points[i]);if(!best||d<best.distance)best={name:c.name,kind:c.kind,distance:d}}});return best
+function evidenceLabel(value){return value==="confirmed"?"CONFIRMED REPORT":value==="indicator"?"AUTOMATIC INDICATOR":"OBSERVATION"}
+function maritimeIcon(event){
+ const e=event.record,deg=Number.isFinite(e.course)?e.course:0,risk=event.risk.total>=MARITIME_ALERT_SCORE;
+ const glyph=e.type==="vessel_position"?"◆":e.type==="navigation_warning"?"⚠":e.type==="restriction"?"⊘":"●";
+ return L.divIcon({className:"",html:'<div class="vessel '+(risk?"vessel-risk":"")+'" style="transform:rotate('+deg+'deg)">'+glyph+"</div>",iconSize:[22,22],iconAnchor:[11,11]})
 }
-function vesselIndicators(v,track,now){
- const out=[],prev=track.length>1?track[track.length-2]:null,gap=Math.max(0,now-v.timestamp);
- if(gap>AIS_GAP_MS)out.push({key:"ais-gap",label:"AIS reporting gap",points:15,duration:gap});
- if(prev&&v.cog!=null&&prev.cog!=null){const d=Math.abs(((v.cog-prev.cog+540)%360)-180);if(d>=45)out.push({key:"course-change",label:"course change "+Math.round(d)+"°",points:12,duration:now-prev.t})}
- if(prev&&v.sog!=null&&prev.sog!=null&&Math.abs(v.sog-prev.sog)>=5)out.push({key:"speed-change",label:"speed change "+Math.abs(v.sog-prev.sog).toFixed(1)+" kt",points:10,duration:now-prev.t});
- let stoppedSince=null;for(let i=track.length-1;i>=0;i--){if(Number(track[i].sog||0)<.5)stoppedSince=track[i].t;else break}
- if(stoppedSince&&now-stoppedSince>=60*60*1000)out.push({key:"stopped",label:"long-duration low speed",points:20,duration:now-stoppedSince});
- if(track.length>=6){const old=track.slice(0,-3).some(p=>now-p.t>60*60*1000&&kmBetween(p.lat,p.lon,v.lat,v.lon)<2);if(old)out.push({key:"repeat",label:"repeated movement / revisit",points:14,duration:now-track[0].t})}
- if(track.length>=8){const bearings=track.slice(-8).map(p=>p.cog).filter(Number.isFinite);if(bearings.length>=6){const span=Math.max(...bearings)-Math.min(...bearings);if(span>120)out.push({key:"route",label:"route deviation indicator",points:15,duration:now-track[track.length-8].t})}}
- return out
-}
-function maritimeRisk(v,track){
- const now=Date.now(),corridor=nearestCorridor(v),inds=vesselIndicators(v,track,now);
- const proximity=corridor.distance<=2?30:corridor.distance<=5?22:corridor.distance<=15?12:0;
- const behavior=Math.min(45,inds.reduce((s,x)=>s+x.points,0));
- const duration=Math.min(15,Math.max(0,...inds.map(x=>Math.floor(x.duration/3600000)*3)));
- const freshness=Math.max(0,now-v.timestamp),quality=freshness<=5*60000?10:freshness<=15*60000?6:freshness<=AIS_GAP_MS?2:0;
- return {score:Math.min(100,proximity+behavior+duration+quality),corridor,indicators:inds,breakdown:{proximity,behavior,duration,dataQuality:quality},confidence:quality>=10?"HIGH":quality>=6?"MEDIUM":"LOW"}
-}
-function maritimeIcon(e){
- const deg=Number.isFinite(e.vessel.cog)?e.vessel.cog:0,cls=e.risk.score>=MARITIME_ALERT_SCORE?"vessel vessel-risk":"vessel";
- return L.divIcon({className:"",html:'<div class="'+cls+'" style="transform:rotate('+deg+'deg)">◆</div>',iconSize:[22,22],iconAnchor:[11,11]})
-}
-function renderVessels(history){
+function renderMaritimeSignals(){
  G.vessels.clearLayers();
- maritimeEvents.forEach(e=>{
-  const v=e.vessel,r=e.risk,track=history[v.mmsi]||[];
-  const popup="<b>"+esc(v.name)+"</b><br>MMSI: "+esc(v.mmsi)+"<br>Speed: "+esc(v.sog==null?"n/a":v.sog.toFixed(1)+" kt")+"<br>Course: "+esc(v.cog==null?"n/a":Math.round(v.cog)+"°")+"<br>Nearest context: "+esc(r.corridor.name)+" · "+r.corridor.distance.toFixed(1)+" km<br>Indicators: "+esc(r.indicators.map(x=>x.label).join(", ")||"none")+"<br><b>Risk "+r.score+"</b> = proximity "+r.breakdown.proximity+" + behavior "+r.breakdown.behavior+" + duration "+r.breakdown.duration+" + data quality "+r.breakdown.dataQuality+"<br>Confidence: "+r.confidence+"<br><small>Observation/indicator only; not a confirmed hostile act.</small>";
-  L.marker([v.lat,v.lon],{icon:maritimeIcon(e),title:v.name}).bindPopup(popup).addTo(G.vessels);
-  if(track.length>1)L.polyline(track.map(p=>[p.lat,p.lon]),{color:r.score>=MARITIME_ALERT_SCORE?"#ff6b6b":"#61dafb",weight:2,opacity:.65,className:"track-line"}).addTo(G.vessels)
+ maritimeEvents.forEach(event=>{
+  const e=event.record,r=event.risk,c=event.correlations;
+  const breakdown=r.components,source=e.source;
+  const popup="<b>"+esc(e.title)+"</b><br><span class='signal-"+esc(e.evidence)+"'>"+esc(evidenceLabel(e.evidence))+"</span><br>"+esc(e.description)+"<br><br><b>Risk "+r.total+"</b> = geography "+breakdown.geography+" + time "+breakdown.temporal+" + independent sources "+breakdown.independentSources+" + source quality "+breakdown.sourceQuality+" + freshness "+breakdown.freshness+"<br>Confidence: "+r.confidence+"<br>Correlations: "+esc(c.slice(0,4).map(x=>x.kind+" "+x.id+" ("+x.distanceKm.toFixed(1)+" km)").join("; ")||"none")+"<br><br>Source: "+esc(source.name)+" · "+esc(source.publisher)+"<br>Licence: "+esc(source.license)+" · allowed use: "+esc(source.allowedUse)+"<br>Retrieved: "+esc(new Date(source.retrievedAt).toLocaleString())+(e.link?'<br><a href="'+esc(e.link)+'" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">Open verified source</a>':"");
+  L.marker([e.lat,e.lon],{icon:maritimeIcon(event),title:e.title}).bindPopup(popup).addTo(G.vessels)
  })
+ document.getElementById("aisStatus").textContent=maritimeRecords.length+" validated records";
+ document.getElementById("aisUpdated").textContent="Local/imported datasets · no external AIS connected"
 }
-function canNotifyMaritime(e){
- let seen={};try{seen=JSON.parse(localStorage.getItem(MARITIME_SEEN_KEY)||"{}")||{}}catch{}
- const now=Date.now(),signature=e.vessel.mmsi+":"+e.risk.indicators.map(x=>x.key).sort().join("-");
- for(const [k,t] of Object.entries(seen))if(now-t>24*3600000)delete seen[k];
- if(seen[signature]&&now-seen[signature]<6*3600000)return false;seen[signature]=now;localStorage.setItem(MARITIME_SEEN_KEY,JSON.stringify(seen));return true
+function saveMaritimeHistory(){
+ const now=Date.now(),history=maritimeRead(MARITIME_HISTORY_KEY,[]);
+ history.push({t:now,count:maritimeRecords.length,highRisk:maritimeEvents.filter(x=>x.risk.total>=MARITIME_ALERT_SCORE).length,types:Object.fromEntries(MC.TYPES.map(t=>[t,maritimeRecords.filter(x=>x.type===t).length]))});
+ localStorage.setItem(MARITIME_HISTORY_KEY,JSON.stringify(history.filter(x=>now-x.t<31*86400000).slice(-300)))
 }
-async function notifyMaritime(e){
- if(e.risk.score<MARITIME_ALERT_SCORE||localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted"||!canNotifyMaritime(e))return;
- const v=e.vessel,r=e.risk,title="NordicWatch · maritime risk "+r.score,body=v.name+" · "+r.corridor.name+" · "+r.indicators.map(x=>x.label).join(", ");
- const opts={body,tag:"nw-maritime-"+v.mmsi,data:{lat:v.lat,lon:v.lon,mmsi:v.mmsi},icon:"icon-192.png",badge:"icon-192.png"};
- try{if(swReg)await swReg.showNotification(title,opts);else new Notification(title,opts)}catch(err){console.warn("maritime notification",err)}
+function maritimeSeen(){
+ const now=Date.now(),seen=maritimeRead(MARITIME_SEEN_KEY,{});
+ Object.entries(seen).forEach(([k,t])=>{if(now-t>7*86400000)delete seen[k]});return seen
 }
-async function loadAIS(){
- const status=document.getElementById("aisStatus"),updated=document.getElementById("aisUpdated"),proxy=safeHttpUrl(localStorage.getItem(AIS_PROXY_KEY)||"");
- if(!proxy){status.textContent="not configured";updated.textContent="Provider verification required";rawVessels=[];maritimeEvents=[];G.vessels.clearLayers();return}
- status.textContent="loading…";
+async function notifyMaritimeSignals(){
+ if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
+ const seen=maritimeSeen(),now=Date.now();
+ for(const event of maritimeEvents.filter(x=>x.risk.total>=MARITIME_ALERT_SCORE)){
+  const key=MC.eventKey(event.record);if(seen[key])continue;seen[key]=now;
+  const title="NordicWatch · maritime signal "+event.risk.total,body=evidenceLabel(event.record.evidence)+" · "+event.record.title;
+  const opts={body,tag:"nw-maritime-"+key,data:{lat:event.record.lat,lon:event.record.lon,id:event.record.id},icon:"icon-192.png",badge:"icon-192.png"};
+  try{if(swReg)await swReg.showNotification(title,opts);else new Notification(title,opts)}catch(error){console.warn("maritime notification",error)}
+ }
+ localStorage.setItem(MARITIME_SEEN_KEY,JSON.stringify(seen))
+}
+function mergeMaritime(records){
+ const map=new Map(maritimeRecords.map(x=>[MC.eventKey(x),x]));records.forEach(x=>map.set(MC.eventKey(x),x));
+ maritimeRecords=[...map.values()].sort((a,b)=>b.timestamp-a.timestamp).slice(0,10000);
+ localStorage.setItem(MARITIME_DATA_KEY,JSON.stringify(maritimeRecords));analyzeMaritime()
+}
+function quarantineImport(file,result){
+ const entry={t:Date.now(),file:String(file.name||"import").slice(0,120),summary:result.summary,records:result.quarantine.slice(0,500).map(x=>({index:x.index,errors:x.errors}))};
+ const q=maritimeRead(MARITIME_QUARANTINE_KEY,[]);q.push(entry);localStorage.setItem(MARITIME_QUARANTINE_KEY,JSON.stringify(q.slice(-20)))
+}
+async function importMaritimeFile(file){
+ const status=document.getElementById("importStatus");
+ if(!file){return}
+ if(file.size>MC.MAX_IMPORT_BYTES){status.textContent="Rejected: file exceeds 2 MiB";return}
+ const content=await file.text(),result=MC.importDataset({name:file.name,mime:file.type,content,size:file.size});
+ quarantineImport(file,result);if(result.accepted.length)mergeMaritime(result.accepted);
+ status.textContent=result.summary.accepted+" accepted · "+result.summary.quarantined+" quarantined · "+result.summary.duplicates+" duplicates"
+}
+async function loadMaritimeMock(){
+ const status=document.getElementById("importStatus");
  try{
-  const u=new URL(proxy);u.searchParams.set("bbox","-12,53,34.5,72.5");
-  const data=await fetchJSON(u.href,15000),items=Array.isArray(data?.vessels)?data.vessels:[];
-  rawVessels=items.map(normalizeVessel).filter(validVessel);const history=saveVesselHistory(rawVessels);
-  maritimeEvents=rawVessels.map(v=>({vessel:v,risk:maritimeRisk(v,history[v.mmsi]||[])})).sort((a,b)=>b.risk.score-a.risk.score);
-  renderVessels(history);for(const e of maritimeEvents)await notifyMaritime(e);
-  status.textContent=rawVessels.length+" vessels";const attribution=String(data?.meta?.attribution||"Configured AIS provider").slice(0,160);updated.textContent="Updated "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+attribution
- }catch(e){status.textContent="feed unavailable";updated.textContent="No maritime assessment produced";rawVessels=[];maritimeEvents=[];G.vessels.clearLayers();console.warn("AIS",e)}
+  const response=await fetch("mock/maritime-signals.json",{cache:"no-store"});if(!response.ok)throw new Error("HTTP "+response.status);
+  const content=await response.text(),result=MC.importDataset({name:"maritime-signals.json",mime:"application/json",content,size:new TextEncoder().encode(content).length});
+  quarantineImport({name:"built-in mockdata"},result);mergeMaritime(result.accepted);
+  status.textContent="TEST DATA · "+result.summary.accepted+" accepted · "+result.summary.quarantined+" quarantined"
+ }catch(error){status.textContent="Mockdata unavailable";console.warn("maritime mock",error)}
+}
+function initMaritimeSignals(){
+ document.getElementById("corrKm").value=localStorage.getItem("NORDICWATCH_CORRELATION_KM")||"100";
+ document.getElementById("corrHours").value=localStorage.getItem("NORDICWATCH_CORRELATION_HOURS")||"24";
+ const stored=maritimeRead(MARITIME_DATA_KEY,[]),validated=MC.importDataset({name:"stored.json",mime:"application/json",content:JSON.stringify(stored)});
+ maritimeRecords=validated.accepted;analyzeMaritime();
+ document.getElementById("importMaritimeBtn").onclick=()=>document.getElementById("maritimeFile").click();
+ document.getElementById("maritimeFile").onchange=e=>importMaritimeFile(e.target.files?.[0]).finally(()=>{e.target.value=""});
+ document.getElementById("mockMaritimeBtn").onclick=loadMaritimeMock;
+ ["corrKm","corrHours"].forEach(id=>document.getElementById(id).onchange=analyzeMaritime)
 }
 
 // Current security and defence news. GDELT is queried directly; every returned
@@ -536,17 +561,17 @@ function generateBrief(kind){
  const topNews=rankedNews[0]||null;
  const level=total>=12||(topNews&&topNews.risk.score>=80)?"ELEVATED":total>=5||(topNews&&topNews.risk.score>=60)?"WATCH":"ROUTINE";
  const score=Math.min(99,Math.round(20+Math.min(35,total*3)+(topNews?topNews.risk.score*.35:0)+Math.min(10,anomalies.length*4)));
- const coverage=(rawAircraft.length?1:0)+(currentArticles.length?1:0)+(rawVessels.length?1:0);
+ const coverage=(rawAircraft.length?1:0)+(currentArticles.length?1:0)+(maritimeRecords.length?1:0);
  const confidence=coverage>=3&&baseline.length>=4?"MEDIUM":coverage>=2?"LOW–MEDIUM":"LOW";
  const content=document.getElementById("briefContent");content.replaceChildren();
  const summary=document.createElement("div");summary.className="brief-summary";
  [["Situation",level],["Activity",String(score)],["Change",delta===null?"No prior snapshot":(delta>=0?"+":"")+delta+" aircraft"]].forEach(x=>{const s=document.createElement("div");s.className="brief-stat";const sm=document.createElement("small");sm.textContent=x[0];const b=document.createElement("b");b.textContent=x[1];s.append(sm,b);summary.append(s)});
  content.append(summary);
- const source=document.createElement("div");source.className="brief-note";source.textContent="Data coverage: live public military ADS-B, current GDELT reporting"+(rawVessels.length?" and configured AIS maritime data.":"; AIS is not configured or returned no usable vessels.")+" Live GNSS is not connected. Static hotspot and infrastructure corridors are context, not observations.";content.append(source);
+ const source=document.createElement("div");source.className="brief-note";source.textContent="Data coverage: live public military ADS-B, current GDELT reporting"+(maritimeRecords.length?" and validated local/imported maritime signals.":"; no maritime dataset is loaded.")+" No external AIS is connected. Live GNSS is not connected. Static infrastructure geometry is analytical context, not observation.";content.append(source);
  const addSection=title=>{const h=document.createElement("h3");h.className="brief-section";h.textContent=title;content.append(h)};
  addSection("Top observations");
  content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>categoryLabel(x[0])+" "+x[1]).join(", ")+"."));
- if(maritimeEvents.length){const me=maritimeEvents[0];content.append(briefItem("infer","Maritime indicator · risk "+me.risk.score,me.vessel.name+" · "+me.risk.corridor.name+" · "+(me.risk.indicators.map(x=>x.label).join(", ")||"no behavioral indicator")+". Confidence "+me.risk.confidence+". Observation/indicator only.",{label:"Open vessel",run:()=>{map.flyTo([me.vessel.lat,me.vessel.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
+ if(maritimeEvents.length){const me=maritimeEvents[0],mr=me.record;content.append(briefItem(mr.evidence==="confirmed"?"external":mr.evidence==="indicator"?"infer":"obs","Maritime signal · risk "+me.risk.total,mr.title+" · "+evidenceLabel(mr.evidence)+" · confidence "+me.risk.confidence+". Source: "+mr.source.name+"; licence: "+mr.source.license+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
  if(topNews){
   const place=topNews.risk.places[0]&&topNews.risk.places[0].name;
   content.append(briefItem("external",topNews.title,(topNews.domain||"External source")+" · risk "+topNews.risk.score+(place?" · "+place:""),{label:"Open report",run:()=>window.open(topNews.url,"_blank","noopener,noreferrer")}));
@@ -600,7 +625,7 @@ async function loadMilitary(){
  rawAircraft=[];G.military.clearLayers();st.textContent="feed unavailable";up.textContent="Map remains operational";console.error(lastErr);
 }
 loadMilitary();setInterval(loadMilitary,30000);
-loadAIS();setInterval(loadAIS,AIS_REFRESH_MS);
+initMaritimeSignals();
 loadNews();setInterval(loadNews,NEWS_REFRESH_MS);
 
 document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{

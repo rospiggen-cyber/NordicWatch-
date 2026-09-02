@@ -1,6 +1,6 @@
 // NordicWatch v0.7 Maritime Service Worker
-const CACHE="nordicwatch-v0.7-maritime-1";
-const APP_SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
+const CACHE="nordicwatch-v0.7-maritime-signals-1";
+const APP_SHELL=["./","./index.html","./maritime-core.js","./mock/maritime-signals.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));

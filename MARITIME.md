@@ -1,89 +1,108 @@
-# NordicWatch v0.7 — Maritime Intelligence verification gate
+# NordicWatch v0.7 — Maritime Signals
 
-The maritime feature is implemented but intentionally inactive. It must not be connected to production until every item below is recorded and approved.
+## Safety boundary
 
-## Required provider verification
+No AIS provider, upstream endpoint or external maritime API is connected. The layer operates on validated local datasets and explicit mockdata. Schema validity means only that a record is structurally usable; it does not confirm the underlying claim.
 
-- [ ] Legal AIS provider and exact product selected
-- [ ] Licence permits display inside NordicWatch
-- [ ] Licence permits derived risk indicators and alerts
-- [ ] Licence permits the intended beta/commercial user group
-- [ ] Geographic coverage, latency, update rate and terrestrial/satellite mix documented
-- [ ] Endpoint and authentication method verified against current provider documentation
-- [ ] Rate limits, outage behaviour and cost ceiling documented
-- [ ] Retention, caching, redistribution and deletion rules documented
-- [ ] MMSI/vessel-name privacy and applicable GDPR assessment completed
-- [ ] Attribution and user-facing disclaimer requirements implemented
-- [ ] Cloudflare/data-processing geography accepted
-- [ ] Test account and non-production endpoint used first
+## Internal record model
 
-## Architecture
+All accepted records use schema version 0.7 and contain:
 
-Browser → NordicWatch Cloudflare Worker → licensed AIS provider.
+- `id`, `type`, `timestamp`, optional `end`
+- `lat`, `lon` inside the NordicWatch geographic boundary
+- evidence class: `observation`, `indicator` or `confirmed`
+- title, description, tags and optional HTTPS source link
+- optional MMSI, speed, course and status
+- source name, publisher, licence, retrieval time, allowed use and quality
+- import timestamp and original record index
 
-The browser never receives the provider credential. The Worker requires:
+Supported types:
 
-- `AIS_API_KEY` — Cloudflare Worker Secret, never committed
-- `AIS_ENABLED=1` — activation gate
-- `AIS_PROVIDER_URL` — verified HTTPS endpoint
-- `APP_ORIGIN` — exact allowed NordicWatch origin
-- optional `AIS_AUTH_HEADER`, `AIS_AUTH_PREFIX`, `AIS_BBOX_PARAMETER`
+- `vessel_position`
+- `maritime_event`
+- `navigation_warning`
+- `restriction`
+- `authority_notice`
+- `manual_event`
 
-The supplied Worker template performs origin checking, bounding-box validation, basic rate limiting, timeouts, response minimisation and canonical field mapping. It reports that it retains no data. Cloudflare logs, cache configuration and the provider's own retention remain separate items requiring verification.
+## Secure import
 
-## Frontend activation
+Supported formats are CSV, JSON arrays/objects and GeoJSON FeatureCollections containing Point features.
 
-Do not configure this until the gate above is complete. After a verified Worker is deployed, set the exact HTTPS `/ais` URL in:
+Controls:
 
-`localStorage.NORDICWATCH_AIS_PROXY`
+- 2 MiB maximum file size
+- 10,000 record maximum
+- strict supported-type and evidence enums
+- numeric coordinate, speed and course validation
+- NordicWatch coordinate bounds
+- nine-digit MMSI validation when supplied
+- HTTPS-only links
+- control-character removal and text-length caps
+- provenance and permitted-use fields required
+- duplicate key: type + id + timestamp
+- rejected records stored only as file name, index and error list in quarantine
+- imported text rendered through text nodes or escaping
 
-Removing that key immediately returns the UI to “AIS not configured”. This is a deployment switch, not authentication.
+## Correlation and risk
 
-## Canonical Worker response
+Distance and time windows are configurable in the layer panel. Each maritime record may correlate with hotspots, current aircraft, GNSS context, current news and other maritime records.
 
-```json
-{
-  "vessels": [{
-    "mmsi": "123456789",
-    "name": "Example",
-    "lat": 59.1,
-    "lon": 19.2,
-    "sog": 10.4,
-    "cog": 215,
-    "heading": 212,
-    "type": "cargo",
-    "timestamp": 1788336000000,
-    "quality": "provider-reported"
-  }]
+Risk is transparent:
+
+| Component | Maximum |
+|---|---:|
+| Geography/proximity | 30 |
+| Temporal relationship | 20 |
+| Independent sources | 20 |
+| Source quality | 20 |
+| Freshness | 10 |
+
+A score is an indicator, not proof of intent, attribution, sabotage or hostile activity. Independent sources are counted by declared source identity; this is not a guarantee that the sources are genuinely independent.
+
+## Map context
+
+The map contains approximate analytical representations of selected cables, pipelines, ports, fairways and watch zones. These geometries are contextual placeholders and must not be used for navigation, engineering, asset protection or precise distance claims.
+
+## Adapter interface
+
+Future sources implement `MaritimeAdapter` from `maritime-core.js`:
+
+```js
+class ApprovedAdapter extends NordicWatchMaritime.MaritimeAdapter {
+  constructor() { super("approved-source-id"); }
+  async load() {
+    // Fetch through a reviewed backend. Never expose credentials here.
+    return rawRecords;
+  }
 }
 ```
 
-## Transparent indicators
+Adapter output is not rendered directly. It must pass through `importDataset` or `normalizeRecord`, including provenance and licence validation, before merging with the application store.
 
-The client can produce:
+Before implementation, verify:
 
-- course change ≥45°
-- speed change ≥5 knots
-- low speed below 0.5 knots for at least one hour
-- revisit within 2 km after at least one hour
-- broad route-deviation indicator from recent course history
-- reporting gap longer than 30 minutes
-- proximity to an approximate cable or pipeline corridor
+1. exact provider and endpoint;
+2. redistribution/display rights;
+3. right to create derivative indicators and alerts;
+4. retention and deletion limits;
+5. commercial/beta-user rights;
+6. attribution;
+7. rate limits and cost ceiling;
+8. GDPR roles and processing geography.
 
-Risk is displayed as the sum of proximity, behaviour, duration and data-quality points. Poor freshness lowers the data-quality contribution and confidence. A score is an indicator, never proof of intent, attribution, sabotage or hostile activity.
+## Mockdata and tests
 
-## Limitations
+`mock/maritime-signals.json` contains synthetic warnings, restrictions and observations marked “Mock/test only”. It loads only when the user presses **Load mockdata**.
 
-AIS is self-reported and may be absent, delayed, incorrect, spoofed or deliberately disabled. Military and state vessels may not transmit. Coverage varies by receiver network and subscription. MMSI, name, vessel type and position require corroboration. Infrastructure geometries in the frontend are approximate analytical corridors and are not navigational or authoritative asset data.
+Run locally:
 
-## Local test plan
+```bash
+node tests/maritime-core.test.js
+```
 
-1. Keep `NORDICWATCH_AIS_PROXY` unset and confirm “AIS not configured”.
-2. Run the Worker locally with a mock upstream and a non-production key.
-3. Confirm requests from a non-allowed Origin receive HTTP 403.
-4. Confirm missing `AIS_ENABLED=1` or missing Secret receives HTTP 503.
-5. Confirm invalid or excessive bounding boxes receive HTTP 400.
-6. Feed canonical fixtures for normal transit, sharp course change, speed change, stop, revisit and stale timestamp.
-7. Verify risk-component arithmetic, confidence, tracks and deduplicated alerts.
-8. Confirm the provider key never appears in HTML, service worker, response body, logs or browser storage.
-9. Confirm existing aircraft, news, briefs, hotspots, alerts and offline shell still work.
+The test suite covers CSV quoting, JSON, GeoJSON, coordinate boundaries, file-size rejection, required licence metadata, duplicates, quarantine, correlation, transparent score components, adapter loading and unsafe-link rejection.
+
+## Future public notices
+
+Navigation warnings, restrictions and authority notices may be added only after their specific source terms permit the intended display, storage, derived analysis and alerting. A public webpage is not automatically an open data licence.

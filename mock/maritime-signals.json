@@ -1,0 +1,23 @@
+[
+  {
+    "id":"mock-navwarn-gotland-1","type":"navigation_warning","evidence":"confirmed",
+    "title":"Synthetic navigation warning near Gotland","description":"TEST DATA: temporary exclusion area used to demonstrate the complete NordicWatch flow.",
+    "lat":57.55,"lon":18.62,"timestamp":"2026-09-02T05:00:00Z","end":"2026-09-02T17:00:00Z",
+    "status":"active","tags":["mock","navigation-warning"],
+    "source":{"name":"NordicWatch mock authority feed","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/navwarn","retrievedAt":"2026-09-02T05:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-manual-bornholm-1","type":"manual_event","evidence":"observation",
+    "title":"Synthetic stationary vessel observation","description":"TEST DATA: manually verified training observation; not a real vessel or incident.",
+    "lat":55.22,"lon":14.78,"timestamp":"2026-09-02T04:30:00Z","mmsi":"999999999","speed":0.2,"course":182,
+    "tags":["mock","stationary"],
+    "source":{"name":"NordicWatch training desk","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/manual","retrievedAt":"2026-09-02T04:35:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-restriction-gulf-1","type":"restriction","evidence":"confirmed",
+    "title":"Synthetic Gulf of Finland restriction","description":"TEST DATA: restricted fairway segment for UI and correlation testing.",
+    "lat":59.73,"lon":25.63,"timestamp":"2026-09-02T03:00:00Z","end":"2026-09-03T03:00:00Z",
+    "tags":["mock","restriction"],
+    "source":{"name":"NordicWatch mock notice service","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/restriction","retrievedAt":"2026-09-02T03:05:00Z","allowedUse":"test","quality":"mock"}
+  }
+]
