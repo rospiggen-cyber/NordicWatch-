@@ -1,0 +1,15 @@
+import assert from "node:assert/strict";
+import {runDiscovery} from "../cloudflare/event-feed-worker.js";
+
+class KV{constructor(){this.data=new Map()}async list({prefix}){return{keys:[...this.data.keys()].filter(x=>x.startsWith(prefix)).map(name=>({name})),list_complete:true}}async get(key,type){const value=this.data.get(key);return type==="json"&&value?JSON.parse(value):value}async put(key,value){this.data.set(key,value)}}
+const kv=new KV(),calls=[];
+const feed=(host,id)=>`<rss><item><title>Exercise Arctic Shield deploys Typhon to Trondheim</title><description>Mk 70 long-range fires deployment with C-17 airlift.</description><link>https://${host}/news/${id}/official</link><pubDate>Wed, 02 Sep 2026 10:00:00 GMT</pubDate></item></rss>`;
+const originalFetch=globalThis.fetch;
+globalThis.fetch=async(url,options={})=>{url=String(url);calls.push({url,options});if(url.includes("adsb.example"))return{ok:true,json:async()=>({ac:[{lat:63.43,lon:10.4,hex:"abc123",flight:"RCH123",t:"C17"}]})};if(url.includes("push.example"))return{ok:true};const dvids=url.includes("dvidshub");return{ok:true,status:200,url:dvids?"https://www.dvidshub.net/rss/news":"https://www.nato.int/rss/news.xml",headers:new Headers(),text:async()=>feed(dvids?"www.dvidshub.net":"www.nato.int",dvids?1:2)}};
+try{
+ const env={EVENTS:kv,APP_ORIGIN:"https://example.github.io",SOURCE_URLS:"",ADSB_ENDPOINT:"https://adsb.example/mil",EVENT_ALERT_THRESHOLD:"75",ALERT_WEBHOOK_URL:"https://push.example/event",ALERT_WEBHOOK_TOKEN:"secret"};
+ const first=await runDiscovery(env,Date.parse("2026-09-02T12:00:00Z"));assert.equal(first.events,1,"repeat official coverage must store one underlying event");assert.equal(first.alerts,1);const record=await kv.get([...kv.data.keys()].find(x=>x.startsWith("event:")),"json");assert.equal(record.confidence,"CONFIRMED");assert.equal(record.evidence.observed[0].evidence,"OBSERVED");assert.match(record.discovery.scoreExplanation,/related military airlift observed/);assert.equal(record.discovery.temporaryWatchZone,true);
+ const pushesAfterFirst=calls.filter(x=>x.url.includes("push.example")).length;await runDiscovery(env,Date.parse("2026-09-02T12:15:00Z"));assert.equal(calls.filter(x=>x.url.includes("push.example")).length,pushesAfterFirst,"unchanged discovery must not alert twice");
+ const blocked=await runDiscovery({...env,EVENTS:new KV(),EVENT_ALERT_THRESHOLD:"100"},Date.parse("2026-09-02T12:00:00Z"));assert.equal(blocked.alerts,0,"a score equal to, not above, the threshold must not alert");
+}finally{globalThis.fetch=originalFetch}
+console.log("event discovery worker tests passed");

@@ -4,7 +4,17 @@ compatibility_date = "2026-09-02"
 
 [vars]
 APP_ORIGIN = "https://YOUR_GITHUB_USER.github.io"
+EVENT_ALERT_THRESHOLD = "75"
+# Comma-separated approved official RSS/Atom endpoints; other hosts are rejected.
+SOURCE_URLS = ""
+# Optional public ADS-B JSON endpoint used for event/airlift correlation.
+ADSB_ENDPOINT = ""
+# Optional HTTPS receiver that delivers authenticated event push payloads.
+ALERT_WEBHOOK_URL = ""
 
 [[kv_namespaces]]
 binding = "EVENTS"
 id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["*/15 * * * *"]

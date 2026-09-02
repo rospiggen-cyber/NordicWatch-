@@ -1,36 +1,18 @@
-const OFFICIAL_SOURCES = Object.freeze([
-  { id: "nato", name: "NATO", hosts: ["nato.int"] },
-  { id: "se", name: "Swedish Armed Forces", hosts: ["forsvarsmakten.se"] },
-  { id: "fi", name: "Finnish Defence Forces", hosts: ["puolustusvoimat.fi"] },
-  { id: "ee", name: "Estonian Defence Forces", hosts: ["mil.ee"] },
-  { id: "lv", name: "Latvian National Armed Forces / Ministry of Defence", hosts: ["mil.lv", "mod.gov.lv"] },
-  { id: "lt", name: "Lithuanian Armed Forces", hosts: ["kariuomene.lt"] },
-  { id: "no", name: "Norwegian Armed Forces", hosts: ["forsvaret.no"] },
-  { id: "pl", name: "Polish Ministry of National Defence", hosts: ["gov.pl"] },
-  { id: "jef", name: "Joint Expeditionary Force", hosts: ["joint-expeditionary-force.com", "gov.uk"] }
-]);
-const TYPES = new Set(["military_exercise","deployment","air_policing_activity","readiness_increase","drone_incident","border_incident","naval_exercise","official_defence_announcement"]);
-const clean = (value, max = 1000) => String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
-const cors = origin => ({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=300","x-content-type-options":"nosniff"});
-const safeOfficialUrl = value => { try { const u = new URL(String(value)); return u.protocol === "https:" && OFFICIAL_SOURCES.some(s => s.hosts.some(h => u.hostname === h || u.hostname.endsWith("." + h))) ? u.href : null; } catch { return null; } };
-function normalize(raw) {
-  const sourceUrl=safeOfficialUrl(raw?.sourceUrl),start=new Date(raw?.startTime),end=new Date(raw?.endTime),latitude=Number(raw?.latitude),longitude=Number(raw?.longitude),radiusKm=Number(raw?.radiusKm),eventType=clean(raw?.eventType,60).toLowerCase();
-  if(!clean(raw?.id,120)||!clean(raw?.title,200)||!TYPES.has(eventType)||!sourceUrl||Number.isNaN(+start)||Number.isNaN(+end)||end<start||!Number.isFinite(latitude)||!Number.isFinite(longitude)||!Number.isFinite(radiusKm))return null;
-  return {id:clean(raw.id,120),title:clean(raw.title,200),eventType,startTime:start.toISOString(),endTime:end.toISOString(),latitude,longitude,radiusKm:Math.max(1,Math.min(1000,radiusKm)),areaName:clean(raw.areaName,120),countries:(Array.isArray(raw.countries)?raw.countries:[]).map(x=>clean(x,80)).slice(0,30),organisations:(Array.isArray(raw.organisations)?raw.organisations:[]).map(x=>clean(x,80)).slice(0,30),description:clean(raw.description,1200),sourceUrl,sourceName:clean(raw.sourceName,120),confidence:"CONFIRMED",severity:clean(raw.severity,30)||"INFO",expectedActivity:(Array.isArray(raw.expectedActivity)?raw.expectedActivity:[]).map(x=>clean(x,40)).slice(0,20),participants:Number.isFinite(+raw.participants)?Math.max(0,Math.round(+raw.participants)):null,updatedAt:new Date(raw.updatedAt||Date.now()).toISOString()};
+import {OFFICIAL_SOURCES,configuredSources,parseFeed,discover,mergeEvents,correlateAircraft,noveltyScore,regionalPostures,officialSource,clean} from "./event-discovery-core.mjs";
+const cors=origin=>({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=300","x-content-type-options":"nosniff"});
+const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","x-content-type-options":"nosniff",...headers}});
+async function kvEvents(env){if(!env.EVENTS)return[];let cursor,rows=[];do{const page=await env.EVENTS.list({prefix:"event:",limit:1000,cursor});rows.push(...await Promise.all(page.keys.map(k=>env.EVENTS.get(k.name,"json"))));cursor=page.list_complete?undefined:page.cursor}while(cursor);return rows.filter(Boolean)}
+async function aircraft(env){if(!env.ADSB_ENDPOINT)return[];try{const u=new URL(env.ADSB_ENDPOINT);if(u.protocol!=="https:")return[];const r=await fetch(u,{headers:{accept:"application/json"},cf:{cacheTtl:0}});if(!r.ok)return[];const body=await r.json();return Array.isArray(body.ac)?body.ac:Array.isArray(body.aircraft)?body.aircraft:[]}catch{return[]}}
+async function fetchSource(item){const response=await fetch(item.url,{headers:{accept:"application/rss+xml, application/atom+xml, application/xml, text/xml;q=.9","user-agent":"NordicWatch-EventDiscovery/1.0"},redirect:"follow",cf:{cacheTtl:300,cacheEverything:true}});if(!response.ok||!officialSource(response.url))throw new Error(`source_${item.source.id}_${response.status}`);const length=Number(response.headers.get("content-length")||0);if(length>2_000_000)throw new Error(`source_${item.source.id}_too_large`);return parseFeed(await response.text(),response.url)}
+async function notify(env,alert){if(!env.ALERT_WEBHOOK_URL||!env.ALERT_WEBHOOK_TOKEN)return false;const url=new URL(env.ALERT_WEBHOOK_URL);if(url.protocol!=="https:")return false;const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${env.ALERT_WEBHOOK_TOKEN}`},body:JSON.stringify({kind:"EVENT_DISCOVERY",title:`NordicWatch Alert — ${alert.event.title}`,body:alert.explanation,tag:`nw-discovery-${alert.event.id}`,url:alert.event.sourceUrl,score:alert.score})});return response.ok}
+export async function runDiscovery(env,now=Date.now()){
+ if(!env.EVENTS)throw new Error("EVENTS binding required");const prior=await kvEvents(env),sources=configuredSources(env.SOURCE_URLS),articles=[],failures=[];
+ for(const item of sources){try{articles.push(...await fetchSource(item))}catch(error){failures.push({source:item.source.id,error:clean(error.message,120)})}}
+ const found=mergeEvents(articles.map(x=>discover(x,now))),planes=await aircraft(env),all=[...found,...regionalPostures(found)],stored=[],alerts=[];
+ for(const event of all){const correlation=correlateAircraft(event,planes),relatedLocations=event.discovery?.memberIds?.length||1,novelty=noveltyScore(event,prior,correlation,relatedLocations),record={...event,evidence:{...event.evidence,observed:correlation.observed,inferred:[...(event.evidence.inferred||[]),{text:correlation.reason}]},discovery:{...event.discovery,score:novelty.score,scoreReasons:novelty.reasons,scoreExplanation:novelty.explanation,lastPolledAt:new Date(now).toISOString()}};const existing=prior.find(x=>x.id===record.id),changed=!existing||JSON.stringify(existing.discovery?.scoreReasons)!==JSON.stringify(record.discovery.scoreReasons);await env.EVENTS.put(`event:${record.id}`,JSON.stringify(record),{expirationTtl:Math.max(86400,Math.ceil((+new Date(record.endTime)-now)/1000)+7*86400)});stored.push(record);const threshold=Math.max(0,Math.min(100,Number(env.EVENT_ALERT_THRESHOLD)||75));if(changed&&novelty.score>threshold){const alert={event:record,score:novelty.score,explanation:novelty.explanation};if(await notify(env,alert))alerts.push(alert)}}
+ await env.EVENTS.put("discovery:last-run",JSON.stringify({at:new Date(now).toISOString(),sources:sources.length,articles:articles.length,events:stored.length,alerts:alerts.length,failures}),{expirationTtl:7*86400});return {sources:sources.length,articles:articles.length,events:stored.length,alerts:alerts.length,failures}
 }
-async function readEvents(env) {
-  if(!env.EVENTS)return [];
-  const listing=await env.EVENTS.list({prefix:"event:",limit:1000});
-  const rows=await Promise.all(listing.keys.map(k=>env.EVENTS.get(k.name,"json")));
-  const events=[],ids=new Set(),urls=new Set();
-  for(const row of rows){const event=normalize(row);if(!event||ids.has(event.id)||urls.has(event.sourceUrl))continue;ids.add(event.id);urls.add(event.sourceUrl);events.push(event)}
-  return events;
-}
-export default { async fetch(request,env) {
-  const url=new URL(request.url),allowed=clean(env.APP_ORIGIN,300),origin=request.headers.get("Origin")||"";
-  if(origin&&origin!==allowed)return new Response(JSON.stringify({error:"origin_not_allowed"}),{status:403,headers:cors(allowed)});
-  if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{...cors(allowed),"access-control-allow-methods":"GET, OPTIONS"}});
-  if(request.method!=="GET"||url.pathname!=="/events")return new Response(JSON.stringify({error:"not_found"}),{status:404,headers:cors(allowed)});
-  try{return new Response(JSON.stringify({schemaVersion:"0.8",generatedAt:new Date().toISOString(),events:await readEvents(env),sources:OFFICIAL_SOURCES.map(({id,name})=>({id,name}))}),{headers:cors(allowed)})}
-  catch{return new Response(JSON.stringify({schemaVersion:"0.8",generatedAt:new Date().toISOString(),events:[],degraded:true}),{status:200,headers:cors(allowed)})}
-}};
+export default {
+ async fetch(request,env){const url=new URL(request.url),allowed=clean(env.APP_ORIGIN,300),origin=request.headers.get("Origin")||"";if(origin&&origin!==allowed)return json({error:"origin_not_allowed"},403,cors(allowed));if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{...cors(allowed),"access-control-allow-methods":"GET, OPTIONS"}});if(request.method!=="GET")return json({error:"method_not_allowed"},405,cors(allowed));if(url.pathname==="/health")return json({ok:true,discovery:true,sources:OFFICIAL_SOURCES.map(x=>({id:x.id,name:x.name}))},200,cors(allowed));if(url.pathname==="/events"){try{return json({schemaVersion:"0.9",generatedAt:new Date().toISOString(),events:mergeEvents(await kvEvents(env)),sources:OFFICIAL_SOURCES.map(({id,name})=>({id,name}))},200,cors(allowed))}catch{return json({schemaVersion:"0.9",generatedAt:new Date().toISOString(),events:[],degraded:true},200,cors(allowed))}}return json({error:"not_found"},404,cors(allowed))},
+ async scheduled(_event,env,ctx){ctx.waitUntil(runDiscovery(env))}
+};

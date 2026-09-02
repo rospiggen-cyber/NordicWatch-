@@ -8,6 +8,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - public ADS-B feed with evidence-based military and government classification
 - Swedish Coast Guard Q-300 track history and persistent-loiter observations
 - confirmed military Event Engine with geographic and expected-activity context
+- scheduled official-source Event Discovery with dynamic watch zones, ADS-B correlation and novelty scoring
 - persistent, bounded aircraft trails with 15-minute to 3-hour display windows
 - geometry-based route-pattern assessment and mission-role correlation
 - Nordic–Baltic GDELT security and defence reporting

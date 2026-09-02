@@ -13,3 +13,19 @@ Evidence is deliberately separate:
 - `INFERRED`: an Event Engine comparison or deviation.
 
 Expected allied activity can lower an anomaly score, but never hides a contradictory deviation. Russian ISR close to an active NATO/JEF event creates an inferred high-interest deviation while retaining the underlying observed and confirmed evidence records.
+
+## Scheduled Event Discovery
+
+`cloudflare/event-feed-worker.js` now has a scheduled discovery pass. The example Wrangler configuration runs every 15 minutes. It polls only HTTPS endpoints whose hostname belongs to the approved registry: the existing Nordic, Baltic, NATO and JEF sources plus DVIDS, Defense.gov, Navy.mil, Marines.mil, AF.mil and Army.mil. DVIDS provides a built-in official RSS endpoint; additional official RSS/Atom URLs are configured with `SOURCE_URLS`. A URL outside the registry is rejected even if supplied through configuration.
+
+The worker extracts locations, named exercises, units, aircraft, ships, weapon systems, deployment/logistics terms, readiness changes and live-fire language. Its local Nordic geocoder creates temporary watch zones without an API key. Relevant records are converted to `EVENT`, deduplicated by source URL and underlying-event similarity, correlated with an optional public ADS-B endpoint, novelty-scored, and stored as `event:<id>` in `EVENTS` KV. Same-exercise activity at multiple locations creates a regional posture record without inferring a common actor beyond the official exercise relationship.
+
+Configure `EVENT_ALERT_THRESHOLD` (default 75). Alerts below the threshold are never sent. Above-threshold alerts are posted to the optional authenticated `ALERT_WEBHOOK_URL`; set `ALERT_WEBHOOK_TOKEN` with `wrangler secret put ALERT_WEBHOOK_TOKEN`. The payload includes the score and a human-readable explanation such as `CONFIRMED official source + strategic weapon + new location + related military airlift observed`. If the webhook is not configured, discovery and KV storage continue without push delivery.
+
+Evidence remains separate in every discovered event:
+
+- `CONFIRMED`: title/source facts from an allowlisted official publication.
+- `OBSERVED`: matching ADS-B records within the temporary watch zone.
+- `INFERRED`: correlation, novelty and regional-posture interpretations.
+
+Social media is not in the confirmation allowlist. A future lead adapter may retain a social lead separately, but it must never emit `confidence: CONFIRMED` or write it as an official EVENT.
