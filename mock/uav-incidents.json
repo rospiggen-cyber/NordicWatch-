@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0",
+  "incidents": [
+    {
+      "id": "fi-pellinge-uav-2026-09-02",
+      "incidentType": "UAV_RECOVERED",
+      "timestamp": "2026-09-02T12:00:00Z",
+      "timePrecision": "DATE",
+      "position": {"latitude": 60.235, "longitude": 25.87},
+      "region": "Gulf of Finland",
+      "country": "Finland",
+      "sourceUrl": "https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b",
+      "sourceName": "STT report citing Finnish Ministry of Defence and Border Guard",
+      "sourceType": "SECONDARY_OFFICIAL_REPORT",
+      "aircraftType": "Fixed-wing UAV",
+      "estimatedSize": "Several metres",
+      "possibleFunctions": ["mapping", "surveillance"],
+      "explosivePayload": "NO",
+      "origin": "UNKNOWN",
+      "attribution": {"status": "NONE", "actor": null, "confidence": "UNKNOWN"},
+      "findingConfidence": "HIGH",
+      "originConfidence": "UNKNOWN",
+      "incidentStatus": "RECOVERED_PLATFORM",
+      "territorialViolation": "UNDER_INVESTIGATION",
+      "roleConfirmation": "ASSESSED",
+      "hostileIntent": "UNKNOWN",
+      "investigationStatus": "Finnish Border Guard and Police investigation; possible territorial violation under investigation",
+      "summary": "Fixed-wing UAV recovered near Porvoo/Pellinge, Finland. Preliminary assessment indicates mapping or surveillance use. No explosive payload reported. Origin and operator remain unknown. Possible territorial violation under investigation.",
+      "evidence": {
+        "observed": "Physical fixed-wing UAV recovered; several metres in size; authorities reported no explosive payload.",
+        "assessed": "Preliminary mapping or surveillance function; exact role remains under investigation."
+      }
+    }
+  ]
+}

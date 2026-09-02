@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.9.2</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.9.3</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -36,6 +36,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.cat-civilian{color:#aab5c5}.cat-state{color:#55d187}.cat-unknown{color:#6f7c91}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}.maritime-tools{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.maritime-tools button{padding:5px 7px;font-size:9px;margin-right:3px}.maritime-tools input[type=number]{width:54px;background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px}.signal-observation{color:var(--accent)}.signal-indicator{color:var(--warn)}.signal-confirmed{color:var(--ok)}
 .coast-track{stroke-dasharray:3 5}.coast-marker{font-size:21px;color:#55d187;text-shadow:0 0 5px #000}.coast-observation{border-left:3px solid var(--accent);padding-left:8px}
 .event-marker{font-size:22px;line-height:22px;color:#ff9f43;text-shadow:0 0 6px #000}.event-area{stroke-dasharray:7 5}.event-signal{border-left:3px solid #ff9f43;padding-left:8px}.event-pref{font-size:9px;color:var(--muted);display:flex!important;align-items:center;gap:4px}
+.uav-marker{font-size:23px;line-height:23px;color:#ff6b6b;text-shadow:0 0 7px #000}.uav-signal{border-left:3px solid #ff6b6b;padding-left:8px}.uav-pattern{stroke-dasharray:4 6}
 .trail-label{font-size:9px;font-weight:800;letter-spacing:.4px;color:#edf4ff;background:rgba(7,16,28,.82);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:2px 4px;white-space:nowrap}.trail-controls{display:flex;align-items:center;gap:5px;margin:5px 0;color:var(--muted)}.trail-controls select{background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px;font-size:10px}
 /* Every Leaflet popup uses one bounded, touch-scrollable content viewport. */
 .leaflet-popup-pane{z-index:750}.leaflet-popup{max-width:calc(100vw - 24px)}.leaflet-popup-content-wrapper{max-width:min(420px,calc(100vw - 24px));overflow:hidden}.leaflet-popup-content{width:auto!important;max-width:calc(100vw - 64px);max-height:min(70vh,calc(100dvh - 160px));margin:14px 12px 12px 18px;padding:30px 8px 4px 0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}.leaflet-container a.leaflet-popup-close-button{position:absolute;z-index:10;top:0;right:0;width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:0 12px 0 10px;background:rgba(255,255,255,.94);font-size:26px;line-height:1;color:#26384d}.leaflet-container a.leaflet-popup-close-button:hover,.leaflet-container a.leaflet-popup-close-button:focus{background:#fff;color:#07101c}
@@ -47,7 +48,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.2</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.3</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
@@ -56,6 +57,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <label><input type="checkbox" data-l="trails" checked> Aircraft trails</label>
 <label><input type="checkbox" id="patternLabels"> Pattern labels</label><div class="trail-controls">Trail window <select id="trailWindow"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 h</option><option value="180">3 h</option></select></div>
 <label><input type="checkbox" data-l="events" checked> Events / Exercises ◉</label>
+<label><input type="checkbox" data-l="uav" checked> UAV incidents ◇</label>
 <label><input type="checkbox" data-l="behavior" checked> Coast Guard behavior ⟳</label>
 <label><input type="checkbox" data-l="vessels" checked> Maritime signals ◈</label>
 <label><input type="checkbox" data-l="infra" checked> Infrastructure</label>
@@ -71,7 +73,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.2</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.3</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
 <script src="coast-guard-analysis.js"></script>
@@ -79,6 +81,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <script src="maritime-core.js"></script>
 <script src="event-engine.js"></script>
 <script src="route-pattern.js"></script>
+<script src="uav-incidents.js"></script>
 <script>
 const D={
 hotspots:[
@@ -111,6 +114,7 @@ hotspots:[
 ["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
 ["Norwegian energy zone",61,3,44,"Critical offshore infrastructure","Major offshore oil and gas infrastructure linking Norway to European energy supply.","Unusual ISR or maritime patrol activity · GNSS anomalies · restricted zones · offshore incidents","HIGH"]],
 changes:[
+["Recovered UAV incidents","Physical UAV recoveries remain OBSERVED, preliminary functions remain ASSESSED, and actor attribution is shown only when explicitly confirmed."],
 ["Aircraft trails and route patterns","Persistent ADS-B trails add geometry-based TRANSIT, ORBIT, RACETRACK, LOITER, REPEATED PASS and HOLDING assessments without changing observed evidence."],
 ["Confirmed Event Engine","Official military events add geographic and expected-activity context without replacing direct observations or automatic assessments."],
 ["Coast Guard behavior analysis","Swedish Coast Guard Q-300 aircraft are classified as government traffic. Persistent loiter is recorded separately from confirmed operations and does not raise Activity without duration or supporting signals."],
@@ -123,8 +127,8 @@ changes:[
 ["Other layers remain demo","Hotspots, infrastructure and GNSS are still analysis/demo layers."]]};
 const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({position:"bottomright"}).addTo(map);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
-const G={hotspots:L.layerGroup().addTo(map),trails:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),events:L.layerGroup().addTo(map),behavior:L.layerGroup().addTo(map),vessels:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
-function c(lat,lon,r,col,p,g){L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
+const G={hotspots:L.layerGroup().addTo(map),trails:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),events:L.layerGroup().addTo(map),uav:L.layerGroup().addTo(map),behavior:L.layerGroup().addTo(map),vessels:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
+function c(lat,lon,r,col,p,g){return L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
  
   
 D.hotspots.forEach(h=>{
@@ -137,7 +141,7 @@ D.hotspots.forEach(h=>{
   if(h[6]) p+="<br><br><b>Watch for</b><br>"+h[6];
   if(h[7]) p+="<br><br><b>Confidence:</b> "+h[7];
 
-  c(h[1],h[2],45000+h[3]*650,col,p,"hotspots");
+  h._layer=c(h[1],h[2],45000+h[3]*650,col,p,"hotspots");
 });
 
 
@@ -171,6 +175,9 @@ if(!EE)throw new Error("NordicWatch Event Engine unavailable");
 let allEvents=[],activeEvents=[],eventAssessments=[];
 const RP=window.NordicWatchRoutes;
 if(!RP)throw new Error("NordicWatch route pattern engine unavailable");
+const UI=window.NordicWatchUAV;
+if(!UI)throw new Error("NordicWatch UAV incident engine unavailable");
+let uavIncidents=[],uavPatterns=[];
 const aircraftClass=a=>AC.classifyAircraft(a);
 const isMilitaryAircraft=a=>AC.isMilitaryActivity(aircraftClass(a));
 const classify=a=>{const r=aircraftClass(a);return r.role?r.role.toLowerCase():null};
@@ -435,12 +442,11 @@ function renderAircraft(){
    L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(aircraftPopup(a,analysis)).addTo(G.military);
  });
  document.getElementById("adsbStatus").textContent=summary.military+" military · "+summary.nonMilitary+" civilian/state/unknown";
- eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));
- const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0));
- document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation));
+ updateActivityScore(summary);
  if(allEvents.length)renderEvents();
  scheduleTrailRender();
 }
+function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0));document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation+uavActivityContribution()))}
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS";
 const eventWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
@@ -480,6 +486,27 @@ async function initEventEngine(){
  let previous=[];try{previous=JSON.parse(localStorage.getItem(EVENT_SNAPSHOT_KEY)||"[]")}catch{}const changes=EE.diffEvents(previous,allEvents);localStorage.setItem(EVENT_SNAPSHOT_KEY,JSON.stringify(allEvents.map(e=>({...e,snapshotStatus:EE.statusAt(e)}))));
  status.textContent=`${activeEvents.length} active${degraded?" · seed fallback":" · official feed"}`;renderEvents();renderEventChanges(changes);await notifyEventStarts(changes)
 }
+
+const UAV_SNAPSHOT_KEY="NORDICWATCH_UAV_SNAPSHOT",UAV_ALERT_SEEN_KEY="NORDICWATCH_UAV_ALERT_SEEN";
+function uavActivityContribution(){return Math.min(25,Math.round(uavIncidents.reduce((sum,x)=>sum+UI.riskScore(x).score,0)*.35))}
+function uavSourceLink(incident){const source=safeHttpUrl(incident.sourceUrl);return source?`<a href="${esc(source)}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">${esc(incident.sourceName||new URL(source).hostname)}</a>`:"Unavailable"}
+function uavPopup(incident){
+ const risk=UI.riskScore(incident),functions=incident.possibleFunctions.join(" / ")||"unknown",attribution=incident.attribution.status==="ATTRIBUTED"?incident.attribution.actor:"none";
+ return `<b>RECOVERED UAV — ${esc(incident.region.toUpperCase())}</b><br><span class="signal-observation">OBSERVED · ${esc(incident.findingConfidence)} CONFIDENCE</span><br>${esc(incident.summary)}<br><br><b>Position</b>: ${incident.position.latitude.toFixed(3)}, ${incident.position.longitude.toFixed(3)}<br><b>Time</b>: ${incident.timePrecision==="DATE"?esc(new Date(incident.timestamp).toLocaleDateString([], {dateStyle:"medium"}))+" · exact time unavailable":esc(eventTime(incident.timestamp))}<br><b>Country</b>: ${esc(incident.country)}<br><b>Platform</b>: ${esc(incident.aircraftType)} · ${esc(incident.estimatedSize)}<br><b>Explosive payload</b>: ${esc(incident.explosivePayload)}<br><b>Origin</b>: ${esc(incident.origin)} · confidence ${esc(incident.originConfidence)}<br><b>Attribution</b>: ${esc(attribution)}<br><b>Investigation</b>: ${esc(incident.investigationStatus)}<br><b>Possible territorial violation</b>: ${esc(incident.territorialViolation)}<br><b>Incident risk</b>: ${risk.score}<br><b>Source</b>: ${uavSourceLink(incident)}<br><br><span class="signal-indicator">ASSESSED</span><br>Preliminary function: ${esc(functions)}. ${esc(incident.evidence.assessed)}<br><br><span class="meta">ATTRIBUTED</span><br>${esc(incident.evidence.attributed)}`
+}
+function renderUAVIncidents(){
+ G.uav.clearLayers();
+ for(const incident of uavIncidents){const icon=L.divIcon({className:"",html:'<div class="uav-marker">◇</div>',iconSize:[26,26],iconAnchor:[13,13]});const marker=L.marker([incident.position.latitude,incident.position.longitude],{icon,title:`Recovered UAV — ${incident.region}`}).bindPopup(uavPopup(incident)).addTo(G.uav);if(new URLSearchParams(location.search).get("uav")===incident.id)setTimeout(()=>{map.setView([incident.position.latitude,incident.position.longitude],8);marker.openPopup()},100)}
+ for(const pattern of uavPatterns){const members=pattern.incidentIds.map(id=>uavIncidents.find(x=>x.id===id)).filter(Boolean);if(!members.length)continue;const centre=members[0].position;const popup=`<b>${esc(pattern.title)}</b><br><span class="signal-indicator">ASSESSED</span><br>${pattern.count} UAV incidents within 7 days / ${pattern.radiusKm} km<br>Period: ${esc(eventTime(pattern.startTime))} – ${esc(eventTime(pattern.endTime))}<br>Area: ${esc(pattern.region)}<br>Confidence: ${pattern.confidence}%<br>Included observations: ${esc(pattern.incidentIds.join(", "))}<br>${esc(pattern.operatorAssessment)}`;L.circle([centre.latitude,centre.longitude],{radius:pattern.radiusKm*1000,color:"#ff6b6b",weight:1.5,fillOpacity:.025,className:"uav-pattern"}).bindPopup(popup).addTo(G.uav)}
+ renderUAVSignals();renderHotspots()
+}
+function renderUAVSignals(){const box=document.getElementById("signals");box.querySelectorAll(".uav-signal").forEach(x=>x.remove());for(const incident of uavIncidents){const row=document.createElement("div");row.className="signal uav-signal";row.innerHTML=`<div class="meta">OBSERVED · ${esc(incident.findingConfidence)} CONFIDENCE</div><div class="title">Recovered UAV — ${esc(incident.region)}</div><div class="desc">${esc(incident.aircraftType)} · origin unknown · attribution none · risk ${UI.riskScore(incident).score}. ASSESSED role: ${esc(incident.possibleFunctions.join(" / ")||"unknown")}.</div>`;box.prepend(row)}for(const pattern of uavPatterns){const row=document.createElement("div");row.className="signal uav-signal";row.innerHTML=`<div class="meta">ASSESSED · ${pattern.confidence}% CONFIDENCE</div><div class="title">${esc(pattern.title)}</div><div class="desc">${pattern.count} incidents · ${esc(pattern.region)} · no common operator inferred.</div>`;box.prepend(row)}}
+function renderUAVChanges(previousIds=[]){const box=document.getElementById("changes");box.querySelectorAll(".uav-change").forEach(x=>x.remove());for(const incident of uavIncidents.filter(x=>!previousIds.includes(x.id))){const row=document.createElement("div");row.className="change uav-change";row.innerHTML=`<b>Recovered UAV recorded in ${esc(incident.region)}.</b><br><span>OBSERVED physical recovery · origin unknown · attribution none · investigation ongoing.</span>`;box.prepend(row)}}
+async function notifyUAVIncidents(){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(UAV_ALERT_SEEN_KEY)||"{}")||{}}catch{}for(const incident of uavIncidents.filter(x=>UI.riskScore(x).score>=35)){if(seen[incident.id])continue;seen[incident.id]=Date.now();const options={body:`A fixed-wing UAV has been recovered near Porvoo, Finland. Origin unknown. Authorities are investigating a possible territorial violation.`,tag:`nw-uav-${incident.id}`,data:{url:new URL(`?uav=${encodeURIComponent(incident.id)}`,location.href).href},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options);else new Notification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options)}catch(e){console.warn("uav notification",e)}}localStorage.setItem(UAV_ALERT_SEEN_KEY,JSON.stringify(seen))}
+async function initUAVIncidents(){try{const data=await fetchJSON("mock/uav-incidents.json",5000),imported=UI.importIncidents(data.incidents||[]);uavIncidents=imported.incidents;uavPatterns=UI.detectPatterns(uavIncidents);let previous=[];try{previous=JSON.parse(localStorage.getItem(UAV_SNAPSHOT_KEY)||"[]")}catch{}renderUAVIncidents();renderUAVChanges(previous);localStorage.setItem(UAV_SNAPSHOT_KEY,JSON.stringify(uavIncidents.map(x=>x.id)));updateActivityScore();await notifyUAVIncidents()}catch(e){console.warn("uav incident feed unavailable; app remains operational",e)}}
+function hotspotScore(h){return Math.min(99,h[3]+UI.hotspotImpact(uavIncidents,{latitude:h[1],longitude:h[2]}).scoreDelta)}
+function hotspotPopup(h,score){let p=`<b>${esc(h[0])}</b><br>Activity score: ${score}<br>${esc(h[4])}`;if(h[5])p+=`<br><br><b>Why it matters</b><br>${esc(h[5])}`;if(h[6])p+=`<br><br><b>Watch for</b><br>${esc(h[6])}`;if(h[7])p+=`<br><br><b>Confidence:</b> ${esc(h[7])}`;const impact=UI.hotspotImpact(uavIncidents,{latitude:h[1],longitude:h[2]});if(impact.linked.length)p+=`<br><br><b>UAV context</b><br>${impact.linked.length} deduplicated physical incident · +${impact.scoreDelta} hotspot score`;return p}
+function renderHotspots(){document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>hotspotScore(b)-hotspotScore(a)).map(h=>{const score=hotspotScore(h);if(h._layer)h._layer.setPopupContent(hotspotPopup(h,score));return `<div class="hot"><div><b>${esc(h[0])}</b><small>${esc(h[4])}</small></div><div class="n ${score>=70?"hi":score>=50?"med":"lo"}">${score}</div></div>`}).join("")}
 
 async function fetchJSON(url,timeout=9000){
  const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout);
@@ -673,7 +700,7 @@ function generateBrief(kind){
  const rankedNews=currentArticles.slice().sort((a,b)=>b.risk.score-a.risk.score);
  const topNews=rankedNews[0]||null;
  const level=total>=12||(topNews&&topNews.risk.score>=80)?"ELEVATED":total>=5||(topNews&&topNews.risk.score>=60)?"WATCH":"ROUTINE";
- const score=Math.min(99,Math.round(20+Math.min(35,total*3)+(topNews?topNews.risk.score*.35:0)+Math.min(10,anomalies.length*4)));
+ const score=Math.min(99,Math.round(20+Math.min(35,total*3)+(topNews?topNews.risk.score*.35:0)+Math.min(10,anomalies.length*4)+uavActivityContribution()));
  const coverage=(rawAircraft.length?1:0)+(currentArticles.length?1:0)+(maritimeRecords.length?1:0);
  const confidence=coverage>=3&&baseline.length>=4?"MEDIUM":coverage>=2?"LOW–MEDIUM":"LOW";
  const content=document.getElementById("briefContent");content.replaceChildren();
@@ -686,13 +713,14 @@ function generateBrief(kind){
  content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>x[1]+" "+categoryLabel(x[0])).join(" · ")+"."));
  content.append(briefItem("obs","Civilian / state / unknown traffic",aircraftNow.nonMilitary+" civilian/unknown aircraft ("+aircraftNow.base.CIVILIAN+" civilian · "+aircraftNow.base.STATE+" state · "+aircraftNow.base.UNKNOWN+" unknown). These do not affect military activity."));
  if(coastGuardObservations.length){const cg=coastGuardObservations[0];content.append(briefItem("obs",cg.title,`${cg.location} · ${durationText(cg.durationMs)} · ${cg.turns} turns · cause ${cg.cause}. AUTOMATIC INTERPRETATION; ${cg.evidence.operation}. ${cg.operationalWarning?"Operational-warning threshold met.":"No immediate operational warning; Activity is unchanged."}`))}
+ if(uavIncidents.length){const incident=uavIncidents[0];content.append(briefItem("obs",`Recovered UAV — ${incident.region}`,`${incident.aircraftType}, ${incident.estimatedSize}; no explosive payload reported. Origin unknown, attribution none. Investigation: ${incident.investigationStatus}. Risk ${UI.riskScore(incident).score}.`,{label:"Open incident",run:()=>{map.flyTo([incident.position.latitude,incident.position.longitude],8);document.getElementById("briefDrawer").classList.remove("show")}}));content.append(briefItem("infer","Preliminary UAV role assessment",`${incident.possibleFunctions.join(" / ")||"Unknown function"}. This assessment does not establish origin, operator or hostile intent.`))}
  if(maritimeEvents.length){const me=maritimeEvents[0],mr=me.record;content.append(briefItem(mr.evidence==="confirmed"?"external":mr.evidence==="indicator"?"infer":"obs","Maritime signal · risk "+me.risk.total,mr.title+" · "+evidenceLabel(mr.evidence)+" · confidence "+me.risk.confidence+". Source: "+mr.source.name+"; licence: "+mr.source.license+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
  if(topNews){
   const place=topNews.risk.places[0]&&topNews.risk.places[0].name;
   content.append(briefItem("external",topNews.title,(topNews.domain||"External source")+" · risk "+topNews.risk.score+(place?" · "+place:""),{label:"Open report",run:()=>window.open(topNews.url,"_blank","noopener,noreferrer")}));
  }else content.append(briefItem("external","No current matching report","The news feed has not returned a usable current article."));
- const strongest=D.hotspots.slice().sort((a,b)=>b[3]-a[3])[0];
- content.append(briefItem("infer","Highest configured watch area",strongest[0]+" has the highest static watch score ("+strongest[3]+"). This is analytical context, not proof of a current event.",{label:"Open area",run:()=>briefFocus(strongest[0])}));
+ const strongest=D.hotspots.slice().sort((a,b)=>hotspotScore(b)-hotspotScore(a))[0];
+ content.append(briefItem("infer","Highest configured watch area",strongest[0]+" has the highest current watch score ("+hotspotScore(strongest)+"). This is analytical context, not proof of attribution or hostile intent.",{label:"Open area",run:()=>briefFocus(strongest[0])}));
  addSection("New baseline deviations");
  if(anomalies.length) anomalies.forEach(k=>content.append(briefItem("infer",categoryLabel(k)+" above local baseline",counts[k]+" visible versus a 7-day stored average of "+avg[k].toFixed(1)+". The baseline is device-local and may still be immature.")));
  else content.append(briefItem("infer","No clear aviation deviation","No category exceeds the current device-local threshold. This does not mean that no relevant activity exists."));
@@ -748,11 +776,12 @@ document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{
  document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("on"));b.classList.add("on");activeFilter=b.dataset.f;renderAircraft();
 });
 document.getElementById("signals").innerHTML='<div class="signal"><div class="meta">LIVE</div><div class="title">Military air layer</div><div class="desc">Attempts live ADS-B military data and keeps the rest of NordicWatch operational if the feed is blocked or unavailable.</div></div><div class="signal"><div class="meta">FILTERING</div><div class="title">Mission-role categories</div><div class="desc">AWACS, tanker, ISR, transport and fighter categories are inferred from public callsign/type metadata and should be treated as heuristic, not authoritative.</div></div>';
-document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>b[3]-a[3]).map(h=>'<div class="hot"><div><b>'+h[0]+'</b><small>'+h[4]+'</small></div><div class="n '+(h[3]>=70?'hi':h[3]>=50?'med':'lo')+'">'+h[3]+'</div></div>').join("");
+renderHotspots();
 document.getElementById("changes").innerHTML=D.changes.map(x=>'<div class="change"><b>'+x[0]+'</b><br><span>'+x[1]+'</span></div>').join("");
 const eventStartAlerts=document.getElementById("eventStartAlerts");eventStartAlerts.checked=localStorage.getItem(EVENT_START_ALERT_KEY)==="1";eventStartAlerts.onchange=()=>localStorage.setItem(EVENT_START_ALERT_KEY,eventStartAlerts.checked?"1":"0");
 const trailWindow=document.getElementById("trailWindow"),patternLabels=document.getElementById("patternLabels");trailWindow.value=localStorage.getItem("NORDICWATCH_TRAIL_WINDOW")||"30";trailWindow.onchange=()=>{localStorage.setItem("NORDICWATCH_TRAIL_WINDOW",trailWindow.value);renderAircraftTrails();renderAircraft()};patternLabels.checked=localStorage.getItem("NORDICWATCH_PATTERN_LABELS")==="1";patternLabels.onchange=()=>{localStorage.setItem("NORDICWATCH_PATTERN_LABELS",patternLabels.checked?"1":"0");renderAircraftTrails()};
 initEventEngine();
+initUAVIncidents();
 initAircraftTrails().then(loadMilitary);setInterval(loadMilitary,30000);
 document.querySelectorAll("[data-l]").forEach(e=>e.onchange=()=>e.checked?G[e.dataset.l].addTo(map):map.removeLayer(G[e.dataset.l]));
 document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
