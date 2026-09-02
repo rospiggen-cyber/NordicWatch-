@@ -30,13 +30,13 @@ function normalize(raw){
  const lat=Number(raw.lat??raw.latitude??raw.LATITUDE),lon=Number(raw.lon??raw.lng??raw.longitude??raw.LONGITUDE);
  const mmsi=cleanText(raw.mmsi??raw.MMSI,9).replace(/\D/g,"");
  if(!/^\d{9}$/.test(mmsi)||!Number.isFinite(lat)||!Number.isFinite(lon))return null;
- const timeRaw=raw.timestamp??raw.time??raw.TIMESTAMP??Date.now(),numeric=Number(timeRaw);
+ const timeRaw=raw.timestamp??raw.time??raw.msgtime??raw.TIMESTAMP??Date.now(),numeric=Number(timeRaw);
  const timestamp=Number.isFinite(numeric)?(numeric<1e12?numeric*1000:numeric):Date.parse(timeRaw);
  return {mmsi,name:cleanText(raw.name??raw.shipname??raw.SHIPNAME??"Unknown vessel",80),lat,lon,
-  sog:Number.isFinite(Number(raw.sog??raw.SOG))?Number(raw.sog??raw.SOG):null,
-  cog:Number.isFinite(Number(raw.cog??raw.COG))?Number(raw.cog??raw.COG):null,
-  heading:Number.isFinite(Number(raw.heading??raw.HEADING))?Number(raw.heading??raw.HEADING):null,
-  type:cleanText(raw.type??raw.ship_type??raw.TYPE??"unknown",50),
+  sog:Number.isFinite(Number(raw.sog??raw.speedOverGround??raw.SOG))?Number(raw.sog??raw.speedOverGround??raw.SOG):null,
+  cog:Number.isFinite(Number(raw.cog??raw.courseOverGround??raw.COG))?Number(raw.cog??raw.courseOverGround??raw.COG):null,
+  heading:Number.isFinite(Number(raw.heading??raw.trueHeading??raw.HEADING))?Number(raw.heading??raw.trueHeading??raw.HEADING):null,
+  type:cleanText(raw.type??raw.ship_type??raw.shipType??raw.TYPE??"unknown",50),
   timestamp:Number.isFinite(timestamp)?timestamp:Date.now(),quality:"provider-reported"};
 }
 function extractItems(payload){
