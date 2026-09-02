@@ -1,4 +1,4 @@
-# NordicWatch v0.9 — Aircraft Trails and Route Patterns
+# NordicWatch v0.9.1 — Mobile-safe Map Popups
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -39,13 +39,17 @@ Military and Coast Guard positions are retained by ICAO hex in IndexedDB, with a
 
 Route patterns are inferred from time-series geometry rather than callsigns. Popup evidence keeps recorded positions under `OBSERVED`, while TRANSIT, ORBIT, RACETRACK, LOITER, REPEATED PASS and HOLDING / CIRCULAR remain `INFERRED` with a 0–100 confidence value. Short tracks remain UNKNOWN.
 
+## Mobile map popups
+
+All Leaflet popups use a bounded internal scroll area and retain a 44×44 px close control above the scrolling content. Mobile popups remain inside the map and safe viewport, while touch scrolling is isolated from map dragging. The Layers panel starts collapsed on narrow screens and collapses whenever a popup opens.
+
 ## Coast Guard behavior
 
 Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast Guard from corroborating operator, registration, callsign and ICAO identifiers. Device-local position history can identify persistent loiter from duration, confinement, speed and accumulated turns. The result is labelled as direct observation plus automatic interpretation; it becomes a confirmed operation only when supported by a confirmed rescue or emission report. Circling alone does not raise Activity unless it persists for at least 90 minutes.
 
 ## Authentication and data handling
 
-v0.9 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
+v0.9.1 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
