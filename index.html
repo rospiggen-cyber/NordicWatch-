@@ -33,7 +33,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .signal,.hot{padding:11px 0;border-top:1px solid var(--border)}.signal:first-of-type,.hot:first-of-type{border-top:0}.meta{font-size:10px;color:var(--muted);margin-bottom:4px}.title{font-size:13px;font-weight:700}.desc{font-size:11px;color:#b8c4d4;margin-top:4px;line-height:1.4}.hot{display:flex;justify-content:space-between;gap:8px}.hot b{font-size:13px}.hot small{display:block;color:var(--muted);margin-top:3px}.n{font-size:17px;font-weight:800}.hi{color:var(--danger)}.med{color:var(--warn)}.lo{color:var(--ok)}
 .drawer{display:none;position:fixed;z-index:2000;inset:0;background:rgba(0,0,0,.7);align-items:flex-end}.drawer.show{display:flex}.sheet{width:100%;max-height:72vh;overflow:auto;background:#0b1423;border-radius:18px 18px 0 0;padding:17px}.sheethead{display:flex;justify-content:space-between}.change{padding:12px 0;border-top:1px solid var(--border)}.change span{font-size:11px;color:var(--muted)}
 .plane{font-size:22px;line-height:22px;text-shadow:0 0 5px #000}.leaflet-div-icon{background:transparent;border:0}
-.cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}.maritime-tools{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.maritime-tools button{padding:5px 7px;font-size:9px;margin-right:3px}.maritime-tools input[type=number]{width:54px;background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px}.signal-observation{color:var(--accent)}.signal-indicator{color:var(--warn)}.signal-confirmed{color:var(--ok)}
+.cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.cat-civilian{color:#aab5c5}.cat-state{color:#55d187}.cat-unknown{color:#6f7c91}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}.maritime-tools{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.maritime-tools button{padding:5px 7px;font-size:9px;margin-right:3px}.maritime-tools input[type=number]{width:54px;background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px}.signal-observation{color:var(--accent)}.signal-indicator{color:var(--warn)}.signal-confirmed{color:var(--ok)}
 .legend{font-size:10px;color:var(--muted);margin-top:6px}.alertctl{margin-top:8px;display:flex;gap:5px;align-items:center}.alertctl button{padding:6px 8px;font-size:10px}.alertstate{font-size:10px;color:var(--muted)}
 .news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
 .brief-actions{display:flex;gap:6px}.brief-actions button{font-size:11px}.brief-sheet{max-height:86vh}.brief-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.brief-stat{border:1px solid var(--border);border-radius:11px;padding:9px;background:rgba(255,255,255,.025)}.brief-stat small{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.brief-stat b{font-size:16px}.brief-section{margin-top:15px}.brief-item{border-top:1px solid var(--border);padding:10px 0}.brief-item button{margin-top:7px;padding:5px 8px;font-size:10px}.evidence{display:inline-block;border:1px solid currentColor;border-radius:7px;padding:2px 5px;font-size:8px;font-weight:800;letter-spacing:.5px;margin-bottom:5px}.evidence.obs{color:var(--accent)}.evidence.infer{color:var(--warn)}.evidence.external{color:var(--ok)}.brief-note{color:var(--muted);font-size:10px;line-height:1.45}.confidence{font-weight:800}.confidence.low{color:var(--danger)}.confidence.medium{color:var(--warn)}.confidence.high{color:var(--ok)}
@@ -52,7 +52,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <label><input type="checkbox" data-l="infra" checked> Infrastructure</label>
 <label><input type="checkbox" data-l="gps" checked> GPS/GNSS</label>
 <div class="filterbar" id="filters">
-<button class="on" data-f="all">All</button><button data-f="awacs">AWACS</button><button data-f="tanker">Tanker</button><button data-f="isr">ISR</button><button data-f="transport">Transport</button><button data-f="fighter">Fighter</button>
+<button class="on" data-f="all">Military</button><button data-f="awacs">AWACS</button><button data-f="tanker">Tanker</button><button data-f="isr">ISR</button><button data-f="transport">Transport</button><button data-f="fighter">Fighter</button><button data-f="civilian">Civilian</button><button data-f="state">State</button><button data-f="unknown">Unknown</button>
 </div>
 <div class="status">ADSB: <b id="adsbStatus">loading…</b><br><span id="adsbUpdated"></span><br>Maritime: <b id="aisStatus" class="maritime-status">local datasets only</b><br><span id="aisUpdated">No external AIS connected</span></div>
 <div class="maritime-tools"><button id="importMaritimeBtn">Import CSV/GeoJSON</button><button id="mockMaritimeBtn">Load mockdata</button><input id="maritimeFile" type="file" accept=".csv,.json,.geojson,text/csv,application/json,application/geo+json" hidden><div class="legend">Correlation <input id="corrKm" type="number" min="5" max="500" value="100"> km · <input id="corrHours" type="number" min="1" max="168" value="24"> h</div><div class="legend" id="importStatus"></div></div>
@@ -64,6 +64,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
 <div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.7</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script src="aircraft-classifier.js"></script>
 <script src="maritime-core.js"></script>
 <script>
 const D={
@@ -99,7 +100,7 @@ hotspots:[
 changes:[
 ["Nordic–Baltic security news","Current security and defence reporting is matched to watch hotspots and assigned a transparent risk score."],
 ["High-risk news alerts","New high-risk articles can trigger a device notification when alerts are armed."],
-["Live-air classification added","Aircraft are grouped into AWACS, tanker, ISR, transport, fighter or other using public type/callsign metadata."],
+["Central aircraft classification","Aircraft are first classified as civilian, military, state or unknown. Military roles are assigned only after positive military identification."],
 ["Interactive filters","Tap AWACS, tanker, ISR, transport or fighter to isolate that category."],
 ["Safer data path","A proxy endpoint can be used without exposing an API key in the page."],
 ["Alert engine added","High-interest military-air patterns can trigger device notifications with cooldown/deduplication."],
@@ -147,51 +148,12 @@ const fmtAlt=a=>a==="ground"?"ground":(Number.isFinite(+a)?Math.round(+a).toLoca
 const fmtNum=(v,u)=>Number.isFinite(+v)?Math.round(+v)+u:"n/a";
 const nordic=a=>Number.isFinite(+a.lat)&&Number.isFinite(+a.lon)&&+a.lat>=53&&+a.lat<=72.5&&+a.lon>=-12&&+a.lon<=34.5;
 
-function classify(a){
-  const type=String(a.t||"")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g,"");
-
-  const AWACS=new Set([
-    "E3A","E3B","E3C","E3D","E3F",
-    "E7A","E7T","A50"
-  ]);
-
-  const TANKER=new Set([
-    "KC135","K35R","K35E",
-    "KC46","K46A"
-  ]);
-
-  const ISR=new Set([
-    "RC135","R135",
-    "P8","P8A",
-    "EP3","IL20",
-    "EA37"
-  ]);
-
-  const TRANSPORT=new Set([
-    "C17","C17A",
-    "C130","C30J",
-    "A400","A400M",
-    "C5","C5M",
-    "C295","CN35"
-  ]);
-
-  const FIGHTER=new Set([
-    "F15","F16","F18","F22","F35",
-    "JAS39","EUFI","RFAL",
-    "SU27","SU30","SU35",
-    "MG29","MIG29"
-  ]);
-
-  if(AWACS.has(type)) return "awacs";
-  if(TANKER.has(type)) return "tanker";
-  if(ISR.has(type)) return "isr";
-  if(TRANSPORT.has(type)) return "transport";
-  if(FIGHTER.has(type)) return "fighter";
-
-  return "other";
-}
+const AC=window.NordicWatchAircraft;
+if(!AC)throw new Error("NordicWatchAircraft classifier unavailable");
+const aircraftClass=a=>AC.classifyAircraft(a);
+const isMilitaryAircraft=a=>AC.isMilitaryActivity(aircraftClass(a));
+const classify=a=>{const r=aircraftClass(a);return r.role?r.role.toLowerCase():null};
+const aircraftSummary=ac=>AC.summarize(ac);
 function iconFor(a,cat){
  const deg=Number.isFinite(+a.track)?+a.track:0;
  return L.divIcon({className:"",html:`<div class="plane cat-${cat}" style="transform:rotate(${deg}deg)">✈</div>`,iconSize:[24,24],iconAnchor:[12,12]});
@@ -234,6 +196,8 @@ function nearestZone(a){
  return best;
 }
 function alertScore(a,all){
+ if(!isMilitaryAircraft(a))return null;
+ all=all.filter(isMilitaryAircraft);
  const cat=classify(a),z=nearestZone(a);
  if(!z) return null;
  let score={awacs:62,tanker:48,isr:72,fighter:55,transport:22,other:10}[cat]||10;
@@ -249,6 +213,7 @@ function alertScore(a,all){
 }
 // Correlation engine: looks for mission-role combinations inside the same watch zone.
 function detectKillChains(all){
+ all=all.filter(isMilitaryAircraft);
  const events=[];
  for(const z of zones){
    const members=all.filter(a=>nearestZone(a)?.name===z.name);
@@ -321,6 +286,7 @@ function prependSignal(meta,title,desc){
  box.prepend(el); while(box.children.length>8) box.lastElementChild.remove();
 }
 async function evaluateAlerts(ac){
+ ac=ac.filter(isMilitaryAircraft);
  if(localStorage.getItem(ALERT_KEY)!=="1" || !("Notification" in window) || Notification.permission!=="granted") return;
  const clusters=detectKillChains(ac);
  for(const e of clusters) await notifyCluster(e);
@@ -347,17 +313,17 @@ initAlerts();
 let rawAircraft=[],activeFilter="all";
 function renderAircraft(){
  G.military.clearLayers();
- const ac=rawAircraft.filter(a=>activeFilter==="all"||classify(a)===activeFilter);
+ const summary=aircraftSummary(rawAircraft);
+ const ac=rawAircraft.filter(a=>{const result=aircraftClass(a),base=result.base.toLowerCase();return activeFilter==="all"?isMilitaryAircraft(a):result.role?.toLowerCase()===activeFilter||base===activeFilter});
  ac.forEach(a=>{
-   const cat=classify(a), call=(a.flight||"").trim()||a.r||a.hex||"Unknown";
-   const popup=`<b>${esc(call)}</b><br>Category: ${esc(cat.toUpperCase())}<br>Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Source classification: military`;
+   const result=aircraftClass(a),cat=result.role?result.role.toLowerCase():result.base.toLowerCase(),call=(a.flight||"").trim()||a.r||a.hex||"Unknown";
+   const identity=result.base==="MILITARY"?result.base+" / "+result.role+" · "+result.confidence:result.base;
+   const popup=`<b>${esc(call)}</b><br>Classification: ${esc(identity)}<br>Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Evidence: ${esc(result.evidence.map(x=>x.signal).join(", ")||"insufficient for identification")}`;
    L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(popup).addTo(G.military);
  });
- document.getElementById("adsbStatus").textContent=(activeFilter==="all"?rawAircraft.length:ac.length)+" shown";
+ document.getElementById("adsbStatus").textContent=summary.military+" military · "+summary.nonMilitary+" civilian/state/unknown";
+ document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)));
 }
-
-
-
 
 async function fetchJSON(url,timeout=9000){
  const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout);
@@ -370,21 +336,12 @@ const HISTORY_MAX_AGE=31*24*60*60*1000;
 
 function saveHistorySnapshot(ac){
   try{
-    const now=Date.now();
-    let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
-
-    if(history.length && now-history[history.length-1].t<HISTORY_INTERVAL) return;
-
-    const cats={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
-    ac.forEach(a=>cats[classify(a)]++);
-
-    history.push({t:now,total:ac.length,cats});
-    history=history.filter(x=>now-x.t<HISTORY_MAX_AGE);
-
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
-  }catch(e){
-    console.warn("history",e);
-  }
+    const now=Date.now();let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+    if(history.length&&now-history[history.length-1].t<HISTORY_INTERVAL)return;
+    const summary=aircraftSummary(ac),cats=Object.fromEntries(Object.entries(summary.roles).map(([k,v])=>[k.toLowerCase(),v]));
+    history.push({t:now,schemaVersion:2,militaryTotal:summary.military,nonMilitaryTotal:summary.nonMilitary,baseCounts:summary.base,cats});
+    history=history.filter(x=>now-x.t<HISTORY_MAX_AGE);localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
+  }catch(e){console.warn("history",e)}
 }
 
 // --- Maritime Signals v0.7: local/imported licensed datasets only ---
@@ -402,7 +359,7 @@ function maritimeConfig(){
 }
 function maritimeContext(){
  const hotspots=D.hotspots.map(x=>({id:x[0],name:x[0],lat:x[1],lon:x[2],source:"NordicWatch hotspot context"}));
- const aircraft=rawAircraft.map(x=>({id:x.hex||x.flight,lat:+x.lat,lon:+x.lon,timestamp:Date.now(),source:"Public military ADS-B"}));
+ const aircraft=rawAircraft.filter(isMilitaryAircraft).map(x=>({id:x.hex||x.flight,lat:+x.lat,lon:+x.lon,timestamp:Date.now(),source:"Public ADS-B · centrally classified military"}));
  const gnss=[{id:"Narva GNSS context",lat:59.45,lon:27.3,source:"GNSS context layer"},{id:"Gulf of Finland GNSS context",lat:59.8,lon:25.9,source:"GNSS context layer"}];
  const news=currentArticles.flatMap(a=>a.risk.places.slice(0,1).map(p=>({id:a.id,title:a.title,lat:p.lat,lon:p.lon,timestamp:a.date?.getTime(),source:a.domain})));
  return {hotspots,aircraft,gnss,news,maritime:maritimeRecords}
@@ -546,12 +503,12 @@ function durationText(ms){
  const hrs=Math.round(mins/60);return hrs<48?hrs+" h":Math.round(hrs/24)+" d";
 }
 function generateBrief(kind){
- const now=Date.now(),flightHistory=readArray(HISTORY_KEY),newsHistory=readArray(NEWS_HISTORY_KEY);
+ const now=Date.now(),flightHistory=readArray(HISTORY_KEY).filter(x=>x.schemaVersion===2),newsHistory=readArray(NEWS_HISTORY_KEY);
  const last=(()=>{try{return JSON.parse(localStorage.getItem(BRIEF_LAST_KEY)||"null")}catch{return null}})();
  const previous=flightHistory.length>1?flightHistory[flightHistory.length-2]:null;
- const counts={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
- rawAircraft.forEach(a=>counts[classify(a)]++);
- const total=rawAircraft.length,delta=previous?total-previous.total:null;
+ const aircraftNow=aircraftSummary(rawAircraft);
+ const counts=Object.fromEntries(Object.entries(aircraftNow.roles).map(([k,v])=>[k.toLowerCase(),v]));
+ const total=aircraftNow.military,delta=previous?total-previous.militaryTotal:null;
  const avg={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
  const baseline=flightHistory.filter(x=>now-x.t<=7*86400000);
  baseline.forEach(x=>Object.keys(avg).forEach(k=>avg[k]+=Number(x.cats&&x.cats[k]||0)));
@@ -567,10 +524,11 @@ function generateBrief(kind){
  const summary=document.createElement("div");summary.className="brief-summary";
  [["Situation",level],["Activity",String(score)],["Change",delta===null?"No prior snapshot":(delta>=0?"+":"")+delta+" aircraft"]].forEach(x=>{const s=document.createElement("div");s.className="brief-stat";const sm=document.createElement("small");sm.textContent=x[0];const b=document.createElement("b");b.textContent=x[1];s.append(sm,b);summary.append(s)});
  content.append(summary);
- const source=document.createElement("div");source.className="brief-note";source.textContent="Data coverage: live public military ADS-B, current GDELT reporting"+(maritimeRecords.length?" and validated local/imported maritime signals.":"; no maritime dataset is loaded.")+" No external AIS is connected. Live GNSS is not connected. Static infrastructure geometry is analytical context, not observation.";content.append(source);
+ const source=document.createElement("div");source.className="brief-note";source.textContent="Data coverage: public ADS-B with positive-evidence military classification, current GDELT reporting"+(maritimeRecords.length?" and validated local/imported maritime signals.":"; no maritime dataset is loaded.")+" No external AIS is connected. Live GNSS is not connected. Static infrastructure geometry is analytical context, not observation.";content.append(source);
  const addSection=title=>{const h=document.createElement("h3");h.className="brief-section";h.textContent=title;content.append(h)};
  addSection("Top observations");
- content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>categoryLabel(x[0])+" "+x[1]).join(", ")+"."));
+ content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>x[1]+" "+categoryLabel(x[0])).join(" · ")+"."));
+ content.append(briefItem("obs","Civilian / state / unknown traffic",aircraftNow.nonMilitary+" civilian/unknown aircraft ("+aircraftNow.base.CIVILIAN+" civilian · "+aircraftNow.base.STATE+" state · "+aircraftNow.base.UNKNOWN+" unknown). These do not affect military activity."));
  if(maritimeEvents.length){const me=maritimeEvents[0],mr=me.record;content.append(briefItem(mr.evidence==="confirmed"?"external":mr.evidence==="indicator"?"infer":"obs","Maritime signal · risk "+me.risk.total,mr.title+" · "+evidenceLabel(mr.evidence)+" · confidence "+me.risk.confidence+". Source: "+mr.source.name+"; licence: "+mr.source.license+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
  if(topNews){
   const place=topNews.risk.places[0]&&topNews.risk.places[0].name;
