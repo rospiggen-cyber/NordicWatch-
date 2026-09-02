@@ -169,7 +169,7 @@ const SEEN_KEY="NORDICWATCH_ALERT_SEEN";
 const alertState=document.getElementById("alertState");
 const alertsBtn=document.getElementById("alertsBtn");
 let swReg=null;
-const backgroundWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_BACKGROUND_WORKER")||"").replace(/\/$/,"");
+const backgroundWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_BACKGROUND_WORKER")||"https://nordicwatch-background-monitor.rospiggen.workers.dev").replace(/\/$/,"");
 const pushKey=value=>{const pad="=".repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
 async function syncBackgroundPush(on){
  const base=backgroundWorkerBase();if(!base||!swReg?.pushManager)return false;

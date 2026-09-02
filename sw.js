@@ -1,5 +1,5 @@
 // NordicWatch v0.7.1 Service Worker
-const CACHE="nordicwatch-v0.7.1-background-alerts-1";
+const CACHE="nordicwatch-v0.7.1-background-alerts-2";
 const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./background-monitor-core.js","./maritime-core.js","./mock/maritime-signals.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {
