@@ -130,7 +130,7 @@ const MARITIME_CORRIDORS=[
  {name:"Central Baltic cable corridor",kind:"cable",points:[[57.65,18.30],[58.45,20.10],[59.30,22.50]]},
  {name:"Gulf of Finland cable corridor",kind:"cable",points:[[59.45,24.75],[60.05,26.10],[59.85,27.20]]}
 ];
-MARITIME_CORRIDORS.forEach(x=>L.polyline(x.points,{color:x.kind==="pipeline"?"#55d187":"#61dafb",weight:2,opacity:.55,dashArray:"6 6"}).bindPopup("<b>"+esc(x.name)+"</b><br>Approximate analytical corridor · not navigational data").addTo(G.infra));
+MARITIME_CORRIDORS.forEach(x=>L.polyline(x.points,{color:x.kind==="pipeline"?"#55d187":"#61dafb",weight:2,opacity:.55,dashArray:"6 6"}).bindPopup("<b>"+x.name+"</b><br>Approximate analytical corridor · not navigational data").addTo(G.infra));
 [[59.45,27.3,"Narva region"],[59.8,25.9,"Eastern Gulf of Finland"],[58.4,22.5,"Baltic anomaly zone"]].forEach(x=>c(x[0],x[1],85000,"#f7c948","<b>"+x[2]+"</b><br>GPS/GNSS indicator · demo","gps"));
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -443,7 +443,7 @@ function canNotifyMaritime(e){
  if(seen[signature]&&now-seen[signature]<6*3600000)return false;seen[signature]=now;localStorage.setItem(MARITIME_SEEN_KEY,JSON.stringify(seen));return true
 }
 async function notifyMaritime(e){
- if(e.risk.score<MARITIME_ALERT_SCORE||localStorage.getItem(ALERT_KEY)!=="1"||Notification.permission!=="granted"||!canNotifyMaritime(e))return;
+ if(e.risk.score<MARITIME_ALERT_SCORE||localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted"||!canNotifyMaritime(e))return;
  const v=e.vessel,r=e.risk,title="NordicWatch · maritime risk "+r.score,body=v.name+" · "+r.corridor.name+" · "+r.indicators.map(x=>x.label).join(", ");
  const opts={body,tag:"nw-maritime-"+v.mmsi,data:{lat:v.lat,lon:v.lon,mmsi:v.mmsi},icon:"icon-192.png",badge:"icon-192.png"};
  try{if(swReg)await swReg.showNotification(title,opts);else new Notification(title,opts)}catch(err){console.warn("maritime notification",err)}
