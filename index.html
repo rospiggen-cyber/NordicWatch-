@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.6</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.7</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -36,12 +36,14 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}
 .legend{font-size:10px;color:var(--muted);margin-top:6px}.alertctl{margin-top:8px;display:flex;gap:5px;align-items:center}.alertctl button{padding:6px 8px;font-size:10px}.alertstate{font-size:10px;color:var(--muted)}
 .news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
+.brief-actions{display:flex;gap:6px}.brief-actions button{font-size:11px}.brief-sheet{max-height:86vh}.brief-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.brief-stat{border:1px solid var(--border);border-radius:11px;padding:9px;background:rgba(255,255,255,.025)}.brief-stat small{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.brief-stat b{font-size:16px}.brief-section{margin-top:15px}.brief-item{border-top:1px solid var(--border);padding:10px 0}.brief-item button{margin-top:7px;padding:5px 8px;font-size:10px}.evidence{display:inline-block;border:1px solid currentColor;border-radius:7px;padding:2px 5px;font-size:8px;font-weight:800;letter-spacing:.5px;margin-bottom:5px}.evidence.obs{color:var(--accent)}.evidence.infer{color:var(--warn)}.evidence.external{color:var(--ok)}.brief-note{color:var(--muted);font-size:10px;line-height:1.45}.confidence{font-weight:800}.confidence.low{color:var(--danger)}.confidence.medium{color:var(--warn)}.confidence.high{color:var(--ok)}
+@media(max-width:560px){.brief-summary{grid-template-columns:1fr}.brief-actions{flex-wrap:wrap}}
 @media(max-width:850px){main{grid-template-columns:1fr}#map{height:58vh;min-height:430px}.side{border-left:0}.layers{font-size:10px}.toolbar{position:sticky;top:0;z-index:900;background:#07101c}}
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.6</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
-<div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><button class="primary" id="changed">What changed?</button></div>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.7</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
 <label><input type="checkbox" data-l="hotspots" checked> Hotspots</label>
@@ -58,6 +60,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.7</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
 const D={
@@ -370,6 +373,8 @@ function saveHistorySnapshot(ac){
 // Current security and defence news. GDELT is queried directly; every returned
 // field is treated as untrusted and rendered as text or a validated HTTPS URL.
 const NEWS_SEEN_KEY="NORDICWATCH_NEWS_SEEN",NEWS_REFRESH_MS=10*60*1000,NEWS_HIGH_RISK=60;
+const NEWS_HISTORY_KEY="NORDICWATCH_NEWS_HISTORY",BRIEF_LAST_KEY="NORDICWATCH_LAST_BRIEF";
+let currentArticles=[];
 const NEWS_TERMS={drone:14,missile:18,sabotage:20,jamming:18,gnss:18,military:8,nato:8,submarine:16,attack:20};
 const NEWS_PLACES=[
  {name:"Kaliningrad",lat:54.71,lon:20.51,terms:["kaliningrad","baltijsk"]},{name:"Suwałki",lat:54.10,lon:23.20,terms:["suwałki","suwalki"]},
@@ -387,8 +392,100 @@ function renderNews(articles){
  for(const a of articles){const row=document.createElement("article");row.className="news-item";row.id=`news-${a.id}`;const top=document.createElement("div");top.className="news-top";const link=document.createElement("a");link.className="news-title";link.href=a.url;link.target="_blank";link.rel="noopener noreferrer nofollow";link.referrerPolicy="no-referrer";link.textContent=a.title;link.addEventListener("click",()=>focusNews(a));const risk=document.createElement("span");risk.className=`risk ${a.risk.score>=60?"hi":a.risk.score>=35?"med":"lo"}`;risk.textContent=`Risk ${a.risk.score}`;top.append(link,risk);const meta=document.createElement("div");meta.className="meta";meta.textContent=`${a.domain} · ${relativeDate(a.date)}`;const tags=document.createElement("div");tags.className="news-tags";[...a.risk.places.map(p=>p.name),...a.risk.words].forEach(t=>{const tag=document.createElement("span");tag.className="tag";tag.textContent=t;tags.append(tag)});row.append(top,meta,tags);row.addEventListener("dblclick",()=>focusNews(a));box.append(row)}
  const selected=new URLSearchParams(location.search).get("news");if(selected&&/^[a-z0-9]+$/.test(selected)){const row=document.getElementById(`news-${selected}`);if(row){row.classList.add("selected");row.scrollIntoView({block:"center"})}}
 }
+
+function saveNewsSnapshot(articles){
+ try{
+  const now=Date.now();
+  let history=JSON.parse(localStorage.getItem(NEWS_HISTORY_KEY)||"[]");
+  if(history.length&&now-history[history.length-1].t<30*60*1000)return;
+  history.push({t:now,articles:articles.slice(0,20).map(a=>({id:a.id,title:a.title,url:a.url,score:a.risk.score,places:a.risk.places.map(p=>p.name),date:a.date?a.date.getTime():null}))});
+  history=history.filter(x=>now-x.t<31*24*60*60*1000);
+  localStorage.setItem(NEWS_HISTORY_KEY,JSON.stringify(history));
+ }catch(e){console.warn("news history",e)}
+}
+function readArray(key){try{const v=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
+function categoryLabel(k){return ({awacs:"AWACS",tanker:"tanker",isr:"ISR",transport:"transport",fighter:"fighter",other:"other"})[k]||k}
+function briefFocus(place){
+ const p=NEWS_PLACES.find(x=>x.name===place)||zones.find(x=>x.name===place);
+ if(p){map.flyTo([p.lat,p.lon],6,{duration:.8});document.getElementById("briefDrawer").classList.remove("show")}
+}
+function briefItem(type,title,desc,action){
+ const row=document.createElement("div");row.className="brief-item";
+ const badge=document.createElement("span");badge.className="evidence "+type;
+ badge.textContent=type==="obs"?"DIRECT OBSERVATION":type==="external"?"CONFIRMED EXTERNAL REPORT":"AUTOMATIC ASSESSMENT";
+ const h=document.createElement("div");h.className="title";h.textContent=title;
+ const d=document.createElement("div");d.className="desc";d.textContent=desc;
+ row.append(badge,h,d);
+ if(action){const b=document.createElement("button");b.textContent=action.label;b.onclick=action.run;row.append(b)}
+ return row;
+}
+function consecutiveDuration(history,predicate){
+ let start=null;
+ for(let i=history.length-1;i>=0;i--){if(predicate(history[i]))start=history[i].t;else break}
+ return start?Date.now()-start:0;
+}
+function durationText(ms){
+ const mins=Math.round(ms/60000);if(mins<60)return mins+" min";
+ const hrs=Math.round(mins/60);return hrs<48?hrs+" h":Math.round(hrs/24)+" d";
+}
+function generateBrief(kind){
+ const now=Date.now(),flightHistory=readArray(HISTORY_KEY),newsHistory=readArray(NEWS_HISTORY_KEY);
+ const last=(()=>{try{return JSON.parse(localStorage.getItem(BRIEF_LAST_KEY)||"null")}catch{return null}})();
+ const previous=flightHistory.length>1?flightHistory[flightHistory.length-2]:null;
+ const counts={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
+ rawAircraft.forEach(a=>counts[classify(a)]++);
+ const total=rawAircraft.length,delta=previous?total-previous.total:null;
+ const avg={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
+ const baseline=flightHistory.filter(x=>now-x.t<=7*86400000);
+ baseline.forEach(x=>Object.keys(avg).forEach(k=>avg[k]+=Number(x.cats&&x.cats[k]||0)));
+ Object.keys(avg).forEach(k=>avg[k]=baseline.length?avg[k]/baseline.length:0);
+ const anomalies=Object.keys(counts).filter(k=>counts[k]>=2&&counts[k]>=Math.max(2,avg[k]*1.5));
+ const rankedNews=currentArticles.slice().sort((a,b)=>b.risk.score-a.risk.score);
+ const topNews=rankedNews[0]||null;
+ const level=total>=12||(topNews&&topNews.risk.score>=80)?"ELEVATED":total>=5||(topNews&&topNews.risk.score>=60)?"WATCH":"ROUTINE";
+ const score=Math.min(99,Math.round(20+Math.min(35,total*3)+(topNews?topNews.risk.score*.35:0)+Math.min(10,anomalies.length*4)));
+ const coverage=(rawAircraft.length?1:0)+(currentArticles.length?1:0);
+ const confidence=coverage===2&&baseline.length>=4?"MEDIUM":coverage===2?"LOW–MEDIUM":"LOW";
+ const content=document.getElementById("briefContent");content.replaceChildren();
+ const summary=document.createElement("div");summary.className="brief-summary";
+ [["Situation",level],["Activity",String(score)],["Change",delta===null?"No prior snapshot":(delta>=0?"+":"")+delta+" aircraft"]].forEach(x=>{const s=document.createElement("div");s.className="brief-stat";const sm=document.createElement("small");sm.textContent=x[0];const b=document.createElement("b");b.textContent=x[1];s.append(sm,b);summary.append(s)});
+ content.append(summary);
+ const source=document.createElement("div");source.className="brief-note";source.textContent="Data coverage: live public military ADS-B and current GDELT reporting. Vessel and live GNSS feeds are not connected and are excluded from the assessment. Static hotspot scores are context, not observations.";content.append(source);
+ const addSection=title=>{const h=document.createElement("h3");h.className="brief-section";h.textContent=title;content.append(h)};
+ addSection("Top observations");
+ content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>categoryLabel(x[0])+" "+x[1]).join(", ")+"."));
+ if(topNews){
+  const place=topNews.risk.places[0]&&topNews.risk.places[0].name;
+  content.append(briefItem("external",topNews.title,(topNews.domain||"External source")+" · risk "+topNews.risk.score+(place?" · "+place:""),{label:"Open report",run:()=>window.open(topNews.url,"_blank","noopener,noreferrer")}));
+ }else content.append(briefItem("external","No current matching report","The news feed has not returned a usable current article."));
+ const strongest=D.hotspots.slice().sort((a,b)=>b[3]-a[3])[0];
+ content.append(briefItem("infer","Highest configured watch area",strongest[0]+" has the highest static watch score ("+strongest[3]+"). This is analytical context, not proof of a current event.",{label:"Open area",run:()=>briefFocus(strongest[0])}));
+ addSection("New baseline deviations");
+ if(anomalies.length) anomalies.forEach(k=>content.append(briefItem("infer",categoryLabel(k)+" above local baseline",counts[k]+" visible versus a 7-day stored average of "+avg[k].toFixed(1)+". The baseline is device-local and may still be immature.")));
+ else content.append(briefItem("infer","No clear aviation deviation","No category exceeds the current device-local threshold. This does not mean that no relevant activity exists."));
+ addSection("Ongoing events");
+ const activeCats=Object.keys(counts).filter(k=>counts[k]>0);
+ if(activeCats.length){
+  activeCats.slice(0,3).forEach(k=>{const ms=consecutiveDuration(flightHistory,x=>Number(x.cats&&x.cats[k]||0)>0);content.append(briefItem("obs",categoryLabel(k)+" presence",counts[k]+" currently visible"+(ms?" · observed in consecutive local snapshots for approximately "+durationText(ms):"")+"."))});
+ }else content.append(briefItem("obs","No sustained aviation event stored","No current category presence can be timed from local snapshots."));
+ addSection("Watch next 24 hours");
+ const watches=[];
+ if(topNews&&topNews.risk.places.length)watches.push("Corroboration and follow-on activity around "+topNews.risk.places.map(p=>p.name).join(", ")+".");
+ if(anomalies.length)watches.push("Whether elevated "+anomalies.map(categoryLabel).join(" / ")+" activity persists across several snapshots.");
+ watches.push("Combinations of ISR, fighter, tanker and AWACS activity inside the same watch zone.");
+ watches.forEach(x=>content.append(briefItem("infer","Signal to watch",x)));
+ addSection("Automatic assessment");
+ const assessment=document.createElement("div");assessment.className="brief-item";
+ const badge=document.createElement("span");badge.className="evidence infer";badge.textContent="AUTOMATIC ASSESSMENT";
+ const p=document.createElement("div");p.className="desc";p.textContent="Situation "+level.toLowerCase()+". The score combines currently visible aviation, stored local baseline deviations and risk-ranked external reporting. It is an indicator, not an intelligence conclusion.";
+ const cf=document.createElement("div");cf.className="brief-note";cf.append("Confidence: ");const strong=document.createElement("span");strong.className="confidence "+(confidence==="MEDIUM"?"medium":"low");strong.textContent=confidence;cf.append(strong);
+ assessment.append(badge,p,cf);content.append(assessment);
+ localStorage.setItem(BRIEF_LAST_KEY,JSON.stringify({t:now,kind,score,level}));
+ document.getElementById("briefTitle").textContent=(kind==="morning"?"Morning Brief":"Evening Brief")+" · "+new Date().toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
+ document.getElementById("briefDrawer").classList.add("show");
+}
 async function notifyHighRiskNews(articles){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(NEWS_SEEN_KEY)||"{}")||{}}catch{}const now=Date.now();for(const [id,time] of Object.entries(seen))if(now-time>7*86400000)delete seen[id];for(const a of articles.filter(x=>x.risk.score>=NEWS_HIGH_RISK)){if(seen[a.id])continue;seen[a.id]=now;const appUrl=new URL(`?news=${encodeURIComponent(a.id)}#news-${encodeURIComponent(a.id)}`,location.href).href;const opts={body:`${a.risk.places.map(p=>p.name).join(", ")} · risk ${a.risk.score}`,tag:`nw-news-${a.id}`,data:{url:appUrl},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification("NordicWatch · high-risk news",opts);else new Notification("NordicWatch · high-risk news",opts)}catch(e){console.warn("news notification",e)}}localStorage.setItem(NEWS_SEEN_KEY,JSON.stringify(seen))}
-async function loadNews(){const status=document.getElementById("newsStatus");status.textContent="Loading current news…";const endpoint=new URL("https://api.gdeltproject.org/api/v2/doc/doc");endpoint.search=new URLSearchParams({query:'("Kaliningrad" OR "Suwalki" OR "Gotland" OR "Murmansk" OR "Gulf of Finland" OR "Narva" OR "Bornholm") (drone OR missile OR sabotage OR jamming OR GNSS OR military OR NATO OR submarine OR attack)',mode:"ArtList",maxrecords:"40",format:"json",sort:"DateDesc"});try{const data=await fetchJSON(endpoint.href,20000);const articles=(Array.isArray(data?.articles)?data.articles:[]).map(normalizeArticle).filter(Boolean).sort((a,b)=>b.risk.score-a.risk.score||(b.date?.getTime()||0)-(a.date?.getTime()||0));renderNews(articles);status.textContent=`${articles.length} current articles · refreshed ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;await notifyHighRiskNews(articles)}catch(e){status.textContent="News feed unavailable · retrying later";renderNews([]);console.warn("news",e)}}
+async function loadNews(){const status=document.getElementById("newsStatus");status.textContent="Loading current news…";const endpoint=new URL("https://api.gdeltproject.org/api/v2/doc/doc");endpoint.search=new URLSearchParams({query:'("Kaliningrad" OR "Suwalki" OR "Gotland" OR "Murmansk" OR "Gulf of Finland" OR "Narva" OR "Bornholm") (drone OR missile OR sabotage OR jamming OR GNSS OR military OR NATO OR submarine OR attack)',mode:"ArtList",maxrecords:"40",format:"json",sort:"DateDesc"});try{const data=await fetchJSON(endpoint.href,20000);const articles=(Array.isArray(data?.articles)?data.articles:[]).map(normalizeArticle).filter(Boolean).sort((a,b)=>b.risk.score-a.risk.score||(b.date?.getTime()||0)-(a.date?.getTime()||0));currentArticles=articles;saveNewsSnapshot(articles);renderNews(articles);status.textContent=`${articles.length} current articles · refreshed ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;await notifyHighRiskNews(articles)}catch(e){status.textContent="News feed unavailable · retrying later";renderNews([]);console.warn("news",e)}}
 async function loadMilitary(){
  const st=document.getElementById("adsbStatus"),up=document.getElementById("adsbUpdated"); st.textContent="loading…";
  // Optional future proxy: set localStorage.NORDICWATCH_ADSB_PROXY to e.g. https://your-worker.example/mil
@@ -427,7 +524,12 @@ const drawerEl=document.getElementById("drawer");
 changedBtn.onclick=()=>drawerEl.classList.add("show");
 closeBtn.onclick=()=>drawerEl.classList.remove("show");
 drawerEl.onclick=e=>{if(e.target===drawerEl)drawerEl.classList.remove("show")};
- const layersPanel=document.getElementById("layersPanel");
+ const briefDrawer=document.getElementById("briefDrawer");
+document.getElementById("morningBrief").onclick=()=>generateBrief("morning");
+document.getElementById("eveningBrief").onclick=()=>generateBrief("evening");
+document.getElementById("briefClose").onclick=()=>briefDrawer.classList.remove("show");
+briefDrawer.onclick=e=>{if(e.target===briefDrawer)briefDrawer.classList.remove("show")};
+const layersPanel=document.getElementById("layersPanel");
 const layersToggle=document.getElementById("layersToggle");
 
 layersToggle.addEventListener("click",()=>{
