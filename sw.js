@@ -1,5 +1,5 @@
-// NordicWatch v0.9.1 Service Worker
-const CACHE="nordicwatch-v0.9.1-mobile-popup-fix";
+// NordicWatch v0.9.2 Service Worker
+const CACHE="nordicwatch-v0.9.2-mobile-safe-surfaces";
 const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./coast-guard-analysis.js","./background-monitor-core.js","./maritime-core.js","./event-engine.js","./route-pattern.js","./mock/events.json","./mock/maritime-signals.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {

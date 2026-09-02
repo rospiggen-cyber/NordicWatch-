@@ -1,4 +1,4 @@
-# NordicWatch v0.9.1 — Mobile-safe Map Popups
+# NordicWatch v0.9.2 — Mobile-safe Scroll Surfaces
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -41,7 +41,7 @@ Route patterns are inferred from time-series geometry rather than callsigns. Pop
 
 ## Mobile map popups
 
-All Leaflet popups use a bounded internal scroll area and retain a 44×44 px close control above the scrolling content. Mobile popups remain inside the map and safe viewport, while touch scrolling is isolated from map dragging. The Layers panel starts collapsed on narrow screens and collapses whenever a popup opens.
+All Leaflet popups use a bounded internal scroll area and retain a 44×44 px close control above the scrolling content. Mobile popups remain inside the map and safe viewport, while touch scrolling is isolated from map dragging. Layers, drawers, briefs and long side cards use dynamic viewport bounds, safe-area insets, contained momentum scrolling and sticky headers. The Layers panel starts collapsed on narrow screens and collapses whenever a popup opens.
 
 ## Coast Guard behavior
 
@@ -49,7 +49,7 @@ Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast G
 
 ## Authentication and data handling
 
-v0.9.1 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
+v0.9.2 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
