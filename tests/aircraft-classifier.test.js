@@ -3,7 +3,13 @@ const A=require("../aircraft-classifier.js");
 
 const classify=x=>A.classifyAircraft(x);
 assert.equal(classify({operator:"SAS",t:"A320"}).base,"CIVILIAN");
-assert.deepEqual(classify({operator:"Swedish Coast Guard",t:"DHC8"}),{base:"STATE",confidence:null,role:null,evidence:[{signal:"state-identity",strength:"strong"}]});
+assert.equal(classify({operator:"Swedish Coast Guard",t:"DHC8"}).governmentRole,"COAST_GUARD");
+for(const aircraft of [
+  {operator:"Swedish Coast Guard",t:"DH8C"},{operator:"Kustbevakningen",t:"Q300"},{r:"SE-MAA"},{r:"SE-MAB"},{r:"SE-MAC"},
+  {flight:"KBV501"},{flight:"KBV502"},{flight:"KBV503"},{hex:"4AB421"},{hex:"4AB422"},{hex:"4AB423"},{military:true,r:"SE-MAA",t:"DHC8"}
+]){
+ const result=classify(aircraft);assert.equal(result.base,"STATE");assert.equal(result.governmentRole,"COAST_GUARD");assert.equal(result.role,null);assert.equal(A.isMilitaryActivity(result),false)
+}
 assert.equal(classify({t:"A320",flight:"ABC123"}).base,"UNKNOWN");
 assert.equal(classify({t:"KC135"}).base,"UNKNOWN","military type alone is not enough");
 assert.equal(classify({flight:"RCH123"}).base,"UNKNOWN","one callsign indicator is not enough");

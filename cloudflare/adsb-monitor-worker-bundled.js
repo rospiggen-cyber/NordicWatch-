@@ -10,6 +10,8 @@
   const BASE=Object.freeze({CIVILIAN:"CIVILIAN",MILITARY:"MILITARY",STATE:"STATE",UNKNOWN:"UNKNOWN"});
   const CONFIDENCE=Object.freeze({CONFIRMED:"CONFIRMED",PROBABLE:"PROBABLE"});
   const ROLE=Object.freeze({AWACS:"AWACS",TANKER:"TANKER",ISR:"ISR",TRANSPORT:"TRANSPORT",FIGHTER:"FIGHTER",OTHER:"OTHER"});
+  const GOVERNMENT_ROLE=Object.freeze({COAST_GUARD:"COAST_GUARD"});
+  const SWEDISH_COAST_GUARD=Object.freeze({registrations:new Set(["SEMAA","SEMAB","SEMAC"]),callsigns:new Set(["KBV501","KBV502","KBV503"]),hexes:new Set(["4AB421","4AB422","4AB423"])});
   const ROLE_TYPES={
     AWACS:new Set(["E3A","E3B","E3C","E3D","E3F","E7A","E7T","A50"]),
     TANKER:new Set(["KC135","K35R","K35E","KC46","K46A"]),
@@ -37,10 +39,15 @@
     for(const [role,types] of Object.entries(ROLE_TYPES))if(types.has(t))return role;
     return ROLE.OTHER;
   }
+  function isSwedishCoastGuard(a){
+    const op=operator(a),reg=registration(a),cs=callsign(a),hx=hex(a),t=type(a),identity=SWEDISH_COAST_GUARD.registrations.has(reg)||SWEDISH_COAST_GUARD.callsigns.has(cs)||SWEDISH_COAST_GUARD.hexes.has(hx);
+    return identity||/(?:SWEDISH\s+COAST\s+GUARD|KUSTBEVAKNING)/i.test(op)&&["DH8C","DHC8","DHC8300","Q300"].includes(t)
+  }
 
   function classifyAircraft(a,options={}){
     const evidence=[];
     const cls=explicitClass(a),op=operator(a),cs=callsign(a),t=type(a),hx=hex(a),reg=registration(a);
+    if(isSwedishCoastGuard(a))return {base:BASE.STATE,confidence:CONFIDENCE.CONFIRMED,role:null,governmentRole:GOVERNMENT_ROLE.COAST_GUARD,label:"Government / Coast Guard",evidence:[{signal:"swedish-coast-guard-identity",strength:"strong"}]};
     const knownHex=new Set((options.knownMilitaryHex||[]).map(norm));
     const knownReg=new Set((options.knownMilitaryRegistrations||[]).map(norm));
     const explicitMilitary=truthy(a,["military","isMilitary","is_military","knownMilitary","militaryHex","militaryRegistration"])||
@@ -71,7 +78,7 @@
     return {base,roles,military:base.MILITARY,nonMilitary:base.CIVILIAN+base.STATE+base.UNKNOWN,total:(aircraft||[]).length};
   }
 
-  return Object.freeze({BASE,CONFIDENCE,ROLE,classifyAircraft,isMilitaryActivity,summarize});
+  return Object.freeze({BASE,CONFIDENCE,ROLE,GOVERNMENT_ROLE,SWEDISH_COAST_GUARD,classifyAircraft,isMilitaryActivity,isSwedishCoastGuard,summarize});
 });
 
 (function(root,factory){

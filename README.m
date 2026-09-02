@@ -1,11 +1,12 @@
-# NordicWatch v0.7 — Maritime Signals
+# NordicWatch v0.7.2 — Maritime Signals and Coast Guard Behavior
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
 ## Current components
 
 - Leaflet/OpenStreetMap situational map
-- public military ADS-B feed and mission-role correlation alerts
+- public ADS-B feed with evidence-based military and government classification
+- Swedish Coast Guard Q-300 track history and persistent-loiter observations
 - Nordic–Baltic GDELT security and defence reporting
 - device-local aircraft, news and maritime-signal history
 - Morning Brief and Evening Brief
@@ -24,6 +25,10 @@ No AIS API is connected. Maritime data enters only through:
 Every accepted record must include source name, publisher, licence, retrieval time, allowed use and source quality. The application distinguishes observation, automatic indicator and confirmed report. Risk is the visible sum of geography, temporal correlation, independent sources, source quality and freshness.
 
 See [MARITIME.md](MARITIME.md) for schemas, adapter instructions and limitations.
+
+## Coast Guard behavior
+
+Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast Guard from corroborating operator, registration, callsign and ICAO identifiers. Device-local position history can identify persistent loiter from duration, confinement, speed and accumulated turns. The result is labelled as direct observation plus automatic interpretation; it becomes a confirmed operation only when supported by a confirmed rescue or emission report. Circling alone does not raise Activity unless it persists for at least 90 minutes.
 
 ## Authentication and data handling
 
