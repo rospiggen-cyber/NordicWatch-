@@ -1,6 +1,6 @@
-// NordicWatch v0.7 Maritime Service Worker
-const CACHE="nordicwatch-v0.7-aircraft-classifier-1";
-const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./maritime-core.js","./mock/maritime-signals.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
+// NordicWatch v0.7.1 Service Worker
+const CACHE="nordicwatch-v0.7.1-background-alerts-1";
+const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./background-monitor-core.js","./maritime-core.js","./mock/maritime-signals.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));
@@ -28,3 +28,5 @@ self.addEventListener("notificationclick",event=>{
     return clients.openWindow?clients.openWindow(target.href):undefined;
   }));
 });
+
+self.addEventListener("push",event=>{\n const title="NordicWatch FLASH";\n const options={body:"New positively identified military activity. Open NordicWatch for current details.",tag:"nordicwatch-background-flash",renotify:true,requireInteraction:true,data:{url:"./"},icon:"icon-192.png",badge:"icon-192.png"};\n event.waitUntil(self.registration.showNotification(title,options));\n});\n

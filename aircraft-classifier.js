@@ -11,7 +11,7 @@
   const ROLE_TYPES={
     AWACS:new Set(["E3A","E3B","E3C","E3D","E3F","E7A","E7T","A50"]),
     TANKER:new Set(["KC135","K35R","K35E","KC46","K46A"]),
-    ISR:new Set(["RC135","R135","P8","P8A","EP3","IL20","EA37"]),
+    ISR:new Set(["RC135","R135","P8","P8A","EP3","IL20","EA37","GLF4","GLEX","CL60"]),
     TRANSPORT:new Set(["C17","C17A","C130","C30J","A400","A400M","C5","C5M","C295","CN35"]),
     FIGHTER:new Set(["F15","F16","F18","F22","F35","JAS39","EUFI","RFAL","SU27","SU30","SU35","MG29","MIG29"])
   };

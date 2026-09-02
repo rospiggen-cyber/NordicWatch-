@@ -12,6 +12,8 @@ const confirmed=classify({military:true,t:"E3A"});
 assert.equal(confirmed.base,"MILITARY");assert.equal(confirmed.confidence,"CONFIRMED");assert.equal(confirmed.role,"AWACS");
 const probable=classify({flight:"RCH123",t:"C17"});
 assert.equal(probable.base,"MILITARY");assert.equal(probable.confidence,"PROBABLE");assert.equal(probable.role,"TRANSPORT");
+const korpen=classify({flight:"SVF666",t:"GLF4"});
+assert.equal(korpen.base,"MILITARY");assert.equal(korpen.confidence,"PROBABLE");assert.equal(korpen.role,"ISR");
 assert.equal(classify({operator:"USAF",t:"A320"}).role,"OTHER");
 
 for(const [t,role] of [["E3A","AWACS"],["KC135","TANKER"],["RC135","ISR"],["C17","TRANSPORT"],["F35","FIGHTER"]])assert.equal(classify({military:true,t}).role,role);

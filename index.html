@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.7</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.7.1</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -42,7 +42,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.7</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.7.1</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
@@ -62,9 +62,10 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.7</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.7.1</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
+<script src="background-monitor-core.js"></script>
 <script src="maritime-core.js"></script>
 <script>
 const D={
@@ -168,6 +169,16 @@ const SEEN_KEY="NORDICWATCH_ALERT_SEEN";
 const alertState=document.getElementById("alertState");
 const alertsBtn=document.getElementById("alertsBtn");
 let swReg=null;
+const backgroundWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_BACKGROUND_WORKER")||"").replace(/\/$/,"");
+const pushKey=value=>{const pad="=".repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
+async function syncBackgroundPush(on){
+ const base=backgroundWorkerBase();if(!base||!swReg?.pushManager)return false;
+ let sub=await swReg.pushManager.getSubscription();
+ if(on&&!sub){const response=await fetch(base+"/push/public-key",{credentials:"omit"});if(!response.ok)throw new Error("background key unavailable");const {publicKey}=await response.json();if(!publicKey)throw new Error("background push not configured");sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKey(publicKey)})}
+ if(on&&sub){const response=await fetch(base+"/push/subscribe",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(sub)});if(!response.ok)throw new Error("background subscription rejected");alertState.textContent="armed · background";return true}
+ if(!on&&sub){await fetch(base+"/push/subscribe",{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({endpoint:sub.endpoint})}).catch(()=>{});await sub.unsubscribe()}
+ return false
+}
 
 const zones=[
  {name:"Kaliningrad / Baltijsk",lat:54.71,lon:20.51,r:430},
@@ -298,6 +309,7 @@ async function initAlerts(){
  const enabled=localStorage.getItem(ALERT_KEY)==="1";
  alertState.textContent=enabled&&Notification.permission==="granted"?"armed":Notification.permission==="denied"?"blocked":"off";
  alertsBtn.textContent=enabled?"Alerts on":"Enable alerts";
+ if(enabled&&Notification.permission==="granted")syncBackgroundPush(true).catch(e=>console.warn("background push",e));
 }
 alertsBtn.onclick=async()=>{
  if(!("Notification" in window)){alertState.textContent="unsupported";return}
@@ -306,6 +318,7 @@ alertsBtn.onclick=async()=>{
  }
  const on=localStorage.getItem(ALERT_KEY)!=="1";
  localStorage.setItem(ALERT_KEY,on?"1":"0"); alertsBtn.textContent=on?"Alerts on":"Enable alerts"; alertState.textContent=on?"armed":"off";
+ try{await syncBackgroundPush(on)}catch(e){alertState.textContent=on?"armed · foreground only":"off";console.warn("background push",e)}
  if(on) await evaluateAlerts(rawAircraft);
 };
 initAlerts();

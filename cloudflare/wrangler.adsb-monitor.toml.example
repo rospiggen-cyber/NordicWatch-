@@ -1,0 +1,28 @@
+name = "nordicwatch-background-monitor"
+main = "adsb-monitor-worker.js"
+compatibility_date = "2026-09-02"
+
+[vars]
+APP_ORIGIN = "https://REPLACE_WITH_APP_ORIGIN"
+MONITOR_ENABLED = "0"
+MOCK_MODE = "1"
+VAPID_SUBJECT = "mailto:REPLACE_WITH_CONTACT"
+
+# Enable only after ADS-B provider terms and endpoint are documented:
+# ADSB_ENDPOINT = "https://verified-provider.example/aircraft"
+# ADSB_ENDPOINT_VERIFIED_AT = "YYYY-MM-DD"
+# ADSB_TERMS_VERIFIED_AT = "YYYY-MM-DD"
+
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[[kv_namespaces]]
+binding = "ALERT_STATE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[triggers]
+crons = ["* * * * *"]
+
+# Secrets: VAPID_PRIVATE_KEY and TEST_TRIGGER_TOKEN
+# Non-secret VAPID_PUBLIC_KEY is set as a Worker variable.
