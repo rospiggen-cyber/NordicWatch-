@@ -1,5 +1,5 @@
-// NordicWatch v0.6 Service Worker
-const CACHE="nordicwatch-v0.6";
+// NordicWatch v0.7 Service Worker
+const CACHE="nordicwatch-v0.7";
 const APP_SHELL=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {
