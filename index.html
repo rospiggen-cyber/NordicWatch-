@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.8</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.9</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -36,6 +36,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .cat-awacs{color:#ff9f43}.cat-tanker{color:#b388ff}.cat-isr{color:#ff6b6b}.cat-transport{color:#61dafb}.cat-fighter{color:#ffd166}.cat-other{color:#8ed1a5}.cat-civilian{color:#aab5c5}.cat-state{color:#55d187}.cat-unknown{color:#6f7c91}.vessel{font-size:20px;line-height:20px;color:#7ee7ff;text-shadow:0 0 5px #000}.vessel-risk{color:#ff6b6b}.track-line{stroke-dasharray:5 5}.maritime-status{color:var(--muted)}.maritime-tools{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}.maritime-tools button{padding:5px 7px;font-size:9px;margin-right:3px}.maritime-tools input[type=number]{width:54px;background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px}.signal-observation{color:var(--accent)}.signal-indicator{color:var(--warn)}.signal-confirmed{color:var(--ok)}
 .coast-track{stroke-dasharray:3 5}.coast-marker{font-size:21px;color:#55d187;text-shadow:0 0 5px #000}.coast-observation{border-left:3px solid var(--accent);padding-left:8px}
 .event-marker{font-size:22px;line-height:22px;color:#ff9f43;text-shadow:0 0 6px #000}.event-area{stroke-dasharray:7 5}.event-signal{border-left:3px solid #ff9f43;padding-left:8px}.event-pref{font-size:9px;color:var(--muted);display:flex!important;align-items:center;gap:4px}
+.trail-label{font-size:9px;font-weight:800;letter-spacing:.4px;color:#edf4ff;background:rgba(7,16,28,.82);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:2px 4px;white-space:nowrap}.trail-controls{display:flex;align-items:center;gap:5px;margin:5px 0;color:var(--muted)}.trail-controls select{background:#07101c;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:3px;font-size:10px}
 .legend{font-size:10px;color:var(--muted);margin-top:6px}.alertctl{margin-top:8px;display:flex;gap:5px;align-items:center}.alertctl button{padding:6px 8px;font-size:10px}.alertstate{font-size:10px;color:var(--muted)}
 .news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
 .brief-actions{display:flex;gap:6px}.brief-actions button{font-size:11px}.brief-sheet{max-height:86vh}.brief-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.brief-stat{border:1px solid var(--border);border-radius:11px;padding:9px;background:rgba(255,255,255,.025)}.brief-stat small{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.brief-stat b{font-size:16px}.brief-section{margin-top:15px}.brief-item{border-top:1px solid var(--border);padding:10px 0}.brief-item button{margin-top:7px;padding:5px 8px;font-size:10px}.evidence{display:inline-block;border:1px solid currentColor;border-radius:7px;padding:2px 5px;font-size:8px;font-weight:800;letter-spacing:.5px;margin-bottom:5px}.evidence.obs{color:var(--accent)}.evidence.infer{color:var(--warn)}.evidence.external{color:var(--ok)}.brief-note{color:var(--muted);font-size:10px;line-height:1.45}.confidence{font-weight:800}.confidence.low{color:var(--danger)}.confidence.medium{color:var(--warn)}.confidence.high{color:var(--ok)}
@@ -44,12 +45,14 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.8</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
 <label><input type="checkbox" data-l="hotspots" checked> Hotspots</label>
 <label><input type="checkbox" data-l="military" checked> Live military ✈</label>
+<label><input type="checkbox" data-l="trails" checked> Aircraft trails</label>
+<label><input type="checkbox" id="patternLabels"> Pattern labels</label><div class="trail-controls">Trail window <select id="trailWindow"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 h</option><option value="180">3 h</option></select></div>
 <label><input type="checkbox" data-l="events" checked> Events / Exercises ◉</label>
 <label><input type="checkbox" data-l="behavior" checked> Coast Guard behavior ⟳</label>
 <label><input type="checkbox" data-l="vessels" checked> Maritime signals ◈</label>
@@ -66,13 +69,14 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.8</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
 <script src="coast-guard-analysis.js"></script>
 <script src="background-monitor-core.js"></script>
 <script src="maritime-core.js"></script>
 <script src="event-engine.js"></script>
+<script src="route-pattern.js"></script>
 <script>
 const D={
 hotspots:[
@@ -105,6 +109,7 @@ hotspots:[
 ["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
 ["Norwegian energy zone",61,3,44,"Critical offshore infrastructure","Major offshore oil and gas infrastructure linking Norway to European energy supply.","Unusual ISR or maritime patrol activity · GNSS anomalies · restricted zones · offshore incidents","HIGH"]],
 changes:[
+["Aircraft trails and route patterns","Persistent ADS-B trails add geometry-based TRANSIT, ORBIT, RACETRACK, LOITER, REPEATED PASS and HOLDING assessments without changing observed evidence."],
 ["Confirmed Event Engine","Official military events add geographic and expected-activity context without replacing direct observations or automatic assessments."],
 ["Coast Guard behavior analysis","Swedish Coast Guard Q-300 aircraft are classified as government traffic. Persistent loiter is recorded separately from confirmed operations and does not raise Activity without duration or supporting signals."],
 ["Nordic–Baltic security news","Current security and defence reporting is matched to watch hotspots and assigned a transparent risk score."],
@@ -116,7 +121,7 @@ changes:[
 ["Other layers remain demo","Hotspots, infrastructure and GNSS are still analysis/demo layers."]]};
 const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({position:"bottomright"}).addTo(map);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
-const G={hotspots:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),events:L.layerGroup().addTo(map),behavior:L.layerGroup().addTo(map),vessels:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
+const G={hotspots:L.layerGroup().addTo(map),trails:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),events:L.layerGroup().addTo(map),behavior:L.layerGroup().addTo(map),vessels:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
 function c(lat,lon,r,col,p,g){L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
  
   
@@ -162,6 +167,8 @@ if(!AC)throw new Error("NordicWatchAircraft classifier unavailable");
 const EE=window.NordicWatchEvents;
 if(!EE)throw new Error("NordicWatch Event Engine unavailable");
 let allEvents=[],activeEvents=[],eventAssessments=[];
+const RP=window.NordicWatchRoutes;
+if(!RP)throw new Error("NordicWatch route pattern engine unavailable");
 const aircraftClass=a=>AC.classifyAircraft(a);
 const isMilitaryAircraft=a=>AC.isMilitaryActivity(aircraftClass(a));
 const classify=a=>{const r=aircraftClass(a);return r.role?r.role.toLowerCase():null};
@@ -232,10 +239,51 @@ function alertScore(a,all){
  if(cats.has("fighter") && cat==="isr") score+=10;
  if(cats.has("awacs")) score+=7;
  if(cats.has("tanker")) score+=5;
+ const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),patternContext=RP.context(aircraftClass(a),pattern);
+ if(patternContext)score+=patternContext.interest;
+ if(cat==="isr"&&pattern.pattern==="REPEATED PASS"&&z.name==="Kaliningrad / Baltijsk")score+=12;
+ if(cat==="fighter"&&pattern.pattern==="REPEATED PASS")score+=10;
+ const firstTrackPoint=pattern.metrics.points?.[0],firstZone=firstTrackPoint&&nearestZone(firstTrackPoint);if(cat==="isr"&&["REPEATED PASS","LOITER"].includes(pattern.pattern)&&firstZone?.name!==z.name)score+=8;
  const contexts=activeEvents.map(event=>EE.assessEvent(event,[a],{classify:aircraftClass})).filter(x=>x.observed.length);
  for(const context of contexts)score+=context.scoreDelta;
  score=Math.min(99,score);
- return {score:Math.max(0,score),cat,zone:z,nearby:[...cats],eventContexts:contexts};
+ return {score:Math.max(0,score),cat,zone:z,nearby:[...cats],eventContexts:contexts,pattern,patternContext};
+}
+
+// Aircraft trail persistence and geometric route-pattern analysis.
+const TRAIL_DB="nordicwatch-aircraft-trails",TRAIL_FALLBACK_KEY="NORDICWATCH_AIRCRAFT_TRAILS",PATTERN_STATE_KEY="NORDICWATCH_PATTERN_STATES",TRAIL_MAX_POINTS=360,TRAIL_MAX_TRACKS=120,TRAIL_MAX_AGE=6*60*60*1000;
+const trailTracks=new Map(),trailVisuals=new Map(),patternAnalyses=new Map();let trailDb=null,trailRenderQueued=false;
+const aircraftHex=a=>String(a?.hex||"").toLowerCase().replace(/[^a-f0-9]/g,"").slice(0,12);
+const trackableAircraft=a=>isMilitaryAircraft(a)||aircraftClass(a).governmentRole==="COAST_GUARD";
+function openTrailDb(){return new Promise((resolve,reject)=>{if(typeof indexedDB==="undefined")return reject(new Error("IndexedDB unavailable"));const request=indexedDB.open(TRAIL_DB,1);request.onupgradeneeded=()=>request.result.createObjectStore("tracks",{keyPath:"hex"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
+function trailFallbackRead(){try{const value=JSON.parse(localStorage.getItem(TRAIL_FALLBACK_KEY)||"[]");return Array.isArray(value)?value:[]}catch{return []}}
+function trailFallbackWrite(){try{const rows=[...trailTracks.values()].sort((a,b)=>(b.points.at(-1)?.timestamp||0)-(a.points.at(-1)?.timestamp||0)).slice(0,50);localStorage.setItem(TRAIL_FALLBACK_KEY,JSON.stringify(rows))}catch(e){console.warn("trail fallback storage",e)}}
+async function initAircraftTrails(){let rows=[];try{trailDb=await openTrailDb();rows=await new Promise((resolve,reject)=>{const request=trailDb.transaction("tracks","readonly").objectStore("tracks").getAll();request.onsuccess=()=>resolve(request.result||[]);request.onerror=()=>reject(request.error)})}catch(e){console.warn("IndexedDB trail store unavailable; using localStorage",e);rows=trailFallbackRead()}const cutoff=Date.now()-TRAIL_MAX_AGE;rows.sort((a,b)=>(b.points?.at(-1)?.timestamp||0)-(a.points?.at(-1)?.timestamp||0));for(const row of rows.slice(0,TRAIL_MAX_TRACKS)){const points=RP.normalize(row.points).filter(x=>x.timestamp>=cutoff).slice(-TRAIL_MAX_POINTS);if(points.length)trailTracks.set(row.hex,{hex:row.hex,points})}if(trailDb){const keep=new Set(trailTracks.keys()),store=trailDb.transaction("tracks","readwrite").objectStore("tracks");for(const row of rows)if(!keep.has(row.hex))store.delete(row.hex)}scheduleTrailRender()}
+function persistTrail(row){if(trailDb){try{trailDb.transaction("tracks","readwrite").objectStore("tracks").put(row)}catch(e){console.warn("trail persistence",e)}}else trailFallbackWrite()}
+function pruneTrails(now=Date.now()){
+ const cutoff=now-TRAIL_MAX_AGE;for(const [hex,row] of trailTracks){row.points=RP.normalize(row.points).filter(x=>x.timestamp>=cutoff).slice(-TRAIL_MAX_POINTS);if(!row.points.length){trailTracks.delete(hex);if(trailDb)try{trailDb.transaction("tracks","readwrite").objectStore("tracks").delete(hex)}catch{}}}
+ if(trailTracks.size>TRAIL_MAX_TRACKS)for(const [hex] of [...trailTracks].sort((a,b)=>(a[1].points.at(-1)?.timestamp||0)-(b[1].points.at(-1)?.timestamp||0)).slice(0,trailTracks.size-TRAIL_MAX_TRACKS))trailTracks.delete(hex)
+}
+function captureAircraftTrails(aircraft,now=Date.now()){
+ const changed=[];for(const a of aircraft.filter(trackableAircraft)){const hex=aircraftHex(a);if(!hex||!Number.isFinite(+a.lat)||!Number.isFinite(+a.lon))continue;const classification=aircraftClass(a),timestamp=now-Math.max(0,Number(a.seen)||0)*1000,row=trailTracks.get(hex)||{hex,points:[]},last=row.points.at(-1);if(last&&timestamp-last.timestamp<10000)continue;const point={timestamp,lat:+a.lat,lon:+a.lon,altitude:a.alt_baro,speed:a.gs,track:a.track,callsign:(a.flight||"").trim(),hex,classification:`${classification.base}${classification.role?" / "+classification.role:""}`};if(last&&RP.km(last,point)<.03&&timestamp-last.timestamp<60000)continue;row.points.push(point);row.points=RP.normalize(row.points).slice(-TRAIL_MAX_POINTS);trailTracks.set(hex,row);changed.push(row)}pruneTrails(now);changed.forEach(persistTrail);updatePatternChanges();scheduleTrailRender()
+}
+function trailWindowPoints(hex){const mins=Number(document.getElementById("trailWindow")?.value)||30,cutoff=Date.now()-mins*60000,row=trailTracks.get(hex);return row?row.points.filter(x=>x.timestamp>=cutoff):[]}
+const trailColor=a=>({awacs:"#ff9f43",tanker:"#b388ff",isr:"#ff6b6b",transport:"#61dafb",fighter:"#ffd166",other:"#8ed1a5",civilian:"#aab5c5",state:"#55d187",unknown:"#6f7c91"})[(aircraftClass(a).role||aircraftClass(a).base).toLowerCase()]||"#8ed1a5";
+const trailDuration=ms=>ms<3600000?Math.max(0,Math.round(ms/60000))+" min":(ms/3600000).toFixed(1)+" h";
+function aircraftPopup(a,analysis){const result=aircraftClass(a),call=(a.flight||"").trim()||a.r||a.hex||"Unknown",identity=result.governmentRole==="COAST_GUARD"?"Government / Coast Guard":result.base==="MILITARY"?result.base+" / "+result.role+" · "+result.confidence:result.base,m=analysis?.metrics,first=m?.points?.[0]?.timestamp,last=m?.points?.at(-1)?.timestamp,context=RP.context(result,analysis||{});return `<b>${esc(call)}</b><br>Classification: ${esc(identity)}<br>Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Evidence: ${esc(result.evidence.map(x=>x.signal).join(", ")||"insufficient for identification")}<br><br><span class="signal-observation">OBSERVED</span><br>Aircraft track recorded for ${esc(m?trailDuration(m.durationMs):"0 min")}<br>Distance travelled: ${esc(m?m.distanceKm.toFixed(1):"0.0")} km<br>First seen: ${esc(first?new Date(first).toLocaleString():"n/a")}<br>Last seen: ${esc(last?new Date(last).toLocaleString():"n/a")}<br><br><span class="signal-indicator">INFERRED</span><br>${esc(analysis?.pattern||"UNKNOWN")} pattern · ${esc(analysis?.confidence||0)}% confidence${context?"<br>"+esc(context.text):""}`}
+function scheduleTrailRender(){if(trailRenderQueued)return;trailRenderQueued=true;requestAnimationFrame(()=>{trailRenderQueued=false;renderAircraftTrails()})}
+function renderAircraftTrails(){
+ const active=new Map(rawAircraft.filter(trackableAircraft).map(a=>[aircraftHex(a),a]).filter(x=>x[0])),labelsOn=document.getElementById("patternLabels")?.checked===true,maxLabels=innerWidth<=850?5:12;let labelCount=0;
+ for(const [hex,visual] of trailVisuals)if(!active.has(hex)){visual.segments.forEach(x=>G.trails.removeLayer(x));if(visual.label)G.trails.removeLayer(visual.label);trailVisuals.delete(hex)}
+ const ranked=[...active].map(([hex,a])=>({hex,a,analysis:RP.detect(trailWindowPoints(hex))})).sort((a,b)=>b.analysis.confidence-a.analysis.confidence);patternAnalyses.clear();
+ for(const {hex,a,analysis} of ranked){patternAnalyses.set(hex,analysis);const simplified=RP.simplify(analysis.metrics.points,.0015),color=trailColor(a),chunks=4,size=Math.max(2,Math.ceil(simplified.length/chunks));let visual=trailVisuals.get(hex);if(!visual){visual={segments:[],label:null};trailVisuals.set(hex,visual)}for(let i=0;i<chunks;i++){const start=Math.max(0,i*size-(i?1:0)),pts=simplified.slice(start,Math.min(simplified.length,(i+1)*size));let line=visual.segments[i];if(!line){line=L.polyline([],{color,weight:2.5,opacity:.2+i*.2,className:"track-line"}).addTo(G.trails);visual.segments[i]=line}line.setStyle({color,opacity:.18+i*.2});line.setLatLngs(pts.map(p=>[p.lat,p.lon]));line.unbindPopup();if(pts.length>1)line.bindPopup(aircraftPopup(a,analysis))}
+  if(visual.label){G.trails.removeLayer(visual.label);visual.label=null}if(labelsOn&&labelCount<maxLabels&&analysis.confidence>=60&&analysis.pattern!=="UNKNOWN"&&simplified.length){const last=simplified.at(-1),text=aircraftClass(a).role==="ISR"&&analysis.pattern==="REPEATED PASS"?"ISR PASS":analysis.pattern;visual.label=L.marker([last.lat,last.lon],{interactive:false,icon:L.divIcon({className:"",html:`<div class="trail-label">${esc(text)}</div>`,iconSize:[100,18],iconAnchor:[50,28]})}).addTo(G.trails);labelCount++}}
+}
+function updatePatternChanges(){
+ let states={};try{states=JSON.parse(localStorage.getItem(PATTERN_STATE_KEY)||"{}")||{}}catch{}const now=Date.now(),changes=[],current=[];
+ for(const a of rawAircraft.filter(trackableAircraft)){const hex=aircraftHex(a),analysis=RP.detect(trailWindowPoints(hex)),previous=states[hex],call=(a.flight||"").trim()||a.r||hex,result=aircraftClass(a),zone=nearestZone(a),actorText=`${a.cou||a.country||""} ${a.operator||a.ownOp||""} ${a.r||""}`,russian=/\b(?:russia|russian)\b|\bRA-\d/i.test(actorText);current.push({a,hex,analysis,result,zone});if(analysis.confidence>=60&&previous?.pattern&&previous.pattern!==analysis.pattern&&previous.pattern!=="UNKNOWN")changes.push(`${call} changed from ${previous.pattern} to ${analysis.pattern}.`);if(russian&&analysis.confidence>=60&&analysis.pattern==="REPEATED PASS"&&result.role==="ISR"&&zone?.name==="Kaliningrad / Baltijsk"&&previous?.pattern!==analysis.pattern)changes.push(`Russian ISR began repeated passes near Kaliningrad.`);states[hex]={pattern:analysis.pattern,confidence:analysis.confidence,time:now}}
+ const zonesWithSupport=new Set(current.filter(x=>x.analysis.pattern==="RACETRACK"&&x.analysis.confidence>=60&&["AWACS","TANKER"].includes(x.result.role)&&x.zone).map(x=>x.zone.name));for(const zone of zonesWithSupport){const matches=current.filter(x=>x.zone?.name===zone&&x.analysis.pattern==="RACETRACK"),hasAwacs=matches.some(x=>x.result.role==="AWACS"),hasTanker=matches.some(x=>x.result.role==="TANKER"),key=`support:${zone}`;if(hasAwacs&&hasTanker&&now-(states[key]?.time||0)>ALERT_COOLDOWN_MS){changes.push(`AWACS and tanker racetracks now overlap over ${zone}.`);states[key]={pattern:"COORDINATED_RACETRACK",time:now}}}
+ for(const [hex,value] of Object.entries(states))if(now-value.time>TRAIL_MAX_AGE)delete states[hex];localStorage.setItem(PATTERN_STATE_KEY,JSON.stringify(states));const box=document.getElementById("changes");if(box)for(const text of changes){const row=document.createElement("div");row.className="change pattern-change";const b=document.createElement("b");b.textContent=text;const span=document.createElement("span");span.textContent="INFERRED from ADS-B track geometry.";row.append(b,document.createElement("br"),span);box.prepend(row)}
 }
 // Correlation engine: looks for mission-role combinations inside the same watch zone.
 function detectKillChains(all){
@@ -263,10 +311,12 @@ function detectKillChains(all){
    // Extra weight for the two highest-interest southern Baltic zones.
    if(z.name==="Kaliningrad / Baltijsk") score=Math.min(99,score+3);
    if(z.name==="Polish Baltic coast" && by.isr.length) score=Math.min(99,score+2);
+   const supportRacetrack=by.awacs.some(a=>(patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a)))).pattern==="RACETRACK")&&by.tanker.some(a=>(patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a)))).pattern==="RACETRACK");
+   if(supportRacetrack){score=Math.min(99,score+8);reason+=" · overlapping AWACS/tanker racetracks"}
    const eventContexts=activeEvents.map(event=>EE.assessEvent(event,members,{classify:aircraftClass})).filter(x=>x.observed.length);
    for(const context of eventContexts)score+=context.scoreDelta;
    score=Math.max(0,Math.min(99,score));
-   events.push({zone:z,score,label,reason,members,by,eventContexts});
+   events.push({zone:z,score,label,reason,members,by,eventContexts,supportRacetrack});
  }
  return events.sort((a,b)=>b.score-a.score);
 }
@@ -301,7 +351,7 @@ async function notifyEvent(a,e){
  const id=(a.hex||call)+":"+e.zone.name;
  if(!canNotify(id,level)) return;
  const title=`${level==="WATCH"?"🟡":level==="ALERT"?"🟠":"🔴"} NordicWatch ${level}`;
- const body=`${e.cat.toUpperCase()} ${call} · ${e.zone.name} · score ${e.score}`;
+ const body=`${e.cat.toUpperCase()} ${call} · ${e.zone.name} · ${e.pattern.pattern} ${e.pattern.confidence}% · score ${e.score}`;
  const opts={body,tag:"nw-"+id,renotify:true,data:{lat:+a.lat,lon:+a.lon,call,score:e.score},icon:"icon-192.png",badge:"icon-192.png"};
  try{
    if(swReg) await swReg.showNotification(title,opts);
@@ -379,15 +429,15 @@ function renderAircraft(){
  const ac=rawAircraft.filter(a=>{const result=aircraftClass(a),base=result.base.toLowerCase();return activeFilter==="all"?isMilitaryAircraft(a):result.governmentRole?.toLowerCase()===activeFilter||result.role?.toLowerCase()===activeFilter||base===activeFilter});
  ac.forEach(a=>{
    const result=aircraftClass(a),cat=result.role?result.role.toLowerCase():result.base.toLowerCase(),call=(a.flight||"").trim()||a.r||a.hex||"Unknown";
-   const identity=result.governmentRole==="COAST_GUARD"?"Government / Coast Guard":result.base==="MILITARY"?result.base+" / "+result.role+" · "+result.confidence:result.base;
-   const popup=`<b>${esc(call)}</b><br>Classification: ${esc(identity)}<br>Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Evidence: ${esc(result.evidence.map(x=>x.signal).join(", ")||"insufficient for identification")}`;
-   L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(popup).addTo(G.military);
+   const analysis=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a)));
+   L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(aircraftPopup(a,analysis)).addTo(G.military);
  });
  document.getElementById("adsbStatus").textContent=summary.military+" military · "+summary.nonMilitary+" civilian/state/unknown";
  eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));
  const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0));
  document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation));
  if(allEvents.length)renderEvents();
+ scheduleTrailRender();
 }
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS";
@@ -679,6 +729,7 @@ async function loadMilitary(){
      const j=await fetchJSON(url);
      rawAircraft=(j.ac||j.aircraft||[]).filter(nordic);
     saveHistorySnapshot(rawAircraft);
+     captureAircraftTrails(rawAircraft);
      updateCoastGuardTracks(rawAircraft);
      renderAircraft();
      await evaluateAlerts(rawAircraft);
@@ -686,9 +737,8 @@ async function loadMilitary(){
      return;
    }catch(e){lastErr=e}
  }
- rawAircraft=[];G.military.clearLayers();st.textContent="feed unavailable";up.textContent="Map remains operational";console.error(lastErr);
+ rawAircraft=[];G.military.clearLayers();scheduleTrailRender();st.textContent="feed unavailable";up.textContent="Map remains operational";console.error(lastErr);
 }
-loadMilitary();setInterval(loadMilitary,30000);
 initMaritimeSignals();
 loadNews();setInterval(loadNews,NEWS_REFRESH_MS);
 
@@ -699,7 +749,9 @@ document.getElementById("signals").innerHTML='<div class="signal"><div class="me
 document.getElementById("hots").innerHTML=D.hotspots.slice().sort((a,b)=>b[3]-a[3]).map(h=>'<div class="hot"><div><b>'+h[0]+'</b><small>'+h[4]+'</small></div><div class="n '+(h[3]>=70?'hi':h[3]>=50?'med':'lo')+'">'+h[3]+'</div></div>').join("");
 document.getElementById("changes").innerHTML=D.changes.map(x=>'<div class="change"><b>'+x[0]+'</b><br><span>'+x[1]+'</span></div>').join("");
 const eventStartAlerts=document.getElementById("eventStartAlerts");eventStartAlerts.checked=localStorage.getItem(EVENT_START_ALERT_KEY)==="1";eventStartAlerts.onchange=()=>localStorage.setItem(EVENT_START_ALERT_KEY,eventStartAlerts.checked?"1":"0");
+const trailWindow=document.getElementById("trailWindow"),patternLabels=document.getElementById("patternLabels");trailWindow.value=localStorage.getItem("NORDICWATCH_TRAIL_WINDOW")||"30";trailWindow.onchange=()=>{localStorage.setItem("NORDICWATCH_TRAIL_WINDOW",trailWindow.value);renderAircraftTrails();renderAircraft()};patternLabels.checked=localStorage.getItem("NORDICWATCH_PATTERN_LABELS")==="1";patternLabels.onchange=()=>{localStorage.setItem("NORDICWATCH_PATTERN_LABELS",patternLabels.checked?"1":"0");renderAircraftTrails()};
 initEventEngine();
+initAircraftTrails().then(loadMilitary);setInterval(loadMilitary,30000);
 document.querySelectorAll("[data-l]").forEach(e=>e.onchange=()=>e.checked?G[e.dataset.l].addTo(map):map.removeLayer(G[e.dataset.l]));
 document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-r]").forEach(x=>x.classList.remove("on"));b.classList.add("on");document.getElementById("score").textContent={"6h":57,"24h":62,"3d":65,"7d":68,"30d":54}[b.dataset.r]});
 const changedBtn=document.getElementById("changed");
