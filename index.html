@@ -458,7 +458,7 @@ async function loadAIS(){
   rawVessels=items.map(normalizeVessel).filter(validVessel);const history=saveVesselHistory(rawVessels);
   maritimeEvents=rawVessels.map(v=>({vessel:v,risk:maritimeRisk(v,history[v.mmsi]||[])})).sort((a,b)=>b.risk.score-a.risk.score);
   renderVessels(history);for(const e of maritimeEvents)await notifyMaritime(e);
-  status.textContent=rawVessels.length+" vessels";updated.textContent="Updated "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})
+  status.textContent=rawVessels.length+" vessels";const attribution=String(data?.meta?.attribution||"Configured AIS provider").slice(0,160);updated.textContent="Updated "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+attribution
  }catch(e){status.textContent="feed unavailable";updated.textContent="No maritime assessment produced";rawVessels=[];maritimeEvents=[];G.vessels.clearLayers();console.warn("AIS",e)}
 }
 
