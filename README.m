@@ -1,4 +1,4 @@
-# NordicWatch v0.9.5 — High-value Special Mission Aircraft
+# NordicWatch v0.9.6 — Military Capability Change Detection
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -11,6 +11,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - scheduled official-source Event Discovery with dynamic watch zones, ADS-B correlation and novelty scoring
 - trusted external military reports with approximate geolocation and strict reported/observed/inferred evidence separation
 - reusable RC-135/ISR/EW/AWACS/ASW special-mission normalization, strategic-area scoring and material-change alerts
+- high-priority military capability-change discovery for NATO/Nordic tests, deployments, fielding and procurement beyond permanent map hotspots
 - persistent, bounded aircraft trails with 15-minute to 3-hour display windows
 - geometry-based route-pattern assessment and mission-role correlation
 - Nordic–Baltic GDELT security and defence reporting

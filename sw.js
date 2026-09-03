@@ -1,5 +1,5 @@
-// NordicWatch v0.9.5 Service Worker
-const CACHE="nordicwatch-v0.9.5-special-mission-platforms";
+// NordicWatch v0.9.6 Service Worker
+const CACHE="nordicwatch-v0.9.6-capability-change-detection";
 const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./special-mission-analysis.js","./coast-guard-analysis.js","./background-monitor-core.js","./maritime-core.js","./event-engine.js","./route-pattern.js","./uav-incidents.js","./external-report-core.mjs","./mock/events.json","./mock/maritime-signals.json","./mock/uav-incidents.json","./mock/external-military-reports.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {

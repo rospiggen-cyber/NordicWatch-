@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {officialSource,configuredSources,parseFeed,discover,mergeEvents,correlateAircraft,noveltyScore,regionalPostures} from "../cloudflare/event-discovery-core.mjs";
+import {officialSource,configuredSources,parseFeed,discover,mergeEvents,correlateAircraft,noveltyScore,regionalPostures,classifyCapabilityChange} from "../cloudflare/event-discovery-core.mjs";
 
 assert.equal(officialSource("https://www.dvidshub.net/news/1").id,"dvids");
 assert.equal(officialSource("https://www.defense.gov/News/Releases/1").id,"dod");
@@ -20,4 +20,7 @@ const jan=discover({...articles[0],title:"Exercise Arctic Shield deploys NSM to 
 const posture=regionalPostures([trondheim,jan]);assert.equal(posture.length,1);assert.equal(posture[0].confidence,"CONFIRMED");assert.equal(posture[0].discovery.memberIds.length,2);assert.match(posture[0].evidence.inferred[0].text,/no actor inference/i);
 
 assert.equal(discover({title:"Exercise at Trondheim",summary:"deployment",url:"https://example.social/post",publishedAt:"2026-09-02"}),null);
+const capabilityArticle={title:"German Navy successfully test-fired Israeli LORA ballistic missile from a frigate in the North Atlantic",summary:"The German Navy completed a successful live-fire trial and plans procurement, adding a long-range precision strike and deterrence capability.",url:"https://www.bundeswehr.de/en/organization/navy/news/lora-trial",publishedAt:"2026-09-03T08:00:00Z"};
+const capabilityText=classifyCapabilityChange(capabilityArticle);assert.equal(capabilityText.qualifies,true);assert.equal(capabilityText.severity,"HIGH");assert.equal(capabilityText.confidence,"HIGH");for(const tag of ["naval","ballistic-missile","long-range-strike","Germany","NATO","live-fire","procurement"])assert(capabilityText.tags.includes(tag),`missing capability tag ${tag}`);
+const capabilityEvent=discover(capabilityArticle,Date.parse("2026-09-03T09:00:00Z"));assert(capabilityEvent);assert.equal(capabilityEvent.eventType,"military_capability_change");assert.equal(capabilityEvent.severity,"HIGH");assert.equal(capabilityEvent.confidence,"CONFIRMED");assert.match(capabilityEvent.areaName,/Germany \/ North Atlantic/);assert(capabilityEvent.countries.includes("Germany"));assert(capabilityEvent.organisations.includes("NATO"));assert.equal(capabilityEvent.radiusKm,300);const capabilityScore=noveltyScore(capabilityEvent,[],{related:[]},1);assert(capabilityScore.score>=90);assert.match(capabilityScore.explanation,/weapon capability/);
 console.log("event discovery tests passed");
