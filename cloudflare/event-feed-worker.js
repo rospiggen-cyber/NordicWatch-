@@ -1,4 +1,4 @@
-import {OFFICIAL_SOURCES,configuredSources,parseFeed,discover,mergeEvents,correlateAircraft,noveltyScore,regionalPostures,buildEventChains,officialSource,clean} from "./event-discovery-core.mjs";
+import {OFFICIAL_SOURCES,configuredSources,parseFeed,discoverTimed as discover,mergeEvents,correlateAircraft,noveltyScoreTimed as noveltyScore,regionalPostures,buildEventChains,officialSource,clean} from "./event-discovery-core.mjs";
 import {configuredExternalSources,parseExternalFeed,importReports,correlate as correlateExternal,toEvent as externalToEvent,sourceTrust} from "../external-report-core.mjs";
 const cors=origin=>({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=60","x-content-type-options":"nosniff"});
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","x-content-type-options":"nosniff",...headers}});

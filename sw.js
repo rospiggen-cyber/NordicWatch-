@@ -1,6 +1,6 @@
-// NordicWatch v0.9.8 Service Worker
-const CACHE="nordicwatch-v0.9.8-escalation-engine";
-const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./special-mission-analysis.js","./coast-guard-analysis.js","./background-monitor-core.js","./maritime-core.js","./event-engine.js","./route-pattern.js","./uav-incidents.js","./external-report-core.mjs","./mock/events.json","./mock/maritime-signals.json","./mock/uav-incidents.json","./mock/external-military-reports.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
+// NordicWatch v0.9.9 Service Worker
+const CACHE="nordicwatch-v0.9.9-situational-engine";
+const APP_SHELL=["./","./index.html","./aircraft-classifier.js","./special-mission-analysis.js","./coast-guard-analysis.js","./background-monitor-core.js","./maritime-core.js","./event-engine.js","./situational-engine.js","./route-pattern.js","./uav-incidents.js","./external-report-core.mjs","./mock/events.json","./mock/maritime-signals.json","./mock/uav-incidents.json","./mock/external-military-reports.json","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));

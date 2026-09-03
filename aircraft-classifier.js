@@ -7,7 +7,7 @@
 
   const BASE=Object.freeze({CIVILIAN:"CIVILIAN",MILITARY:"MILITARY",STATE:"STATE",UNKNOWN:"UNKNOWN"});
   const CONFIDENCE=Object.freeze({CONFIRMED:"CONFIRMED",PROBABLE:"PROBABLE"});
-  const ROLE=Object.freeze({AWACS:"AWACS",TANKER:"TANKER",ISR:"ISR",EW:"EW",ASW:"ASW",TRANSPORT:"TRANSPORT",FIGHTER:"FIGHTER",OTHER:"OTHER"});
+  const ROLE=Object.freeze({AWACS:"AWACS",TANKER:"TANKER",ISR:"ISR",SIGINT:"SIGINT",EW:"EW",ASW:"ASW",MARITIME_PATROL:"MARITIME_PATROL",TRANSPORT:"TRANSPORT",FIGHTER:"FIGHTER",BOMBER:"BOMBER",TRAINER:"TRAINER",HELICOPTER:"HELICOPTER",SPECIAL_MISSION:"SPECIAL_MISSION",OTHER_MILITARY:"OTHER_MILITARY",OTHER:"OTHER",UNKNOWN:"UNKNOWN"});
   const INTEREST_CLASS=Object.freeze({HIGH_VALUE_ISR:"HIGH_VALUE_ISR",HIGH_VALUE_SPECIAL_MISSION:"HIGH_VALUE_SPECIAL_MISSION"});
   const SPECIAL_MISSION_PLATFORMS=Object.freeze([
     {match:/\b(?:RC135S|RC135SCOBRABALL|COBRABALL)\b/,platformFamily:"RC-135",platformVariant:"RC-135S",platformName:"RC-135S COBRA BALL",role:ROLE.ISR,subrole:"MASINT / ELINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR},
@@ -56,7 +56,9 @@
 
   function specialMissionPlatform(a){
     const keys=["t","type","typeCode","icaoType","model","aircraftModel","description","desc","flight","callsign","callSign","registration","reg","r","operator","operatorName","operator_name","ownOp","owner","militaryType","militaryMetadata"];
-    const values=keys.map(k=>a&&a[k]).filter(v=>typeof v==="string"&&v.trim()).map(norm);
+    const values=keys.map(k=>a&&a[k]).filter(v=>typeof v==="string"&&v.trim()).map(norm),t=type(a),cs=callsign(a),op=norm(operator(a)),model=norm(text(a,["model","aircraftModel","description","desc"]));
+    if(["CL60","CL650","C650"].includes(t)&&(/ARTEMIS/.test(cs)||/LEIDOS|USARMY|AERIALRECONNAISSANCE/.test(op+model)))return Object.freeze({platformFamily:"Challenger 650",platformVariant:"ARTEMIS II",platformName:"ARTEMIS II CHALLENGER 650",role:ROLE.ISR,subrole:"ISR / SIGINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR,military:true});
+    if(["GLF4","GIV","G4"].includes(t)&&(/SVF680|KORPEN/.test(cs)||/S102B|SWEDISHARMEDFORCES|SWEDISHAIRFORCE/.test(op+model)))return Object.freeze({platformFamily:"S102B",platformVariant:"S102B Korpen",platformName:"S102B KORPEN",role:ROLE.ISR,subrole:"SIGINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR,military:true});
     for(const platform of SPECIAL_MISSION_PLATFORMS)if(values.some(value=>platform.match.test(value)))return Object.freeze({...platform,match:undefined,military:true});
     return null;
   }
@@ -107,7 +109,7 @@
   function isMilitaryActivity(result){return result&&result.base===BASE.MILITARY&&(result.confidence===CONFIDENCE.CONFIRMED||result.confidence===CONFIDENCE.PROBABLE)}
   function summarize(aircraft,options){
     const base={CIVILIAN:0,MILITARY:0,STATE:0,UNKNOWN:0},roles={AWACS:0,TANKER:0,ISR:0,EW:0,ASW:0,TRANSPORT:0,FIGHTER:0,OTHER:0};
-    for(const item of aircraft||[]){const result=classifyAircraft(item,options);base[result.base]++;if(isMilitaryActivity(result))roles[result.role]++}
+    for(const item of aircraft||[]){const result=classifyAircraft(item,options);base[result.base]++;if(isMilitaryActivity(result))roles[Object.hasOwn(roles,result.role)?result.role:"OTHER"]++}
     return {base,roles,military:base.MILITARY,nonMilitary:base.CIVILIAN+base.STATE+base.UNKNOWN,total:(aircraft||[]).length};
   }
 
