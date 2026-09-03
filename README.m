@@ -1,4 +1,4 @@
-# NordicWatch v0.9.7 — Maritime Behavior Anomaly Detection
+# NordicWatch v0.9.8 — Event Chain and Escalation Engine
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -23,6 +23,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - installable PWA and service-worker notification routing
 - deduplicated recovered-UAV incidents with strict OBSERVED / ASSESSED / ATTRIBUTED provenance
 - recovered-UAV hotspot scoring, brief context, alerts and non-attributive pattern detection
+- actor-to-response event chains, source-confidence labels, change-aware escalation scoring and secondary Baltic hotspot context
 
 ## Maritime Signals
 
@@ -56,7 +57,7 @@ Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast G
 
 ## Authentication and data handling
 
-v0.9.4 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
+v0.9.8 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
