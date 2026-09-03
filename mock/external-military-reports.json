@@ -1,0 +1,15 @@
+{
+  "schemaVersion":"1.0",
+  "reports":[{
+    "id":"pl-leba-il20-intercept-2026-08-31",
+    "timestamp":"2026-08-31T10:00:00Z",
+    "sourceName":"RTVE / agency report citing the Polish defence minister",
+    "sourceUrl":"https://www.rtve.es/noticias/20260831/cazas-polacos-identifican-avion-espia-ruso-mar-baltico/17207654.shtml",
+    "title":"Polish fighters intercept Russian Il-20 over the Baltic Sea",
+    "description":"A Russian Ilyushin Il-20 reconnaissance aircraft was reportedly intercepted by Polish fighters approximately 30 km north of Łeba over the Baltic Sea. Polish authorities reported that Polish airspace was not violated.",
+    "aircraftCountry":"Russian",
+    "respondingCountry":"Polish",
+    "respondingAircraft":["Polish fighters"],
+    "trackObserved":false
+  }]
+}

@@ -31,3 +31,11 @@ Evidence remains separate in every discovered event:
 - `INFERRED`: correlation, novelty and regional-posture interpretations.
 
 Social media is not in the confirmation allowlist. A future lead adapter may retain a social lead separately, but it must never emit `confidence: CONFIRMED` or write it as an official EVENT.
+
+## External Military Reports
+
+`external-report-core.mjs` handles trusted reporting about military activity that may not appear in ADS-B. Official authorities and armed forces receive the highest trust. Major agencies may produce `CONFIRMED_EXTERNAL`; reputable defence publications alone remain `INFERRED` candidates. Social-media hosts are rejected.
+
+The report model retains platform, role, reported actor and response, approximate geolocation, source tier, interest and `trackObserved`. It never converts a source mention into an ADS-B observation. Current aircraft and device-local history are searched within ±60 minutes, but a matching fighter, AWACS or tanker produces only an `INFERRED` correlation—not a claim that it performed the reported intercept.
+
+The Łeba regression fixture represents the 31 August 2026 report of a Russian IL-20 intercepted approximately 30 km north of Łeba. It is displayed as a `CONFIRMED_EXTERNAL` report with `APPROXIMATE` location and `NOT OBSERVED BY NORDICWATCH` track status.

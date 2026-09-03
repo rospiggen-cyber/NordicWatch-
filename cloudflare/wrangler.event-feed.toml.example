@@ -7,6 +7,9 @@ APP_ORIGIN = "https://YOUR_GITHUB_USER.github.io"
 EVENT_ALERT_THRESHOLD = "75"
 # Comma-separated approved official RSS/Atom endpoints; other hosts are rejected.
 SOURCE_URLS = ""
+# Trusted external military-report RSS/Atom endpoints. Only hosts in the
+# external-report trust registry are accepted; social media is always rejected.
+EXTERNAL_REPORT_URLS = ""
 # Optional public ADS-B JSON endpoint used for event/airlift correlation.
 ADSB_ENDPOINT = ""
 # Optional HTTPS receiver that delivers authenticated event push payloads.

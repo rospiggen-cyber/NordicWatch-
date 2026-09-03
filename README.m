@@ -1,4 +1,4 @@
-# NordicWatch v0.9.3 — Recovered UAV Incidents
+# NordicWatch v0.9.4 — External Military Reports
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -9,6 +9,7 @@ NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 - Swedish Coast Guard Q-300 track history and persistent-loiter observations
 - confirmed military Event Engine with geographic and expected-activity context
 - scheduled official-source Event Discovery with dynamic watch zones, ADS-B correlation and novelty scoring
+- trusted external military reports with approximate geolocation and strict reported/observed/inferred evidence separation
 - persistent, bounded aircraft trails with 15-minute to 3-hour display windows
 - geometry-based route-pattern assessment and mission-role correlation
 - Nordic–Baltic GDELT security and defence reporting
@@ -52,7 +53,7 @@ Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast G
 
 ## Authentication and data handling
 
-v0.9.3 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
+v0.9.4 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
