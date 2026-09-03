@@ -5,7 +5,7 @@
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
 
-  const EVENT_TYPES=new Set(["military_exercise","deployment","air_policing_activity","readiness_increase","readiness_change","drone_incident","border_incident","naval_exercise","naval_activity","official_defence_announcement","military_capability_change","intercept","scramble","airspace_violation","isr_activity","ew_activity"]);
+  const EVENT_TYPES=new Set(["military_exercise","deployment","air_policing_activity","readiness_increase","readiness_change","drone_incident","border_incident","naval_exercise","naval_activity","maritime_behavior_anomaly","official_defence_announcement","military_capability_change","intercept","scramble","airspace_violation","isr_activity","ew_activity"]);
   const ACTIVITY_TYPES=new Set(["FIGHTER","TRANSPORT","HELICOPTER","UAV","AWACS","TANKER","NAVAL","GROUND_FORCES","AIR_DEFENCE","ISR"]);
   const OFFICIAL_HOSTS=["nato.int","forsvarsmakten.se","puolustusvoimat.fi","mil.ee","mil.lv","mod.gov.lv","kariuomene.lt","forsvaret.no","gov.pl","joint-expeditionary-force.com","gov.uk","dvidshub.net","defense.gov","war.gov","navy.mil","marines.mil","af.mil","army.mil","bundeswehr.de","bmvg.de","defensie.nl"];
   const TRUSTED_EXTERNAL_HOSTS=["reuters.com","apnews.com","afp.com","pap.pl","polskieradio.pl","rtve.es"];

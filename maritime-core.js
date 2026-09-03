@@ -9,7 +9,7 @@
   const MAX_IMPORT_BYTES=2*1024*1024;
   const MAX_RECORDS=10000;
   const BOUNDS={west:-12,south:53,east:34.5,north:72.5};
-  const TYPES=new Set(["vessel_position","maritime_event","navigation_warning","restriction","authority_notice","manual_event"]);
+  const TYPES=new Set(["vessel_position","maritime_event","maritime_behavior_anomaly","navigation_warning","restriction","authority_notice","manual_event"]);
   const EVIDENCE=new Set(["observation","indicator","confirmed"]);
   const ALLOWED_USE=new Set(["test","display","analysis","alerts","commercial"]);
   const QUALITY={official:1,verified:0.9,licensed:0.8,community:0.55,unknown:0.3,mock:0.2};
@@ -82,9 +82,19 @@
       schemaVersion:"0.7",id,type,evidence,title,description,
       lat:pos?.lat,lon:pos?.lon,timestamp:at,end:end&&end>=at?end:null,
       mmsi:text(raw.mmsi,9).replace(/\D/g,"").slice(0,9)||null,
+      imo:text(raw.imo??raw.imo_number,10).replace(/\D/g,"").slice(0,10)||null,
+      vesselName:text(raw.vesselName??raw.vessel_name??raw.shipName??raw.ship_name??raw.name,100)||null,
+      flag:text(raw.flag??raw.flagState??raw.flag_state,60)||null,
+      vesselType:text(raw.vesselType??raw.vessel_type??raw.shipType??raw.ship_type,80)||null,
+      operator:text(raw.operator??raw.owner??raw.manager,120)||null,
+      association:text(raw.association??raw.affiliation,120)||null,
       speed:Number.isFinite(Number(raw.speed??raw.sog))?Number(raw.speed??raw.sog):null,
       course:Number.isFinite(Number(raw.course??raw.cog))?Number(raw.course??raw.cog):null,
-      status:text(raw.status,80)||null,link:httpsUrl(raw.link),source,
+      status:text(raw.status??raw.navStatus??raw.nav_status,80)||null,
+      restrictedManeuverability:raw.restrictedManeuverability===true||raw.restricted_maneuverability===true||/restricted (?:manoeuvrability|maneuverability)/i.test(String(raw.status??raw.navStatus??"")),
+      towing:raw.towing===true||/\b(?:towing|tug|tow)\b/i.test(String(raw.status??raw.vesselType??raw.vessel_type??"")),
+      aisGapMinutes:Number.isFinite(Number(raw.aisGapMinutes??raw.ais_gap_minutes))?Math.max(0,Number(raw.aisGapMinutes??raw.ais_gap_minutes)):null,
+      link:httpsUrl(raw.link),source,
       tags:(Array.isArray(raw.tags)?raw.tags:String(raw.tags??"").split(/[|;]/)).map(x=>text(x,40)).filter(Boolean).slice(0,20),
       importedAt:now,importIndex:index
     };
@@ -155,14 +165,19 @@
     const distanceKm=Number(config.distanceKm)||100,timeMs=(Number(config.timeHours)||24)*3600000;
     const candidates=[];
     const add=(kind,item,at)=>{
+      if(item===record)return;
       if(!Number.isFinite(+item.lat)||!Number.isFinite(+item.lon))return;
       const distance=km(record,item),delta=at==null?null:Math.abs(record.timestamp-at);
-      if(distance<=distanceKm&&(delta===null||delta<=timeMs))candidates.push({kind,id:text(item.id??item.title??item.name,100),distanceKm:distance,timeDeltaMs:delta,source:text(item.source?.name??item.source,100)})
+      if(distance<=distanceKm&&(delta===null||delta<=timeMs))candidates.push({kind,id:text(item.id??item.title??item.name,100),distanceKm:distance,timeDeltaMs:delta,source:text(item.source?.name??item.source,100),role:text(item.role,40),tags:(item.tags||[]).map(x=>text(x,40)).slice(0,20)})
     };
     (context.hotspots||[]).forEach(x=>add("hotspot",x,null));
     (context.aircraft||[]).forEach(x=>add("aircraft",x,timestamp(x.timestamp??x.seenAt??Date.now())));
     (context.gnss||[]).forEach(x=>add("gnss",x,timestamp(x.timestamp)));
     (context.news||[]).forEach(x=>add("news",x,timestamp(x.timestamp??x.date)));
+    (context.infrastructure||[]).forEach(x=>add("critical_infrastructure",x,null));
+    (context.exercises||[]).forEach(x=>add("military_exercise",x,timestamp(x.timestamp??x.startTime)));
+    (context.warships||[]).forEach(x=>add("allied_warship",x,timestamp(x.timestamp)));
+    (context.asw||[]).forEach(x=>add("submarine_asw",x,timestamp(x.timestamp)));
     (context.maritime||[]).forEach(x=>{if(x!==record)add("maritime",x,timestamp(x.timestamp))});
     return candidates.sort((a,b)=>a.distanceKm-b.distanceKm)
   }
@@ -181,7 +196,22 @@
   }
   function eventKey(record){return record.type+"|"+record.id+"|"+record.timestamp}
 
+  const identity=record=>record.mmsi||record.imo||record.id;
+  const angleDelta=(a,b)=>Math.abs(((a-b+540)%360)-180);
+  function behaviorAnomaly(record,records=[],correlations=[],now=Date.now()){
+    if(record.type!=="vessel_position")return null;
+    const track=(records||[]).filter(x=>x.type==="vessel_position"&&identity(x)===identity(record)&&x.timestamp<=record.timestamp&&record.timestamp-x.timestamp<=72*3600000).sort((a,b)=>a.timestamp-b.timestamp),first=track[0]||record,durationMs=Math.max(0,record.timestamp-first.timestamp);
+    let pathKm=0,reversals=0,aisGaps=record.aisGapMinutes>=60?1:0;for(let i=1;i<track.length;i++){pathKm+=km(track[i-1],track[i]);if(Number.isFinite(track[i-1].course)&&Number.isFinite(track[i].course)&&angleDelta(track[i-1].course,track[i].course)>=120)reversals++;if(track[i].timestamp-track[i-1].timestamp>=60*60000)aisGaps++}
+    const netKm=track.length>1?km(first,record):0,linearity=pathKm?netKm/pathKm:1,low=track.filter(x=>Number.isFinite(x.speed)&&x.speed<=3),lowDurationMs=low.length>=2?low.at(-1).timestamp-low[0].timestamp:0,maxRadiusKm=track.length?Math.max(...track.map(x=>km(record,x))):0;
+    const actor=`${record.flag||""} ${record.operator||""} ${record.association||""} ${record.description||""}`,russianBelarusian=/\b(?:russia|russian|russian federation|belarus|belarusian)\b/i.test(actor),stateAssociation=/\b(?:navy|military|armed forces|state|government|auxiliary|ministry of defen[cs]e)\b/i.test(actor),specialPurpose=/\b(?:tug|research|survey|auxiliary|special[- ]purpose)\b/i.test(`${record.vesselType||""} ${record.title||""}`),restricted=record.restrictedManeuverability||/restricted/i.test(record.status||""),towing=record.towing,repeated=track.length>=5&&reversals>=2&&linearity<=.55,loiter=track.length>=4&&durationMs>=2*3600000&&maxRadiusKm<=30&&(linearity<=.4||lowDurationMs>=90*60000),courseReversals=reversals>=2,prolonged=durationMs>=4*3600000&&maxRadiusKm<=50;
+    const kinds=new Set(correlations.map(x=>x.kind)),nearHotspot=correlations.find(x=>x.kind==="hotspot"&&/Gotland|Bornholm|Gulf of Finland|Öresund|Oresund|Baltic/i.test(x.id)),nearInfrastructure=kinds.has("critical_infrastructure"),exercise=kinds.has("military_exercise"),warship=kinds.has("allied_warship"),asw=kinds.has("submarine_asw"),news=kinds.has("news");
+    let score=0,tags=[];const add=(points,tag)=>{score+=points;tags.push(tag)},vesselKind=/tug/i.test(record.vesselType||"")?"tug":/research/i.test(record.vesselType||"")?"research-vessel":/survey/i.test(record.vesselType||"")?"survey-vessel":/auxiliary/i.test(record.vesselType||"")?"auxiliary":"special-purpose-vessel";if(russianBelarusian)add(10,/belarus/i.test(actor)?"Belarus":"Russia");if(stateAssociation)add(12,"state-or-military-association");if(specialPurpose)add(10,vesselKind);if(restricted)add(12,"restricted-manoeuvrability");if(lowDurationMs>=60*60000)add(14,"very-low-speed");if(repeated)add(15,"repeated-back-and-forth");if(loiter)add(16,"loitering");if(courseReversals)add(8,"course-reversals");if(towing)add(10,"towing");if(prolonged)add(10,"prolonged-presence");if(nearHotspot)add(12,nearHotspot.id);if(nearInfrastructure)add(15,"critical-infrastructure");if(exercise)add(10,"military-exercise");if(warship)add(10,"naval-activity");if(asw)add(10,"ASW-activity");if(news)add(8,"external-reporting");if(aisGaps)add(10,"AIS-gap");
+    if(score<35||(!loiter&&!repeated&&!restricted&&!towing&&!aisGaps))return null;score=Math.min(100,score);const observed=[`${track.length} AIS position${track.length===1?"":"s"}`,`${(pathKm||0).toFixed(1)} km recorded track`,`${Math.round(durationMs/60000)} min presence`,...(restricted?["restricted manoeuvrability status"]:[]),...(lowDurationMs>=60*60000?[`${Math.round(lowDurationMs/60000)} min at very low speed`]:[]),...(aisGaps?[`${aisGaps} AIS gap${aisGaps===1?"":"s"}`]:[])],inferred=[...(loiter?["Loitering geometry"]:[]),...(repeated?["Repeated back-and-forth track"]:[]),...(courseReversals?["Unexplained course reversals"]:[]),...(towing?["Towing or possible towing activity"]:[]),...(prolonged?["Prolonged presence in a limited area"]:[])],external=correlations.filter(x=>x.kind==="news").map(x=>x.id);
+    const confidence=track.length>=6&&durationMs>=2*3600000?(record.source.quality==="official"?"HIGH":"MEDIUM-HIGH"):"MEDIUM",region=nearHotspot?.id==="Gotland"?"Gotland / Central Baltic":nearHotspot?.id||"Nordic–Baltic maritime area";return {eventType:"MARITIME_BEHAVIOR_ANOMALY",category:"Maritime behavioral anomaly",severity:score>=70?"HIGH":score>=50?"MEDIUM":"WATCH",confidence,score,tags:[...new Set([...tags,"correlation"])],region,identity:identity(record),track:{points:track,durationMs,pathKm,netKm,reversals,lowDurationMs,maxRadiusKm},evidence:{observed,inferred,external},statement:"Observable maritime behaviour and correlations; the vessel is not classified as hostile.",signature:[score>=70?"HIGH":score>=50?"MEDIUM":"WATCH",loiter,repeated,restricted,towing,aisGaps>0,[...kinds].sort().join("+")].join("|")}
+  }
+  function behaviorEventKey(record,behavior){return `maritime_behavior_anomaly|${identity(record)}|${behavior?.signature||"none"}`}
+
   return {VERSION,MAX_IMPORT_BYTES,MAX_RECORDS,BOUNDS,TYPES:[...TYPES],EVIDENCE:[...EVIDENCE],
     MaritimeAdapter,StaticDatasetAdapter,normalizeRecord,parseCsv,geoJsonRecords,importDataset,
-    correlate,riskScore,eventKey,km,httpsUrl};
+    correlate,riskScore,eventKey,behaviorAnomaly,behaviorEventKey,km,httpsUrl};
 });

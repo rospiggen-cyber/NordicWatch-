@@ -19,5 +19,29 @@
     "lat":59.73,"lon":25.63,"timestamp":"2026-09-02T03:00:00Z","end":"2026-09-03T03:00:00Z",
     "tags":["mock","restriction"],
     "source":{"name":"NordicWatch mock notice service","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/restriction","retrievedAt":"2026-09-02T03:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-allied-warship","type":"vessel_position","evidence":"observation","title":"Synthetic Swedish warship context","description":"TEST DATA: allied naval activity correlation fixture.","vesselName":"HSwMS TEST","mmsi":"265000001","flag":"Sweden","vesselType":"warship / corvette","operator":"Swedish Navy","lat":57.45,"lon":19.55,"timestamp":"2026-09-03T08:00:00Z","speed":12,"course":40,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/warship","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.55,"lon":19.10,"timestamp":"2026-09-03T02:00:00Z","speed":2.1,"course":90,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.56,"lon":19.28,"timestamp":"2026-09-03T03:00:00Z","speed":1.7,"course":270,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.55,"lon":19.12,"timestamp":"2026-09-03T04:00:00Z","speed":1.4,"course":92,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.57,"lon":19.30,"timestamp":"2026-09-03T05:00:00Z","speed":1.2,"course":272,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.56,"lon":19.11,"timestamp":"2026-09-03T06:00:00Z","speed":0.9,"course":88,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.55,"lon":19.27,"timestamp":"2026-09-03T07:00:00Z","speed":0.8,"course":268,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
+  },
+  {
+    "id":"mock-sarmat","type":"vessel_position","evidence":"observation","title":"SARMAT synthetic behavior track","description":"TEST DATA: Russian tug regression fixture; no hostile classification.","vesselName":"SARMAT","imo":"8027133","mmsi":"273000001","flag":"Russian Federation","vesselType":"tug / auxiliary","operator":"state auxiliary association","status":"restricted manoeuvrability","lat":57.56,"lon":19.13,"timestamp":"2026-09-03T08:00:00Z","speed":0.7,"course":90,"source":{"name":"NordicWatch synthetic AIS","publisher":"InionX","license":"Mock/test only","url":"https://example.com/mock/sarmat","retrievedAt":"2026-09-03T08:05:00Z","allowedUse":"test","quality":"mock"}
   }
 ]

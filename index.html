@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.9.6</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.9.7</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -49,7 +49,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.6</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.7</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
@@ -74,7 +74,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.6</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.7</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
 <script src="special-mission-analysis.js"></script>
@@ -116,7 +116,7 @@ hotspots:[
 ["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
 ["Norwegian energy zone",61,3,44,"Critical offshore infrastructure","Major offshore oil and gas infrastructure linking Norway to European energy supply.","Unusual ISR or maritime patrol activity · GNSS anomalies · restricted zones · offshore incidents","HIGH"]],
 changes:[
-["Military capability change detection","Strategic NATO and Nordic weapon tests, deployments and procurement are prioritised even when they occur outside permanent Nordic hotspots."],
+["Maritime behavior anomaly detection","Observable vessel movement, AIS gaps and strategic correlations are scored separately from identity and external reporting without hostile classification."],
 ["Recovered UAV incidents","Physical UAV recoveries remain OBSERVED, preliminary functions remain ASSESSED, and actor attribution is shown only when explicitly confirmed."],
 ["Aircraft trails and route patterns","Persistent ADS-B trails add geometry-based TRANSIT, ORBIT, RACETRACK, LOITER, REPEATED PASS and HOLDING assessments without changing observed evidence."],
 ["Confirmed Event Engine","Official military events add geographic and expected-activity context without replacing direct observations or automatic assessments."],
@@ -458,7 +458,7 @@ function renderAircraft(){
  if(allEvents.length)renderEvents();
  scheduleTrailRender();
 }
- function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0)),specialInterest=Math.min(15,rawAircraft.reduce((max,a)=>{const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,pattern);return Math.max(max,assessment?.score||0)},0)/5);document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+specialInterest+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation+uavActivityContribution()))}
+ function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0)),specialInterest=Math.min(15,rawAircraft.reduce((max,a)=>{const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,pattern);return Math.max(max,assessment?.score||0)},0)/5),maritimeInterest=Math.min(18,maritimeEvents.reduce((max,x)=>Math.max(max,x.behavior?.score||0),0)/5);document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+specialInterest+maritimeInterest+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation+uavActivityContribution()))}
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS";
 const eventWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
@@ -563,14 +563,19 @@ function maritimeConfig(){
 }
 function maritimeContext(){
  const hotspots=D.hotspots.map(x=>({id:x[0],name:x[0],lat:x[1],lon:x[2],source:"NordicWatch hotspot context"}));
- const aircraft=rawAircraft.filter(isMilitaryAircraft).map(x=>({id:x.hex||x.flight,lat:+x.lat,lon:+x.lon,timestamp:Date.now(),source:"Public ADS-B · centrally classified military"}));
+ const aircraft=rawAircraft.filter(isMilitaryAircraft).map(x=>({id:x.hex||x.flight,lat:+x.lat,lon:+x.lon,timestamp:Date.now(),role:aircraftClass(x).role,source:"Public ADS-B · centrally classified military"}));
  const gnss=[{id:"Narva GNSS context",lat:59.45,lon:27.3,source:"GNSS context layer"},{id:"Gulf of Finland GNSS context",lat:59.8,lon:25.9,source:"GNSS context layer"}];
  const news=currentArticles.flatMap(a=>a.risk.places.slice(0,1).map(p=>({id:a.id,title:a.title,lat:p.lat,lon:p.lon,timestamp:a.date?.getTime(),source:a.domain})));
- return {hotspots,aircraft,gnss,news,maritime:maritimeRecords}
+ const infrastructure=[{id:"Gotland cable corridor",lat:57.5,lon:19.0,source:"NordicWatch infrastructure context"},{id:"Bornholm cable and pipeline corridor",lat:55.2,lon:15.2,source:"NordicWatch infrastructure context"},{id:"Gulf of Finland cable corridor",lat:59.65,lon:25.4,source:"NordicWatch infrastructure context"},{id:"Öresund infrastructure corridor",lat:55.9,lon:12.7,source:"NordicWatch infrastructure context"}];
+ const exercises=activeEvents.filter(e=>/exercise|naval/i.test(e.eventType)).map(e=>({id:e.title,lat:e.latitude,lon:e.longitude,timestamp:+new Date(e.startTime),source:e.sourceName}));
+ const allied=/\b(?:Sweden|Swedish|Germany|German|NATO|Denmark|Danish|Norway|Norwegian|Finland|Finnish|Poland|Polish|United Kingdom|British|Netherlands|Dutch)\b/i,warships=maritimeRecords.filter(x=>/warship|frigate|destroyer|corvette|navy/i.test(`${x.vesselType||""} ${x.operator||""} ${x.association||""}`)&&allied.test(`${x.flag||""} ${x.operator||""} ${x.association||""}`));
+ const asw=aircraft.filter(x=>x.role==="ASW").concat(news.filter(x=>/submarine|\bASW\b|anti-submarine/i.test(x.title||"")));
+ return {hotspots,aircraft,gnss,news,maritime:maritimeRecords,infrastructure,exercises,warships,asw}
 }
 function analyzeMaritime(){
  const context=maritimeContext(),cfg=maritimeConfig();
- maritimeEvents=maritimeRecords.map(record=>{const correlations=MC.correlate(record,context,cfg),risk=MC.riskScore(record,correlations);return {record,correlations,risk}}).sort((a,b)=>b.risk.total-a.risk.total);
+ const latest=new Map();for(const record of maritimeRecords.filter(x=>x.type==="vessel_position")){const key=record.mmsi||record.imo||record.id,old=latest.get(key);if(!old||record.timestamp>old.timestamp)latest.set(key,record)}
+ maritimeEvents=maritimeRecords.map(record=>{const correlations=MC.correlate(record,context,cfg),baseRisk=MC.riskScore(record,correlations),key=record.mmsi||record.imo||record.id,behavior=latest.get(key)===record?MC.behaviorAnomaly(record,maritimeRecords,correlations):null,risk=behavior?{...baseRisk,total:Math.max(baseRisk.total,behavior.score),confidence:behavior.confidence}:baseRisk;return {record,correlations,risk,behavior}}).sort((a,b)=>b.risk.total-a.risk.total);
  rawVessels=maritimeRecords.filter(x=>x.type==="vessel_position");
  renderMaritimeSignals();if(typeof renderCoastGuardBehavior==="function")renderCoastGuardBehavior();saveMaritimeHistory();notifyMaritimeSignals()
 }
@@ -583,13 +588,15 @@ function maritimeIcon(event){
 function renderMaritimeSignals(){
  G.vessels.clearLayers();
  maritimeEvents.forEach(event=>{
-  const e=event.record,r=event.risk,c=event.correlations;
+  const e=event.record,r=event.risk,c=event.correlations,behavior=event.behavior;
   const breakdown=r.components,source=e.source;
-  const popup="<b>"+esc(e.title)+"</b><br><span class='signal-"+esc(e.evidence)+"'>"+esc(evidenceLabel(e.evidence))+"</span><br>"+esc(e.description)+"<br><br><b>Risk "+r.total+"</b> = geography "+breakdown.geography+" + time "+breakdown.temporal+" + independent sources "+breakdown.independentSources+" + source quality "+breakdown.sourceQuality+" + freshness "+breakdown.freshness+"<br>Confidence: "+r.confidence+"<br>Correlations: "+esc(c.slice(0,4).map(x=>x.kind+" "+x.id+" ("+x.distanceKm.toFixed(1)+" km)").join("; ")||"none")+"<br><br>Source: "+esc(source.name)+" · "+esc(source.publisher)+"<br>Licence: "+esc(source.license)+" · allowed use: "+esc(source.allowedUse)+"<br>Retrieved: "+esc(new Date(source.retrievedAt).toLocaleString())+(e.link?'<br><a href="'+esc(e.link)+'" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">Open verified source</a>':"");
+  const anomaly=behavior?`<br><br><b>${esc(behavior.category.toUpperCase())}</b><br>Severity: ${esc(behavior.severity)} · Confidence: ${esc(behavior.confidence)} · EventScore ${behavior.score}<br>Region: ${esc(behavior.region)}<br>Tags: ${esc(behavior.tags.join(", "))}<br><br><span class="signal-observation">OBSERVED DATA</span><br>${esc(behavior.evidence.observed.join("; "))}<br><br><span class="signal-indicator">INFERRED ANOMALY</span><br>${esc(behavior.evidence.inferred.join("; ")||"No behavioral inference")}<br>${esc(behavior.statement)}<br><br><span class="signal-confirmed">EXTERNAL REPORTING</span><br>${esc(behavior.evidence.external.join("; ")||"No matching external report")}`:"";
+  const popup="<b>"+esc(e.title)+"</b><br><span class='signal-"+esc(e.evidence)+"'>"+esc(evidenceLabel(e.evidence))+"</span><br>"+esc(e.description)+anomaly+"<br><br><b>Risk "+r.total+"</b> = geography "+breakdown.geography+" + time "+breakdown.temporal+" + independent sources "+breakdown.independentSources+" + source quality "+breakdown.sourceQuality+" + freshness "+breakdown.freshness+"<br>Confidence: "+r.confidence+"<br>Correlations: "+esc(c.slice(0,6).map(x=>x.kind+" "+x.id+" ("+x.distanceKm.toFixed(1)+" km)").join("; ")||"none")+"<br><br>Source: "+esc(source.name)+" · "+esc(source.publisher)+"<br>Licence: "+esc(source.license)+" · allowed use: "+esc(source.allowedUse)+"<br>Retrieved: "+esc(new Date(source.retrievedAt).toLocaleString())+(e.link?'<br><a href="'+esc(e.link)+'" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">Open verified source</a>':"");
   L.marker([e.lat,e.lon],{icon:maritimeIcon(event),title:e.title}).bindPopup(popup).addTo(G.vessels)
  })
  document.getElementById("aisStatus").textContent=maritimeRecords.length+" validated records";
  document.getElementById("aisUpdated").textContent="Local/imported datasets · no external AIS connected"
+ const box=document.getElementById("signals");box.querySelectorAll(".maritime-behavior-signal").forEach(x=>x.remove());for(const event of maritimeEvents.filter(x=>x.behavior).slice(0,3)){const row=document.createElement("div");row.className="signal maritime-behavior-signal";const meta=document.createElement("div");meta.className="meta";meta.textContent="OBSERVED DATA · "+event.behavior.region;const title=document.createElement("div");title.className="title";title.textContent=event.behavior.category+" · "+(event.record.vesselName||event.record.title);const desc=document.createElement("div");desc.className="desc";desc.textContent=`INFERRED ANOMALY · ${event.behavior.severity} · score ${event.behavior.score}. ${event.behavior.statement}`;row.append(meta,title,desc);box.prepend(row)}
 }
 function saveMaritimeHistory(){
  const now=Date.now(),history=maritimeRead(MARITIME_HISTORY_KEY,[]);
@@ -604,8 +611,8 @@ async function notifyMaritimeSignals(){
  if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
  const seen=maritimeSeen(),now=Date.now();
  for(const event of maritimeEvents.filter(x=>x.risk.total>=MARITIME_ALERT_SCORE)){
-  const key=MC.eventKey(event.record);if(seen[key])continue;seen[key]=now;
-  const title="NordicWatch · maritime signal "+event.risk.total,body=evidenceLabel(event.record.evidence)+" · "+event.record.title;
+  const key=event.behavior?MC.behaviorEventKey(event.record,event.behavior):MC.eventKey(event.record);if(seen[key])continue;seen[key]=now;
+  const title=event.behavior?"NordicWatch · maritime behavioral anomaly":"NordicWatch · maritime signal "+event.risk.total,body=event.behavior?`${event.record.vesselName||event.record.title} · ${event.behavior.region} · ${event.behavior.severity} · observable behaviour; not classified as hostile`:evidenceLabel(event.record.evidence)+" · "+event.record.title;
   const opts={body,tag:"nw-maritime-"+key,data:{lat:event.record.lat,lon:event.record.lon,id:event.record.id},icon:"icon-192.png",badge:"icon-192.png"};
   try{if(swReg)await swReg.showNotification(title,opts);else new Notification(title,opts)}catch(error){console.warn("maritime notification",error)}
  }
@@ -740,7 +747,7 @@ function generateBrief(kind){
  if(coastGuardObservations.length){const cg=coastGuardObservations[0];content.append(briefItem("obs",cg.title,`${cg.location} · ${durationText(cg.durationMs)} · ${cg.turns} turns · cause ${cg.cause}. AUTOMATIC INTERPRETATION; ${cg.evidence.operation}. ${cg.operationalWarning?"Operational-warning threshold met.":"No immediate operational warning; Activity is unchanged."}`))}
  if(uavIncidents.length){const incident=uavIncidents[0];content.append(briefItem("obs",`Recovered UAV — ${incident.region}`,`${incident.aircraftType}, ${incident.estimatedSize}; no explosive payload reported. Origin unknown, attribution none. Investigation: ${incident.investigationStatus}. Risk ${UI.riskScore(incident).score}.`,{label:"Open incident",run:()=>{map.flyTo([incident.position.latitude,incident.position.longitude],8);document.getElementById("briefDrawer").classList.remove("show")}}));content.append(briefItem("infer","Preliminary UAV role assessment",`${incident.possibleFunctions.join(" / ")||"Unknown function"}. This assessment does not establish origin, operator or hostile intent.`))}
  if(externalReports.length){const report=externalReports[0],correlation=externalCorrelations.find(x=>x.reportId===report.id);content.append(briefItem(report.evidenceType==="CONFIRMED_EXTERNAL"?"external":"infer",`${report.aircraftType} ${report.aircraftRole} activity · ${report.areaName}`,`${report.description} Location ${report.locationConfidence.toLowerCase()}. Aircraft track: ${report.trackObserved?"observed":"NOT OBSERVED BY NORDICWATCH"}. Interest ${report.interestScore>=75?"HIGH":"MEDIUM"} (${report.interestScore}). Source: ${report.sourceName}.`,{label:"Open event area",run:()=>{map.flyTo([report.latitude,report.longitude],7);document.getElementById("briefDrawer").classList.remove("show")}}));if(correlation?.signals.length)content.append(briefItem("infer","Possible correlated response",correlation.signals.join(" ")+" This does not establish which observed aircraft performed the reported intercept."))}
- if(maritimeEvents.length){const me=maritimeEvents[0],mr=me.record;content.append(briefItem(mr.evidence==="confirmed"?"external":mr.evidence==="indicator"?"infer":"obs","Maritime signal · risk "+me.risk.total,mr.title+" · "+evidenceLabel(mr.evidence)+" · confidence "+me.risk.confidence+". Source: "+mr.source.name+"; licence: "+mr.source.license+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
+ if(maritimeEvents.length){const me=maritimeEvents[0],mr=me.record;if(me.behavior){content.append(briefItem("obs","Maritime track · "+(mr.vesselName||mr.title),me.behavior.evidence.observed.join(" · ")+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}));content.append(briefItem("infer",me.behavior.category+" · "+me.behavior.severity,`${me.behavior.evidence.inferred.join(" · ")} · score ${me.behavior.score} · confidence ${me.behavior.confidence}. ${me.behavior.statement}`));if(me.behavior.evidence.external.length)content.append(briefItem("external","Matching external maritime reporting",me.behavior.evidence.external.join(" · ")))}else content.append(briefItem(mr.evidence==="confirmed"?"external":mr.evidence==="indicator"?"infer":"obs","Maritime signal · risk "+me.risk.total,mr.title+" · "+evidenceLabel(mr.evidence)+" · confidence "+me.risk.confidence+". Source: "+mr.source.name+"; licence: "+mr.source.license+".",{label:"Open signal",run:()=>{map.flyTo([mr.lat,mr.lon],8);document.getElementById("briefDrawer").classList.remove("show")}}))}
  if(topNews){
   const place=topNews.risk.places[0]&&topNews.risk.places[0].name;
   content.append(briefItem("external",topNews.title,(topNews.domain||"External source")+" · risk "+topNews.risk.score+(place?" · "+place:""),{label:"Open report",run:()=>window.open(topNews.url,"_blank","noopener,noreferrer")}));
