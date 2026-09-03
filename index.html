@@ -16,7 +16,7 @@ distribution or commercial use is prohibited.
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>NordicWatch v0.9.4</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<title>NordicWatch v0.9.5</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
  <style>
 :root{--bg:#07101c;--panel:rgba(11,18,32,.95);--border:rgba(255,255,255,.09);--text:#edf4ff;--muted:#8ea0b8;--accent:#61dafb;--warn:#f7c948;--danger:#ff6b6b;--ok:#55d187;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -49,7 +49,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 </style>
 </head>
 <body>
-<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.4</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
+<header><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v0.9.5</div><h1>NordicWatch</h1></div><div class="score">Activity <b id="score">62</b></div></header>
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button class="primary" id="changed">What changed?</button></div></div>
 <main>
 <section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
@@ -74,9 +74,10 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 <aside class="side"><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
-<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.4</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
+<div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v0.9.5</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
+<script src="special-mission-analysis.js"></script>
 <script src="coast-guard-analysis.js"></script>
 <script src="background-monitor-core.js"></script>
 <script src="maritime-core.js"></script>
@@ -115,7 +116,7 @@ hotspots:[
 ["Bornholm",55.13,14.92,46,"Baltic sea-lane and ISR relevance"],
 ["Norwegian energy zone",61,3,44,"Critical offshore infrastructure","Major offshore oil and gas infrastructure linking Norway to European energy supply.","Unusual ISR or maritime patrol activity · GNSS anomalies · restricted zones · offshore incidents","HIGH"]],
 changes:[
-["External military reports","Trusted external reports create geolocated Event Engine context without claiming that NordicWatch observed an absent aircraft track."],
+["High-value special-mission detection","RC-135 variants and reusable ISR, EW, AWACS and ASW platform metadata now drive strategic context, correlation and material-change alerts."],
 ["Recovered UAV incidents","Physical UAV recoveries remain OBSERVED, preliminary functions remain ASSESSED, and actor attribution is shown only when explicitly confirmed."],
 ["Aircraft trails and route patterns","Persistent ADS-B trails add geometry-based TRANSIT, ORBIT, RACETRACK, LOITER, REPEATED PASS and HOLDING assessments without changing observed evidence."],
 ["Confirmed Event Engine","Official military events add geographic and expected-activity context without replacing direct observations or automatic assessments."],
@@ -172,6 +173,8 @@ const nordic=a=>Number.isFinite(+a.lat)&&Number.isFinite(+a.lon)&&+a.lat>=53&&+a
 
 const AC=window.NordicWatchAircraft;
 if(!AC)throw new Error("NordicWatchAircraft classifier unavailable");
+const SM=window.NordicWatchSpecialMission;
+if(!SM)throw new Error("NordicWatch special-mission analysis unavailable");
 const EE=window.NordicWatchEvents;
 if(!EE)throw new Error("NordicWatch Event Engine unavailable");
 let allEvents=[],eventFeedEvents=[],externalEventRecords=[],activeEvents=[],eventAssessments=[],externalReports=[],externalCorrelations=[];
@@ -198,6 +201,7 @@ function iconFor(a,cat){
 const ALERT_COOLDOWN_MS=30*60*1000;
 const ALERT_KEY="NORDICWATCH_ALERTS_ENABLED";
 const SEEN_KEY="NORDICWATCH_ALERT_SEEN";
+const SPECIAL_SEEN_KEY="NORDICWATCH_SPECIAL_MISSION_SEEN";
 const alertState=document.getElementById("alertState");
 const alertsBtn=document.getElementById("alertsBtn");
 let swReg=null;
@@ -217,6 +221,8 @@ const zones=[
  {name:"Suwałki corridor",lat:54.10,lon:23.20,r:350},
  {name:"Gotland",lat:57.47,lon:18.49,r:350},
  {name:"Murmansk",lat:68.97,lon:33.07,r:500},
+ {name:"Finnmark / Northern Norway",lat:70.10,lon:25.50,r:520},
+ {name:"Barents Sea / Severomorsk",lat:69.08,lon:36.00,r:650},
  {name:"Polish Baltic coast",lat:54.60,lon:17.50,r:420},
  {name:"Central Baltic",lat:56.30,lon:18.50,r:500},
  {name:"Gulf of Finland",lat:59.75,lon:25.50,r:420},
@@ -241,25 +247,17 @@ function nearestZone(a){
 function alertScore(a,all){
  if(!isMilitaryAircraft(a))return null;
  all=all.filter(isMilitaryAircraft);
- const cat=classify(a),z=nearestZone(a);
+ const cat=classify(a),pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),classification=aircraftClass(a),specialId=aircraftHex(a)||classification.platformFamily||"special",specialSeen=readObject(SPECIAL_SEEN_KEY),special=SM.assess(a,all,aircraftClass,pattern,{firstAppearance:classification.specialMission&&!specialSeen[specialId]}),contextZone=special?.strategic,z=nearestZone(a)||(contextZone&&{name:contextZone.name,lat:contextZone.lat,lon:contextZone.lon,r:contextZone.radiusKm,d:contextZone.distanceKm});
  if(!z) return null;
- let score={awacs:62,tanker:48,isr:72,fighter:55,transport:22,other:10}[cat]||10;
- if(z.name==="Kaliningrad / Baltijsk") score+=10;
- if(z.name==="Polish Baltic coast" && cat==="isr") score+=12;
+ let score=special?special.score:({awacs:62,tanker:48,isr:72,ew:68,asw:58,fighter:55,transport:22,other:10}[cat]||10);
  const nearby=all.filter(b=>b!==a && nearestZone(b)?.name===z.name);
  const cats=new Set(nearby.map(classify));
- if(cats.has("fighter") && cat==="isr") score+=10;
- if(cats.has("awacs")) score+=7;
- if(cats.has("tanker")) score+=5;
- const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),patternContext=RP.context(aircraftClass(a),pattern);
- if(patternContext)score+=patternContext.interest;
- if(cat==="isr"&&pattern.pattern==="REPEATED PASS"&&z.name==="Kaliningrad / Baltijsk")score+=12;
- if(cat==="fighter"&&pattern.pattern==="REPEATED PASS")score+=10;
- const firstTrackPoint=pattern.metrics.points?.[0],firstZone=firstTrackPoint&&nearestZone(firstTrackPoint);if(cat==="isr"&&["REPEATED PASS","LOITER"].includes(pattern.pattern)&&firstZone?.name!==z.name)score+=8;
+ const patternContext=RP.context(classification,pattern);
+ if(!special){if(z.name==="Kaliningrad / Baltijsk")score+=10;if(z.name==="Polish Baltic coast"&&cat==="isr")score+=12;if(cats.has("fighter")&&cat==="isr")score+=10;if(cats.has("awacs"))score+=7;if(cats.has("tanker"))score+=5;if(patternContext)score+=patternContext.interest;if(cat==="isr"&&pattern.pattern==="REPEATED PASS"&&z.name==="Kaliningrad / Baltijsk")score+=12;if(cat==="fighter"&&pattern.pattern==="REPEATED PASS")score+=10;const firstTrackPoint=pattern.metrics.points?.[0],firstZone=firstTrackPoint&&nearestZone(firstTrackPoint);if(cat==="isr"&&["REPEATED PASS","LOITER"].includes(pattern.pattern)&&firstZone?.name!==z.name)score+=8}
  const contexts=activeEvents.map(event=>EE.assessEvent(event,[a],{classify:aircraftClass})).filter(x=>x.observed.length);
  for(const context of contexts)score+=context.scoreDelta;
  score=Math.min(99,score);
- return {score:Math.max(0,score),cat,zone:z,nearby:[...cats],eventContexts:contexts,pattern,patternContext};
+ return {score:Math.max(0,score),cat,zone:z,nearby:[...cats],eventContexts:contexts,pattern,patternContext,special};
 }
 
 // Aircraft trail persistence and geometric route-pattern analysis.
@@ -282,7 +280,8 @@ function captureAircraftTrails(aircraft,now=Date.now()){
 function trailWindowPoints(hex){const mins=Number(document.getElementById("trailWindow")?.value)||30,cutoff=Date.now()-mins*60000,row=trailTracks.get(hex);return row?row.points.filter(x=>x.timestamp>=cutoff):[]}
 const trailColor=a=>({awacs:"#ff9f43",tanker:"#b388ff",isr:"#ff6b6b",transport:"#61dafb",fighter:"#ffd166",other:"#8ed1a5",civilian:"#aab5c5",state:"#55d187",unknown:"#6f7c91"})[(aircraftClass(a).role||aircraftClass(a).base).toLowerCase()]||"#8ed1a5";
 const trailDuration=ms=>ms<3600000?Math.max(0,Math.round(ms/60000))+" min":(ms/3600000).toFixed(1)+" h";
-function aircraftPopup(a,analysis){const result=aircraftClass(a),call=(a.flight||"").trim()||a.r||a.hex||"Unknown",identity=result.governmentRole==="COAST_GUARD"?"Government / Coast Guard":result.base==="MILITARY"?result.base+" / "+result.role+" · "+result.confidence:result.base,m=analysis?.metrics,first=m?.points?.[0]?.timestamp,last=m?.points?.at(-1)?.timestamp,context=RP.context(result,analysis||{});return `<b>${esc(call)}</b><br>Classification: ${esc(identity)}<br>Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Evidence: ${esc(result.evidence.map(x=>x.signal).join(", ")||"insufficient for identification")}<br><br><span class="signal-observation">OBSERVED</span><br>Aircraft track recorded for ${esc(m?trailDuration(m.durationMs):"0 min")}<br>Distance travelled: ${esc(m?m.distanceKm.toFixed(1):"0.0")} km<br>First seen: ${esc(first?new Date(first).toLocaleString():"n/a")}<br>Last seen: ${esc(last?new Date(last).toLocaleString():"n/a")}<br><br><span class="signal-indicator">INFERRED</span><br>${esc(analysis?.pattern||"UNKNOWN")} pattern · ${esc(analysis?.confidence||0)}% confidence${context?"<br>"+esc(context.text):""}`}
+function aircraftPopup(a,analysis){const result=aircraftClass(a),call=(a.flight||"").trim()||a.r||a.hex||"Unknown",identity=result.governmentRole==="COAST_GUARD"?"Government / Coast Guard":result.base==="MILITARY"?result.base+" / "+result.role+(result.subrole?" / "+result.subrole:"")+" · "+result.confidence:result.base,m=analysis?.metrics,first=m?.points?.[0]?.timestamp,last=m?.points?.at(-1)?.timestamp,context=RP.context(result,analysis||{}),special=SM.assess(a,rawAircraft,aircraftClass,analysis||{}),operator=a.operator||a.ownOp||a.operatorName||"n/a";return `${result.platformName?`<b>${esc(result.platformName)}</b><br><span class="signal-observation">CONFIRMED BY LIVE AIRCRAFT DATA</span><br>`:`<b>${esc(call)}</b><br>`}Classification: ${esc(identity)}<br>${result.platformName?`Operator: ${esc(operator)}<br>Platform family: ${esc(result.platformFamily)}<br>Interest class: ${esc(result.interestClass)}<br>`:""}Type: ${esc(a.t||"n/a")}<br>Registration: ${esc(a.r||"n/a")}<br>Altitude: ${esc(fmtAlt(a.alt_baro))}<br>Speed: ${esc(fmtNum(a.gs," kt"))}<br>Track: ${esc(fmtNum(a.track,"°"))}<br>Hex: ${esc(a.hex||"n/a")}<br>Evidence: OBSERVED${result.platformName?" · "+esc(result.evidence.map(x=>x.signal).join(", ")):""}<br><br><span class="signal-observation">OBSERVED</span><br>Aircraft track recorded for ${esc(m?trailDuration(m.durationMs):"0 min")}<br>Distance travelled: ${esc(m?m.distanceKm.toFixed(1):"0.0")} km<br>First seen: ${esc(first?new Date(first).toLocaleString():"n/a")}<br>Last seen: ${esc(last?new Date(last).toLocaleString():"n/a")}<br><br><span class="signal-indicator">INFERRED</span><br>${esc(analysis?.pattern||"UNKNOWN")} pattern · ${esc(analysis?.confidence||0)}% confidence${context?"<br>"+esc(context.text):""}${special?`<br>Strategic context: ${esc(special.strategic?.name||"No current strategic-area match")}<br>Interest: ${esc(special.level)} (${special.score})<br>${esc(special.inference)}. This is analytical relevance, not proof of escalation.`:""}`}
+function renderSpecialMissionSignals(){const box=document.getElementById("signals");box.querySelectorAll(".special-mission-signal").forEach(x=>x.remove());const rows=rawAircraft.map(a=>{const analysis=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,analysis);return {a,analysis,assessment,result:aircraftClass(a)}}).filter(x=>x.assessment?.level==="HIGH").sort((a,b)=>b.assessment.score-a.assessment.score);for(const row of rows.slice(0,3)){const el=document.createElement("div");el.className="signal special-mission-signal";const meta=document.createElement("div");meta.className="meta";meta.textContent="DIRECT OBSERVATION · "+(row.assessment.strategic?.name||"NORDIC–BALTIC AREA");const title=document.createElement("div");title.className="title";title.textContent=row.result.platformName;const desc=document.createElement("div");desc.className="desc";desc.textContent=`${row.result.role} / ${row.result.subrole} · ${row.assessment.pattern} ${row.assessment.patternConfidence}% · interest ${row.assessment.level}. AUTOMATIC ASSESSMENT: ${row.assessment.inference}.`;el.append(meta,title,desc);box.prepend(el)}}
 function scheduleTrailRender(){if(trailRenderQueued)return;trailRenderQueued=true;requestAnimationFrame(()=>{trailRenderQueued=false;renderAircraftTrails()})}
 function renderAircraftTrails(){
  const active=new Map(rawAircraft.filter(trackableAircraft).map(a=>[aircraftHex(a),a]).filter(x=>x[0])),labelsOn=document.getElementById("patternLabels")?.checked===true,maxLabels=innerWidth<=850?5:12;let labelCount=0;
@@ -293,9 +292,9 @@ function renderAircraftTrails(){
 }
 function updatePatternChanges(){
  let states={};try{states=JSON.parse(localStorage.getItem(PATTERN_STATE_KEY)||"{}")||{}}catch{}const now=Date.now(),changes=[],current=[];
- for(const a of rawAircraft.filter(trackableAircraft)){const hex=aircraftHex(a),analysis=RP.detect(trailWindowPoints(hex)),previous=states[hex],call=(a.flight||"").trim()||a.r||hex,result=aircraftClass(a),zone=nearestZone(a),actorText=`${a.cou||a.country||""} ${a.operator||a.ownOp||""} ${a.r||""}`,russian=/\b(?:russia|russian)\b|\bRA-\d/i.test(actorText);current.push({a,hex,analysis,result,zone});if(analysis.confidence>=60&&previous?.pattern&&previous.pattern!==analysis.pattern&&previous.pattern!=="UNKNOWN")changes.push(`${call} changed from ${previous.pattern} to ${analysis.pattern}.`);if(russian&&analysis.confidence>=60&&analysis.pattern==="REPEATED PASS"&&result.role==="ISR"&&zone?.name==="Kaliningrad / Baltijsk"&&previous?.pattern!==analysis.pattern)changes.push(`Russian ISR began repeated passes near Kaliningrad.`);states[hex]={pattern:analysis.pattern,confidence:analysis.confidence,time:now}}
+ for(const a of rawAircraft.filter(trackableAircraft)){const hex=aircraftHex(a),analysis=RP.detect(trailWindowPoints(hex)),previous=states[hex],call=(a.flight||"").trim()||a.r||hex,result=aircraftClass(a),zone=nearestZone(a),special=SM.assess(a,rawAircraft,aircraftClass,analysis),actorText=`${a.cou||a.country||""} ${a.operator||a.ownOp||""} ${a.r||""}`,russian=/\b(?:russia|russian)\b|\bRA-\d/i.test(actorText);current.push({a,hex,analysis,result,zone});if(analysis.confidence>=60&&previous?.pattern&&previous.pattern!==analysis.pattern&&previous.pattern!=="UNKNOWN")changes.push(`${call} changed from ${previous.pattern} to ${analysis.pattern}.`);if(russian&&analysis.confidence>=60&&analysis.pattern==="REPEATED PASS"&&result.role==="ISR"&&zone?.name==="Kaliningrad / Baltijsk"&&previous?.pattern!==analysis.pattern)changes.push(`Russian ISR began repeated passes near Kaliningrad.`);if(special&&!previous?.specialSeen)changes.push({text:`${result.platformName} detected${special.strategic?" near "+special.strategic.name:""}.`,detail:`OBSERVED in live aircraft data. INFERRED interest ${special.level}; ${special.inference}.`});else if(special&&previous?.specialSignature&&previous.specialSignature!==special.signature)changes.push({text:`${result.platformName} analytical context changed.`,detail:`OBSERVED aircraft remains visible. INFERRED context: ${special.reasons.join(", ")}.`});states[hex]={pattern:analysis.pattern,confidence:analysis.confidence,time:now,specialSeen:Boolean(special),specialSignature:special?.signature||null}}
  const zonesWithSupport=new Set(current.filter(x=>x.analysis.pattern==="RACETRACK"&&x.analysis.confidence>=60&&["AWACS","TANKER"].includes(x.result.role)&&x.zone).map(x=>x.zone.name));for(const zone of zonesWithSupport){const matches=current.filter(x=>x.zone?.name===zone&&x.analysis.pattern==="RACETRACK"),hasAwacs=matches.some(x=>x.result.role==="AWACS"),hasTanker=matches.some(x=>x.result.role==="TANKER"),key=`support:${zone}`;if(hasAwacs&&hasTanker&&now-(states[key]?.time||0)>ALERT_COOLDOWN_MS){changes.push(`AWACS and tanker racetracks now overlap over ${zone}.`);states[key]={pattern:"COORDINATED_RACETRACK",time:now}}}
- for(const [hex,value] of Object.entries(states))if(now-value.time>TRAIL_MAX_AGE)delete states[hex];localStorage.setItem(PATTERN_STATE_KEY,JSON.stringify(states));const box=document.getElementById("changes");if(box)for(const text of changes){const row=document.createElement("div");row.className="change pattern-change";const b=document.createElement("b");b.textContent=text;const span=document.createElement("span");span.textContent="INFERRED from ADS-B track geometry.";row.append(b,document.createElement("br"),span);box.prepend(row)}
+ for(const [hex,value] of Object.entries(states))if(now-value.time>TRAIL_MAX_AGE)delete states[hex];localStorage.setItem(PATTERN_STATE_KEY,JSON.stringify(states));const box=document.getElementById("changes");if(box)for(const change of changes){const row=document.createElement("div");row.className="change pattern-change";const b=document.createElement("b");b.textContent=typeof change==="string"?change:change.text;const span=document.createElement("span");span.textContent=typeof change==="string"?"INFERRED from ADS-B track geometry.":change.detail;row.append(b,document.createElement("br"),span);box.prepend(row)}
 }
 // Correlation engine: looks for mission-role combinations inside the same watch zone.
 function detectKillChains(all){
@@ -304,7 +303,7 @@ function detectKillChains(all){
  for(const z of zones){
    const members=all.filter(a=>nearestZone(a)?.name===z.name);
    if(!members.length) continue;
-   const by={awacs:[],tanker:[],isr:[],fighter:[],transport:[],other:[]};
+    const by={awacs:[],tanker:[],isr:[],ew:[],asw:[],fighter:[],transport:[],other:[]};
    members.forEach(a=>by[classify(a)].push(a));
    let score=0,label="",reason="";
    if(by.isr.length && by.fighter.length && by.awacs.length && by.tanker.length){
@@ -313,8 +312,14 @@ function detectKillChains(all){
      score=90; label="ISR / AIR COVER CLUSTER"; reason="ISR + fighter + AWACS";
    }else if(by.isr.length && by.awacs.length && by.tanker.length){
      score=87; label="ISR SUPPORT CLUSTER"; reason="ISR + AWACS + tanker";
-   }else if(by.isr.length && by.fighter.length){
-     score=82; label="ISR / FIGHTER CORRELATION"; reason="ISR + fighter";
+    }else if(by.isr.length && by.fighter.length){
+      score=82; label="ISR / FIGHTER CORRELATION"; reason="ISR + fighter";
+    }else if(by.isr.length && by.asw.length){
+      score=78; label="ISR / MARITIME SURVEILLANCE CORRELATION"; reason="ISR + ASW aircraft";
+    }else if(by.isr.length && by.tanker.length){
+      score=76; label="POSSIBLE SUPPORTED ISR MISSION"; reason="ISR + tanker activity";
+    }else if(by.isr.length && by.awacs.length){
+      score=76; label="ISR / AWACS CORRELATION"; reason="ISR + AWACS activity";
    }else if(by.awacs.length && by.tanker.length && by.fighter.length){
      score=80; label="AIR SUPPORT PACKAGE"; reason="AWACS + tanker + fighter";
    }else if(by.awacs.length && by.tanker.length){
@@ -349,27 +354,29 @@ async function notifyCluster(e){
 
 function alertLevel(score){return score>=85?"CRITICAL":score>=70?"ALERT":score>=58?"WATCH":null}
 function seenMap(){try{return JSON.parse(localStorage.getItem(SEEN_KEY)||"{}")||{}}catch{return {}}}
-function canNotify(id,level){
+function readObject(key){try{const value=JSON.parse(localStorage.getItem(key)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return {}}}
+function canNotify(id,level,signature=""){
  const m=seenMap(),now=Date.now(),prev=m[id];
- if(prev && now-prev.time<ALERT_COOLDOWN_MS && prev.level===level) return false;
- m[id]={time:now,level};
+ if(prev && now-prev.time<ALERT_COOLDOWN_MS && prev.level===level && (prev.signature||"")===signature) return false;
+ m[id]={time:now,level,signature};
  for(const [k,v] of Object.entries(m)) if(now-v.time>24*60*60*1000) delete m[k];
  localStorage.setItem(SEEN_KEY,JSON.stringify(m));
  return true;
 }
 async function notifyEvent(a,e){
  const call=(a.flight||"").trim()||a.r||a.hex||"Military aircraft";
- const level=alertLevel(e.score); if(!level) return;
- const id=(a.hex||call)+":"+e.zone.name;
- if(!canNotify(id,level)) return;
- const title=`${level==="WATCH"?"🟡":level==="ALERT"?"🟠":"🔴"} NordicWatch ${level}`;
- const body=`${e.cat.toUpperCase()} ${call} · ${e.zone.name} · ${e.pattern.pattern} ${e.pattern.confidence}% · score ${e.score}`;
+ const level=alertLevel(e.score)||(e.special?.eligible&&e.special.level==="HIGH"?"ALERT":null); if(!level) return;
+ const id=(a.hex||call)+":"+(e.special?"HIGH_VALUE_ISR":e.zone.name),signature=e.special?.signature||"";
+ if(!canNotify(id,level,signature)) return;
+ const title=e.special?"NordicWatch · HIGH INTEREST":`${level==="WATCH"?"🟡":level==="ALERT"?"🟠":"🔴"} NordicWatch ${level}`;
+ const body=e.special?`${aircraftClass(a).platformName} · ${e.zone.name} · ${e.special.pattern} ${e.special.patternConfidence}% · OBSERVED by NordicWatch`:`${e.cat.toUpperCase()} ${call} · ${e.zone.name} · ${e.pattern.pattern} ${e.pattern.confidence}% · score ${e.score}`;
  const opts={body,tag:"nw-"+id,renotify:true,data:{lat:+a.lat,lon:+a.lon,call,score:e.score},icon:"icon-192.png",badge:"icon-192.png"};
  try{
    if(swReg) await swReg.showNotification(title,opts);
    else if("Notification" in window && Notification.permission==="granted") new Notification(title,opts);
  }catch(err){console.warn("notification",err)}
- prependSignal(level,`${e.cat.toUpperCase()} ${call}`,`${e.zone.name} · activity score ${e.score}`);
+ if(e.special){const seen=readObject(SPECIAL_SEEN_KEY);seen[aircraftHex(a)||aircraftClass(a).platformFamily]={time:Date.now(),signature};localStorage.setItem(SPECIAL_SEEN_KEY,JSON.stringify(seen))}
+ prependSignal(level,e.special?aircraftClass(a).platformName:`${e.cat.toUpperCase()} ${call}`,`${e.zone.name} · activity score ${e.score}`);
 }
 function prependSignal(meta,title,desc){
  const box=document.getElementById("signals");
@@ -383,7 +390,7 @@ async function evaluateAlerts(ac){
  const clusters=detectKillChains(ac);
  for(const e of clusters) await notifyCluster(e);
  // Individual alerts remain useful, but clusters are evaluated first.
- for(const a of ac){ const e=alertScore(a,ac); if(e && e.score>=58) await notifyEvent(a,e); }
+ for(const a of ac){ const e=alertScore(a,ac); if(e && (e.score>=58||(e.special?.eligible&&e.special.level==="HIGH"))) await notifyEvent(a,e); }
 }
 async function initAlerts(){
  if("serviceWorker" in navigator){try{swReg=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}) }catch(e){console.warn("SW",e)}}
@@ -446,11 +453,12 @@ function renderAircraft(){
    L.marker([+a.lat,+a.lon],{icon:iconFor(a,cat),title:call}).bindPopup(aircraftPopup(a,analysis)).addTo(G.military);
  });
  document.getElementById("adsbStatus").textContent=summary.military+" military · "+summary.nonMilitary+" civilian/state/unknown";
+ renderSpecialMissionSignals();
  updateActivityScore(summary);
  if(allEvents.length)renderEvents();
  scheduleTrailRender();
 }
-function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0));document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation+uavActivityContribution()))}
+ function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0)),specialInterest=Math.min(15,rawAircraft.reduce((max,a)=>{const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,pattern);return Math.max(max,assessment?.score||0)},0)/5);document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+specialInterest+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+eventDeviation+uavActivityContribution()))}
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS";
 const eventWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
@@ -534,7 +542,8 @@ function saveHistorySnapshot(ac){
     const now=Date.now();let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
     if(history.length&&now-history[history.length-1].t<HISTORY_INTERVAL)return;
     const summary=aircraftSummary(ac),cats=Object.fromEntries(Object.entries(summary.roles).map(([k,v])=>[k.toLowerCase(),v]));
-    history.push({t:now,schemaVersion:2,militaryTotal:summary.military,nonMilitaryTotal:summary.nonMilitary,baseCounts:summary.base,cats});
+    const specialPlatforms=[...new Set(ac.map(aircraftClass).filter(x=>x.specialMission).map(x=>x.platformFamily))];
+    history.push({t:now,schemaVersion:2,militaryTotal:summary.military,nonMilitaryTotal:summary.nonMilitary,baseCounts:summary.base,cats,specialPlatforms});
     history=history.filter(x=>now-x.t<HISTORY_MAX_AGE);localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
   }catch(e){console.warn("history",e)}
 }
@@ -673,7 +682,7 @@ function saveNewsSnapshot(articles){
  }catch(e){console.warn("news history",e)}
 }
 function readArray(key){try{const v=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
-function categoryLabel(k){return ({awacs:"AWACS",tanker:"tanker",isr:"ISR",transport:"transport",fighter:"fighter",other:"other"})[k]||k}
+ function categoryLabel(k){return ({awacs:"AWACS",tanker:"tanker",isr:"ISR",ew:"EW",asw:"ASW",transport:"transport",fighter:"fighter",other:"other"})[k]||k}
 function briefFocus(place){
  const p=NEWS_PLACES.find(x=>x.name===place)||zones.find(x=>x.name===place);
  if(p){map.flyTo([p.lat,p.lon],6,{duration:.8});document.getElementById("briefDrawer").classList.remove("show")}
@@ -704,7 +713,7 @@ function generateBrief(kind){
  const aircraftNow=aircraftSummary(rawAircraft);
  const counts=Object.fromEntries(Object.entries(aircraftNow.roles).map(([k,v])=>[k.toLowerCase(),v]));
  const total=aircraftNow.military,delta=previous?total-previous.militaryTotal:null;
- const avg={awacs:0,tanker:0,isr:0,transport:0,fighter:0,other:0};
+ const avg={awacs:0,tanker:0,isr:0,ew:0,asw:0,transport:0,fighter:0,other:0};
  const baseline=flightHistory.filter(x=>now-x.t<=7*86400000);
  baseline.forEach(x=>Object.keys(avg).forEach(k=>avg[k]+=Number(x.cats&&x.cats[k]||0)));
  Object.keys(avg).forEach(k=>avg[k]=baseline.length?avg[k]/baseline.length:0);
@@ -723,6 +732,7 @@ function generateBrief(kind){
  const addSection=title=>{const h=document.createElement("h3");h.className="brief-section";h.textContent=title;content.append(h)};
  addSection("Top observations");
  content.append(briefItem("obs","Military aviation",total+" military aircraft currently visible in the Nordic–Baltic area. "+Object.entries(counts).filter(x=>x[1]).map(x=>x[1]+" "+categoryLabel(x[0])).join(" · ")+"."));
+ const specialMissions=rawAircraft.map(a=>{const result=aircraftClass(a),analysis=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,analysis);return {a,result,analysis,assessment}}).filter(x=>x.assessment).sort((a,b)=>b.assessment.score-a.assessment.score);if(specialMissions.length){const mission=specialMissions[0],rarity=SM.rarity(flightHistory,mission.result.platformFamily,now);content.append(briefItem("obs",mission.result.platformName+" detected",`${mission.result.role} / ${mission.result.subrole} · ${mission.assessment.strategic?.name||"Nordic–Baltic area"}. Observed directly in the live aircraft feed.`));content.append(briefItem("infer","High-value special-mission assessment",`${mission.assessment.pattern} ${mission.assessment.patternConfidence}% · interest ${mission.assessment.level} (${mission.assessment.score}). ${mission.assessment.inference}. This is analytical relevance, not proof of escalation.${rarity?" "+rarity.claim+"; confidence "+rarity.confidence+".":" No rarity claim: stored history is not yet sufficient."}`))}
  content.append(briefItem("obs","Civilian / state / unknown traffic",aircraftNow.nonMilitary+" civilian/unknown aircraft ("+aircraftNow.base.CIVILIAN+" civilian · "+aircraftNow.base.STATE+" state · "+aircraftNow.base.UNKNOWN+" unknown). These do not affect military activity."));
  if(coastGuardObservations.length){const cg=coastGuardObservations[0];content.append(briefItem("obs",cg.title,`${cg.location} · ${durationText(cg.durationMs)} · ${cg.turns} turns · cause ${cg.cause}. AUTOMATIC INTERPRETATION; ${cg.evidence.operation}. ${cg.operationalWarning?"Operational-warning threshold met.":"No immediate operational warning; Activity is unchanged."}`))}
  if(uavIncidents.length){const incident=uavIncidents[0];content.append(briefItem("obs",`Recovered UAV — ${incident.region}`,`${incident.aircraftType}, ${incident.estimatedSize}; no explosive payload reported. Origin unknown, attribution none. Investigation: ${incident.investigationStatus}. Risk ${UI.riskScore(incident).score}.`,{label:"Open incident",run:()=>{map.flyTo([incident.position.latitude,incident.position.longitude],8);document.getElementById("briefDrawer").classList.remove("show")}}));content.append(briefItem("infer","Preliminary UAV role assessment",`${incident.possibleFunctions.join(" / ")||"Unknown function"}. This assessment does not establish origin, operator or hostile intent.`))}
