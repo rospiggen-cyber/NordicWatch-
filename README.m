@@ -1,4 +1,4 @@
-# NordicWatch v0.9.9 — Detection, Correlation, Behaviour & Baseline Engine
+# NordicWatch v1.0 — Detection, Correlation, Behaviour & Baseline Engine
 
 NordicWatch is a mobile-first Nordic–Baltic OSINT situational-awareness PWA.
 
@@ -57,7 +57,7 @@ Swedish Coast Guard Dash 8 Q-300 aircraft are classified as Government / Coast G
 
 ## Authentication and data handling
 
-v0.9.9 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
+v1.0 does not implement user authentication or a payment wall. Browser notification permission is not authentication. Settings, deduplication state and some fallback history are stored locally and must not be treated as access control.
 
 Credentials must never be placed in `index.html`, the service worker, imported files or `localStorage`. The dormant Worker placeholder has no upstream endpoint and always rejects maritime-data requests until a separately reviewed adapter is implemented.
 
