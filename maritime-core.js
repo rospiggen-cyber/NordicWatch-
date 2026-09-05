@@ -8,7 +8,7 @@
   const VERSION="0.7";
   const MAX_IMPORT_BYTES=2*1024*1024;
   const MAX_RECORDS=10000;
-  const BOUNDS={west:-12,south:53,east:34.5,north:72.5};
+  const BOUNDS={west:-15,south:53,east:40,north:81};
   const TYPES=new Set(["vessel_position","maritime_event","maritime_behavior_anomaly","navigation_warning","restriction","authority_notice","manual_event"]);
   const EVIDENCE=new Set(["observation","indicator","confirmed"]);
   const ALLOWED_USE=new Set(["test","display","analysis","alerts","commercial"]);

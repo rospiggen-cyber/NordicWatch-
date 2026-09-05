@@ -1,7 +1,7 @@
 (function(root,factory){
   const api=factory();
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
-  else root.NordicWatchAircraft=api;
+  root.NordicWatchAircraft=api;
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   "use strict";
 
@@ -36,13 +36,15 @@
     ISR:new Set(["RC135","RC135W","R135","EP3","IL20","GLF4","GLEX","CL60"]),
     EW:new Set(["EA37","EA37B","IL22"]),
     ASW:new Set(["P8","P8A","IL38","TU142"]),
-    TRANSPORT:new Set(["C17","C17A","C130","C30J","A400","A400M","C5","C5M","C295","CN35"]),
+    TRANSPORT:new Set(["E121","EMB121","EMB121AA","C17","C17A","C130","C30J","A400","A400M","C5","C5M","C295","CN35"]),
     FIGHTER:new Set(["F15","F16","F18","F22","F35","JAS39","EUFI","RFAL","SU27","SU30","SU35","MG29","MIG29"])
   };
-  const MIL_OPERATOR=/(?:^|\b)(?:AIR FORCE|ARMED FORCES|LUFTWAFFE|FLYGVAPNET|FLYGVAPNET|ROYAL AIR FORCE|USAF|USN|US NAVY|ARMY AVIATION|MARINE CORPS|NATO)(?:\b|$)/i;
+  const MIL_OPERATOR=/(?:^|\b)(?:AIR FORCE|ARMED FORCES|LUFTWAFFE|FLYGVAPNET|FLYGVAPNET|ROYAL AIR FORCE|USAF|USN|US NAVY|FRANCE[ -]+NAVY|FRENCH NAVY|MARINE NATIONALE|ROYAL NAVY|ARMY AVIATION|MARINE CORPS|NATO)(?:\b|$)/i;
   const STATE_OPERATOR=/(?:^|\b)(?:COAST GUARD|POLICE|CUSTOMS|BORDER GUARD|GOVERNMENT|FRONTEX|MARITIME ADMINISTRATION)(?:\b|$)/i;
+  const CIVIL_CALLSIGN=/^(?:SAS|FIN|DLH|RYR|NAX|KLM|WZZ|EZY|BAW|AFR)[0-9][A-Z0-9]{1,5}$/;
+  const CIVIL_AIRLINER=/^(?:A3(?:18|19|20|21|30|32|33|38|39)|B7(?:37|38|39|44|48|52|63|64|72|73|77|78|88|89)|E(?:170|175|190|195)|BCS[13])$/;
   const CIVIL_OPERATOR=/(?:^|\b)(?:SAS|SCANDINAVIAN AIRLINES|FINNAIR|LUFTHANSA|RYANAIR|NORWEGIAN|KLM|WIZZ AIR|EASYJET|BRITISH AIRWAYS|AIR FRANCE|DHL|FEDEX|UPS)(?:\b|$)/i;
-  const MIL_CALLSIGN=/^(?:NATO|RCH|CNV|RRR|ASCOT|GAF|BAF|IAM|SVF|NOAF|DAF|FAF|PLF|TUAF)[A-Z0-9]*$/;
+  const MIL_CALLSIGN=/^(?:NATO|CTM|RCH|CNV|RRR|ASCOT|GAF|BAF|IAM|SVF|NOAF|DAF|FAF|PLF|TUAF)[A-Z0-9]*$/;
 
   const text=(a,keys)=>keys.map(k=>a&&a[k]).find(v=>typeof v==="string"&&v.trim())||"";
   const norm=v=>String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
@@ -58,7 +60,7 @@
     const keys=["t","type","typeCode","icaoType","model","aircraftModel","description","desc","flight","callsign","callSign","registration","reg","r","operator","operatorName","operator_name","ownOp","owner","militaryType","militaryMetadata"];
     const values=keys.map(k=>a&&a[k]).filter(v=>typeof v==="string"&&v.trim()).map(norm),t=type(a),cs=callsign(a),op=norm(operator(a)),model=norm(text(a,["model","aircraftModel","description","desc"]));
     if(["CL60","CL650","C650"].includes(t)&&(/ARTEMIS/.test(cs)||/LEIDOS|USARMY|AERIALRECONNAISSANCE/.test(op+model)))return Object.freeze({platformFamily:"Challenger 650",platformVariant:"ARTEMIS II",platformName:"ARTEMIS II CHALLENGER 650",role:ROLE.ISR,subrole:"ISR / SIGINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR,military:true});
-    if(["GLF4","GIV","G4"].includes(t)&&(/SVF680|KORPEN/.test(cs)||/S102B|SWEDISHARMEDFORCES|SWEDISHAIRFORCE/.test(op+model)))return Object.freeze({platformFamily:"S102B",platformVariant:"S102B Korpen",platformName:"S102B KORPEN",role:ROLE.ISR,subrole:"SIGINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR,military:true});
+    if((t==="S102B"||["GLF4","GIV","G4"].includes(t))&&(/SVF680|KORPEN/.test(cs)||/S102B|SWEDISHARMEDFORCES|SWEDISHAIRFORCE/.test(t+op+model)))return Object.freeze({platformFamily:"S102B",platformVariant:"S102B Korpen",platformName:"S102B KORPEN",role:ROLE.ISR,subrole:"SIGINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR,military:true});
     for(const platform of SPECIAL_MISSION_PLATFORMS)if(values.some(value=>platform.match.test(value)))return Object.freeze({...platform,match:undefined,military:true});
     return null;
   }
@@ -101,6 +103,7 @@
     const civilianExplicit=truthy(a,["civilian","isCivilian","is_civilian"])||/\bCIVILIAN\b/.test(cls)||CIVIL_OPERATOR.test(op);
     if(civilianExplicit)return {base:BASE.CIVILIAN,confidence:null,role:null,evidence:[{signal:"civilian-identity",strength:"strong"}]};
 
+    if(CIVIL_CALLSIGN.test(cs)&&CIVIL_AIRLINER.test(t))return {base:BASE.CIVILIAN,confidence:CONFIDENCE.PROBABLE,role:null,evidence:[{signal:"airline-callsign-and-airliner-type",strength:"weak"}]};
     const weakKinds=new Set(evidence.filter(x=>x.strength==="weak").map(x=>x.signal));
     if(weakKinds.size>=2)return {base:BASE.MILITARY,confidence:CONFIDENCE.PROBABLE,role:militaryRole(a),evidence};
     return {base:BASE.UNKNOWN,confidence:null,role:null,evidence};

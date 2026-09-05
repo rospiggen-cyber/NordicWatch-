@@ -22,7 +22,7 @@
     const sourceUrl=safeUrl(raw.sourceUrl),start=new Date(raw.startTime),end=new Date(raw.endTime);
     const latitude=Number(raw.latitude),longitude=Number(raw.longitude),radiusKm=Number(raw.radiusKm);
     if(!clean(raw.id,120)||!clean(raw.title,200)||!EVENT_TYPES.has(eventType)||!sourceUrl||Number.isNaN(start.getTime())||Number.isNaN(end.getTime())||end<start)return null;
-    if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||latitude<45||latitude>75||longitude< -15||longitude>45||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>1000)return null;
+    if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||latitude<45||latitude>85||longitude< -15||longitude>45||!Number.isFinite(radiusKm)||radiusKm<1||radiusKm>1000)return null;
     const expectedActivity=[...new Set(list(raw.expectedActivity).map(activity).filter(x=>ACTIVITY_TYPES.has(x)))];
     const confidenceValue=clean(raw.confidence,30).toUpperCase(),confirmed=officialUrl(sourceUrl)&&confidenceValue==="CONFIRMED",confirmedExternal=trustedExternalUrl(sourceUrl)&&confidenceValue==="CONFIRMED_EXTERNAL";
     const discovery=raw.discovery&&typeof raw.discovery==="object"?{temporaryWatchZone:raw.discovery.temporaryWatchZone===true,score:Math.max(0,Math.min(100,Number(raw.discovery.score)||0)),scoreReasons:list(raw.discovery.scoreReasons,20),scoreExplanation:clean(raw.discovery.scoreExplanation,500),exerciseKey:clean(raw.discovery.exerciseKey,160),memberIds:list(raw.discovery.memberIds,50),relatedEventIds:list(raw.discovery.relatedEventIds,50)}:null;

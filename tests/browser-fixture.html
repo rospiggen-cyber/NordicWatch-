@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>NordicWatch deterministic UI fixture</title>
+<h1>NordicWatch UI fixture</h1><p>Use only on a dedicated localhost test port. Synthetic observations will be written to this origin's NordicWatch test state. No notifications are enabled.</p><button id="start">Start synthetic acceptance scenario</button>
+<script>
+document.getElementById('start').onclick=()=>{
+ const now=Date.now(),H=3600000;
+ const signals=['Power grid failure','Rail infrastructure disruption','Telecom cable outage','Drone over energy plant','Cyber power-grid anomaly'].map((title,i)=>({id:'ui-test-'+i,domain:['INFRASTRUCTURE','NEWS','CYBER','GNSS','OFFICIAL'][i],timestamp:now-i*H,lat:54.1+i*.05,lon:12.1,region:'Northern Germany',title:'TEST ONLY · '+title,source:'Synthetic source '+i,quality:75,eventScore:18,evidence:'DIRECT OBSERVATION'}));
+ localStorage.setItem('NORDICWATCH_SITUATION_SIGNALS',JSON.stringify(signals));
+ localStorage.setItem('NORDICWATCH_SIGNAL_ARCHIVE',JSON.stringify([{id:'uitestnews',signalId:'uitestnews',eventId:'uitest-event',title:'TEST ONLY · Baltic infrastructure investigation',description:'Synthetic security report for brief acceptance testing.',url:'https://example.org/test',domain:'example.org',publishedAt:new Date(now-8*H).toISOString(),articlePublishedAt:new Date(now-8*H).toISOString(),ingestedAt:new Date(now-7*H).toISOString(),lastUpdatedAt:new Date(now-8*H).toISOString(),eventTime:new Date(now-8*H).toISOString(),expiresAt:new Date(now+16*H).toISOString(),timeStatus:'KNOWN',freshness:'FRESH',temporal:{containsNewDevelopment:false},risk:{score:40,eventScore:40,confidence:'MEDIUM',sourceConfidence:'SINGLE_RELIABLE_SOURCE',places:[{name:'Northern Germany',lat:54.1,lon:12.1}],words:['infrastructure'],why:['Synthetic source evidence'],components:{geographicRelevance:90,sourceConfidence:70,militarySignificance:50}}}]));
+ localStorage.setItem('NORDICWATCH_BRIEF_V2',JSON.stringify({t:now-2*H,situations:[]}));
+ location.href='../index.html';
+};
+</script></html>
