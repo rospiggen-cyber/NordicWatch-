@@ -1,0 +1,35 @@
+name: Step 1 reliability tests
+
+on:
+  push:
+    branches:
+      - codex/step1-news-event-reliability
+  pull_request:
+    paths:
+      - "cloudflare/event-feed-worker.js"
+      - "cloudflare/news-reliability-core.mjs"
+      - "intelligence-core.js"
+      - "brief-engine.js"
+      - "tests/news-reliability.test.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax checks
+        run: |
+          node --check cloudflare/news-reliability-core.mjs
+          node --check cloudflare/event-feed-worker.js
+          node --check intelligence-core.js
+          node --check brief-engine.js
+      - name: Regression tests
+        run: node --test tests/news-reliability.test.mjs
