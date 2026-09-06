@@ -1,5 +1,4 @@
 const H = 3600000;
-const DAY = 24 * H;
 
 // Curated public RSS sources used when EXTERNAL_REPORT_URLS is not configured.
 // Keep this list deliberately small: broad collection, conservative assessment.
@@ -10,7 +9,7 @@ export const DEFAULT_EXTERNAL_FEEDS = Object.freeze([
   "https://www.navalnews.com/feed/"
 ]);
 
-const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|estonia|estonian|latvia|latvian|lithuania|lithuanian|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|narva|gulf of finland|suwa[lł]ki)\b/i;
+const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|estonia|estonian|latvia|latvian|lithuania|lithuanian|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|severomorsk|narva|gulf of finland|suwa[lł]ki)\b/i;
 const ADJACENT = /\b(?:germany|german|poland|polish|united kingdom|britain|british|north sea|north atlantic|ukraine|ukrainian|belarus|belarusian|netherlands|dutch|iceland|arctic)\b/i;
 const IMPACT = Object.freeze({
   WEAPONS_STOCKPILE: /\b(?:stockpile|inventory|munition|missile stock|interceptor|ammunition|weapons? shortage|weapons? depletion|expenditure rate)\b/i,
@@ -21,6 +20,14 @@ const IMPACT = Object.freeze({
   SUPPLY_CHAIN: /\b(?:supply chain|semiconductor|rare earth|component shortage|explosive precursor|propellant|rocket motor)\b/i
 });
 const GLOBAL_CONTEXT = /\b(?:iran|israel|middle east|persian gulf|strait of hormuz|taiwan|south china sea|east china sea|indo-pacific|pacific|china|chinese|north korea|korean peninsula|red sea|yemen)\b/i;
+const GEO_GROUPS = Object.freeze([
+  ["kaliningrad", "konigsberg", "baltijsk", "baltiysk"],
+  ["svalbard", "spitsbergen", "barentsburg"],
+  ["murmansk", "kola", "severomorsk"],
+  ["suwalki", "suwałki"],
+  ["gotland", "baltic sea"],
+  ["narva", "gulf of finland"]
+]);
 const STOP = new Set("the and for with from that this into over under near after before have has had was were will would could should about against amid among their there they them its our your new says said report reports military defence defense security activity forces force region regional official update updates".split(/\s+/));
 
 const clean = (v, n = 5000) => String(v ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
@@ -139,9 +146,16 @@ function eventText(event) {
   return clean(`${event.title || ""} ${event.description || ""} ${event.areaName || ""} ${(event.countries || []).join(" ")} ${entityText}`, 10000);
 }
 
+function expandGeoTerms(raw) {
+  const n = norm(raw);
+  const out = new Set(tokens(raw).filter(x => x.length >= 5));
+  for (const group of GEO_GROUPS) if (group.some(alias => n.includes(norm(alias)))) for (const alias of group) out.add(norm(alias));
+  return [...out];
+}
+
 function geographyTerms(event) {
   const raw = [event.areaName, ...(event.locations || []), ...(event.countries || [])].filter(Boolean).join(" ");
-  return tokens(raw).filter(x => x.length >= 5);
+  return expandGeoTerms(raw);
 }
 
 export function findFollowUps(event, signals = [], now = Date.now()) {
