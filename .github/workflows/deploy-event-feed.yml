@@ -1,0 +1,81 @@
+name: Deploy NordicWatch event feed
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "cloudflare/event-feed-worker.js"
+      - "cloudflare/news-reliability-core.mjs"
+      - "cloudflare/event-discovery-core.mjs"
+      - "external-report-core.mjs"
+      - "situation-engine.js"
+      - "intelligence-core.js"
+      - ".github/workflows/deploy-event-feed.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      EVENTS_KV_ID: ${{ secrets.CLOUDFLARE_EVENTS_KV_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify deployment secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID EVENTS_KV_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required GitHub secret: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Syntax and regression tests
+        run: |
+          node --check cloudflare/news-reliability-core.mjs
+          node --check cloudflare/event-feed-worker.js
+          node --check intelligence-core.js
+          node --check brief-engine.js
+          node --test tests/news-reliability.test.mjs
+
+      - name: Build protected Wrangler config
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > wrangler.event-feed.deploy.toml <<EOF
+          name = "nordicwatch-event-feed"
+          main = "cloudflare/event-feed-worker.js"
+          compatibility_date = "2026-09-02"
+
+          [vars]
+          APP_ORIGIN = "https://rospiggen-cyber.github.io"
+          EVENT_ALERT_THRESHOLD = "75"
+
+          [[kv_namespaces]]
+          binding = "EVENTS"
+          id = "${EVENTS_KV_ID}"
+
+          [triggers]
+          crons = ["*/15 * * * *"]
+          EOF
+
+      - name: Deploy Cloudflare Worker
+        run: npx --yes wrangler@4 deploy --config wrangler.event-feed.deploy.toml --keep-vars
