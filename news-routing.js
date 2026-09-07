@@ -1,6 +1,6 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.NordicWatchNewsRouting=api})(globalThis,function(){
   'use strict';
-  const H=3600000;
+  const H=3600000,F=typeof module==='object'&&module.exports?require('./news-freshness.js'):globalThis.NordicWatchFreshness;
   const text=v=>String(v||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').toLowerCase();
   const time=v=>v?+new Date(v):NaN;
   const regions=[['Sweden','sweden|swedish|gotland'],['Finland','finland|finnish'],['Norway','norway|norwegian|finnmark'],['Denmark','denmark|danish|bornholm'],['Iceland','iceland|icelandic'],['Estonia','estonia|estonian|narva'],['Latvia','latvia|latvian|namejs'],['Lithuania','lithuania|lithuanian'],['Polish Baltic coast','polish baltic coast|gdansk|gdynia|szczecin|suwalki'],['Baltic Sea','baltic|gulf of finland'],['Kaliningrad / Baltijsk','kaliningrad|konigsberg|koenigsberg|baltijsk|baltiysk'],['Kola / Murmansk','kola|murmansk|severomorsk'],['Barents / Svalbard','barents|svalbard|spitsbergen|barentsburg'],['Jan Mayen / High North','jan mayen|high north'],['Northern Germany','schleswig holstein|mecklenburg vorpommern|kiel|rostock|lubeck|hamburg']];
@@ -19,15 +19,15 @@
   const host=url=>{try{return new URL(url).hostname}catch{return ''}};
   const canonical=url=>{try{const u=new URL(url);u.hash='';for(const k of [...u.searchParams.keys()])if(/^(utm_|fbclid|gclid)/.test(k))u.searchParams.delete(k);return u.href}catch{return ''}};
   function normalize(item,now=Date.now()){
-    const url=item.url||item.sourceUrl,source=host(url),namejs=text(item.title+' '+(item.description||'' )).match(/\bnamejs\s*(20\d\d)\b/);
+    const dates=F.dates(item),url=item.url||item.sourceUrl,source=host(url),namejs=text(item.title+' '+(item.description||'' )).match(/\bnamejs\s*(20\d\d)\b/);
     const evidence=/^(CONFIRMED|CONFIRMED_EXTERNAL)$/.test(item.confidence)||/CONFIRMED/.test(item.risk?.sourceConfidence)||/(^|\.)(nato\.int|dvidshub\.net|mil|forsvarsmakten\.se|mil\.lv)$/.test(source)?'CONFIRMED_EXTERNAL':'INFERRED';
-    return {...item,url,domain:source||item.domain||'External report',eventId:namejs?'exercise-namejs-'+namejs[1]:item.eventId||item.id||item.signalId||canonical(url)||text(item.title),publishedAt:item.publishedAt||item.articlePublishedAt||item.temporal?.articlePublishedAt||item.startTime||item.ingestedAt,lastUpdatedAt:item.lastUpdatedAt||item.updatedAt||item.lastObservedAt||(!item.routingSignature?item.lastUpdated:null),lastChecked:item.lastChecked||item.lastCheckedAt||item.discovery?.lastPolledAt,evidenceType:evidence,eventType:namejs?'MILITARY_EXERCISE':item.eventType,ongoing:item.ongoing===true||(/exercise/i.test(item.eventType||'')&&time(item.endTime)>now)};
+    return {...item,url,domain:source||item.domain||'External report',eventId:namejs?'exercise-namejs-'+namejs[1]:item.eventId||item.id||item.signalId||canonical(url)||text(item.title),publishedAt:dates.publishedAt||dates.updatedAt||F.parse(item.temporal?.articlePublishedAt)||F.parse(item.startTime),lastUpdatedAt:dates.updatedAt||F.parse(item.lastObservedAt)||(!item.routingSignature?F.parse(item.lastUpdated):null),lastChecked:item.lastChecked||item.lastCheckedAt||item.discovery?.lastPolledAt,evidenceType:evidence,eventType:namejs?'MILITARY_EXERCISE':item.eventType,ongoing:item.ongoing===true||(/exercise/i.test(item.eventType||'')&&time(item.endTime)>now)};
   }
   function windowFor(a,now){
     const published=time(a.publishedAt),updated=time(a.lastUpdatedAt),effective=Number.isFinite(updated)&&updated>published?updated:published;
     const age=now-effective,ongoing=a.ongoing||/developing/i.test(a.lifecycle||a.status||'');
     if(/resolved|stale|ended|inactive/i.test(a.lifecycle||a.status||''))return {brief:false,context:false,reason:'Resolved or stale event'};
-    if(!Number.isFinite(age)||age<0)return {brief:false,context:false,reason:'Missing or future evidence timestamp'};
+    if(!Number.isFinite(age)||age < -F.SKEW_HOURS*H)return {brief:false,context:false,reason:'Missing or future evidence timestamp'};
     if(age<=72*H)return {brief:true,context:true,reason:null};
     if(age<=7*24*H&&ongoing)return {brief:false,context:true,reason:'Developing context older than 72h; lastChecked alone does not renew evidence'};
     return {brief:false,context:false,reason:'Outside evidence window'};

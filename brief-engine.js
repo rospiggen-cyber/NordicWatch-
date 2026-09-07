@@ -1,14 +1,10 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.NordicWatchBrief=api})(globalThis,function(){
   'use strict';
-  const H=3600000;
+  const H=3600000,F=typeof module==='object'&&module.exports?require('./news-freshness.js'):globalThis.NordicWatchFreshness;
   const at=v=>v==null?NaN:+new Date(v);
   function eligible(a,now=Date.now()){
     if(a.relevance)return a.relevance.relevant===true&&a.briefEligible===true;
-    const published=at(a.publishedAt||a.articlePublishedAt||a.ingestedAt),updated=at(a.lastUpdatedAt),occurrence=at(a.eventTime),age=now-published;
-    if(age<0||!Number.isFinite(age))return false;
-    const development=a.containsNewDevelopment===true||a.temporal?.containsNewDevelopment===true;
-    if(Number.isFinite(occurrence)&&now-occurrence>72*H&&!development&&!a.ongoing)return false;
-    return age<24*H||(age<=72*H&&(a.ongoing===true||development&&updated>published&&now-updated<24*H));
+    return F.assess(a,now).freshnessResult==='PASS';
   }
   function rankNews(a,situations,now){const match=situations.filter(s=>s.observations.some(o=>o.incidentId===a.eventId||o.id===a.signalId)),correlation=Math.max(0,...match.map(s=>s.situationScore)),age=Math.max(0,(now-at(a.publishedAt||a.ingestedAt))/H),c=a.risk?.components||{};
     const components={geography:(c.geographicRelevance||0)*.2,security:(c.militarySignificance||a.risk?.score||0)*.15,eventScore:(a.risk?.eventScore||a.risk?.score||0)*.2,correlation:correlation*.2,recency:Math.max(0,100-age*100/72)*.15,reliability:(c.sourceConfidence||40)*.1};return {score:Math.round(Object.values(components).reduce((a,b)=>a+b,0)),components};

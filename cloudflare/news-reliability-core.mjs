@@ -1,3 +1,5 @@
+import "../news-freshness.js";
+const F=globalThis.NordicWatchFreshness;
 const H = 3600000;
 
 // Curated public RSS sources used when EXTERNAL_REPORT_URLS is not configured.
@@ -65,7 +67,7 @@ export function classifyScope(article) {
 
 export function normalizeArticle(article, now = Date.now()) {
   const url = canonical(article.url || article.sourceUrl);
-  const publishedAt = iso(article.publishedAt || article.timestamp || article.articlePublishedAt || article.updatedAt) || iso(now);
+  const dates=F.dates(article),publishedAt=dates.timestamp;
   const summary = clean(article.summary || article.description || article.content, 2500);
   const normalized = {
     ...article,
@@ -74,7 +76,8 @@ export function normalizeArticle(article, now = Date.now()) {
     summary,
     description: clean(article.description || article.summary || article.content, 2500),
     publishedAt,
-    timestamp: iso(article.timestamp) || publishedAt,
+    updatedAt:dates.updatedAt,rawPublishedAt:dates.rawPublishedAt,rawUpdatedAt:dates.rawUpdatedAt,timestampStatus:dates.timestampStatus,timestampSource:dates.timestampSource,
+    timestamp: F.parse(article.timestamp) || publishedAt,
     sourceName: clean(article.sourceName || host(url), 160),
     domain: article.domain || "NEWS"
   };
