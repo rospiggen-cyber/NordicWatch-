@@ -3,6 +3,7 @@
   const H=3600000;
   const at=v=>v==null?NaN:+new Date(v);
   function eligible(a,now=Date.now()){
+    if(a.relevance)return a.relevance.relevant===true&&a.briefEligible===true;
     const published=at(a.publishedAt||a.articlePublishedAt||a.ingestedAt),updated=at(a.lastUpdatedAt),occurrence=at(a.eventTime),age=now-published;
     if(age<0||!Number.isFinite(age))return false;
     const development=a.containsNewDevelopment===true||a.temporal?.containsNewDevelopment===true;
@@ -24,7 +25,7 @@
     const layer=count=>({count,status:count?'PARTIAL':'INSUFFICIENT'});
     const liveObservationCoverage=layer(signals.filter(s=>!['NEWS','OFFICIAL'].includes(s.domain)&&now-s.timestamp<H&&s.timestamp<=now).length);
     const historicalCoverage=layer(signals.filter(s=>s.timestamp<now-H&&s.timestamp>=now-72*H).length);
-    const externalEventCoverage={checked:coverage?.externalChecked===true,status:coverage.externalChecked===true?'SUFFICIENT':'INSUFFICIENT'};
+    const externalEventCoverage={checked:coverage?.externalChecked===true,status:coverage?.externalChecked===true?'SUFFICIENT':'INSUFFICIENT'};
     const coverageStatus=!news.articles.length?'INSUFFICIENT':newsCoverage.status==='SUFFICIENT'&&externalEventCoverage.checked?'SUFFICIENT':'PARTIAL';
     const confidence=coverageStatus==='SUFFICIENT'?'MODERATE':coverageStatus==='PARTIAL'?'LIMITED':'LOW';
     const assessment=coverageStatus==='SUFFICIENT'?'No new significant development':'Insufficient evidence to assess significant change';
@@ -33,7 +34,7 @@
     for(const old of previous?.events||[])if(!events.some(e=>e.id===old.id))events.push({...old,status:'stale',changed:false,lastChecked:now});
     for(const s of situations.filter(s=>s.observations.length>=2)){const old=previous?.situations?.find(p=>p.situationId===s.situationId),changed=!old||s.signalIds.some(id=>!old.signalIds.includes(id))||Math.abs(s.situationScore-old.situationScore)>=5;
       if(changed)developments.push({id:s.situationId,title:s.title,score:s.situationScore+15,evidence:'AUTOMATIC ASSESSMENT',text:s.summary,situation:s});}
-    for(const a of news.articles)if(events.some(e=>e.id===(a.eventId||a.signalId||a.id||a.url)&&e.changed&&e.status!=='resolved')&&!developments.some(d=>d.situation?.observations.some(o=>o.incidentId===a.eventId)))developments.push({id:a.signalId||a.id,title:a.title,score:a.briefRanking.score,evidence:/CONFIRMED_OFFICIAL|CONFIRMED_MAJOR_MEDIA/.test(a.risk?.sourceConfidence)?'CONFIRMED EXTERNAL REPORT':'DIRECT OBSERVATION',text:`${a.domain||'External reporting'} · EventScore ${a.risk?.eventScore||a.risk?.score||0} · ${a.timeStatus||'KNOWN'} publication time`,article:a});
+    for(const a of news.articles)if(events.some(e=>e.id===(a.eventId||a.signalId||a.id||a.url)&&e.changed&&e.status!=='resolved')&&!developments.some(d=>d.situation?.observations.some(o=>o.incidentId===a.eventId)))developments.push({id:a.signalId||a.id,title:a.title,score:a.briefRanking.score,evidence:a.evidenceType==='CONFIRMED_EXTERNAL'||/CONFIRMED_OFFICIAL|CONFIRMED_MAJOR_MEDIA/.test(a.risk?.sourceConfidence)?'CONFIRMED EXTERNAL REPORT':'AUTOMATIC ASSESSMENT',text:`${a.domain||'External reporting'} · EventScore ${a.risk?.eventScore||a.risk?.score||0} · ${a.timeStatus||'KNOWN'} publication time`,article:a});
     for(const s of signals.filter(s=>s.timestamp>=(previous?.t||now-24*H)&&s.timestamp<=now&&s.domain!=='NEWS'))if(!developments.some(d=>d.situation?.signalIds.includes(s.id)))developments.push({id:s.id,title:s.title,score:s.eventScore||20,evidence:s.evidence,text:s.domain+' · '+new Date(s.timestamp).toISOString(),signal:s});
     developments.sort((a,b)=>b.score-a.score);return {coverageAssessment,coverageStatus,confidence,assessment,limitation,newsCoverage,liveObservationCoverage,historicalCoverage,externalEventCoverage,relevantStoredNewsEvaluated:news.articles.length,events,developments:developments.slice(0,3),news,watching:situations.filter(s=>['DEVELOPING','ELEVATED','HIGH'].includes(s.level)),snapshot:{t:now,events,situations:situations.map(s=>({situationId:s.situationId,signalIds:s.signalIds,situationScore:s.situationScore}))}};
   }

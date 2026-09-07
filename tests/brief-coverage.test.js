@@ -13,7 +13,7 @@ test('Morning and Evening UI await failed refreshes and still render insufficien
  const vm=require('node:vm'),fs=require('node:fs');
  for(const kind of ['morning','evening']){
  const rendered=[];const node=()=>({append(){},prepend(){},firstChild:null,set textContent(v){rendered.push(v)}});
- const context=vm.createContext({window:{NordicWatchBrief:B,NordicWatchSituations:{}},document:{getElementById:()=>node(),createElement:()=>node()},IC:{perimeter:()=>({visible:true})},briefNewsCoverage:null,briefExternalCoverage:false,readArray:()=>[],maritimeRead:()=>null,localStorage:{setItem(){}},loadNews:async()=>{throw Error('network failure')},initEventEngine:async()=>{throw Error('parser failure')},generateBriefLiveDetails(){},briefItem:()=>node()});
+ const context=vm.createContext({window:{NordicWatchBrief:B,NordicWatchSituations:{}},document:{getElementById:()=>node(),createElement:()=>node()},routeNewsEvidence:()=>({articles:[],degraded:false}),NR:require('../news-routing.js'),IC:{perimeter:()=>({visible:true})},briefNewsCoverage:null,briefExternalCoverage:false,readArray:()=>[],maritimeRead:()=>null,localStorage:{setItem(){}},loadNews:async()=>{throw Error('network failure')},initEventEngine:async()=>{throw Error('parser failure')},generateBriefLiveDetails(){},briefItem:()=>node()});
  vm.runInContext(fs.readFileSync(require.resolve('../situation-ui.js'),'utf8'),context);
  vm.runInContext('refreshSituations=()=>{};',context);
  await vm.runInContext('generateBrief('+JSON.stringify(kind)+')',context);
