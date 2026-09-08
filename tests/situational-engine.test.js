@@ -32,4 +32,8 @@ const common={geographicRelevance:95,militarySignificance:95,actorSignificance:9
 
 // Bounded baseline and safe same-origin deep links.
 const history=Array.from({length:14},(_,i)=>({timestamp:now-(i+1)*86400000,military:4,isr:1,tanker:1,awacs:0,ew:0,gnss:0,events:1})),base=SE.baseline(history,{military:12,isr:4,tanker:1,awacs:1,ew:0,gnss:1,events:1},{now});assert(["UNUSUAL","HIGHLY_UNUSUAL"].includes(base.baselineStatus));assert.equal(SE.safeDeepLink("https://evil.example/steal"),"./");assert.match(SE.safeDeepLink("?event=x"),/event=x/);
+
+// Hotspot correlation preserves the source identity and evidence link for the UI.
+const sourced=SE.hotspotAssessment({name:"Kaliningrad / Baltijsk",lat:54.7,lon:20.5,radiusKm:300},{signals:[{id:"news-source",domain:"NEWS",evidence:"OBSERVATION",timestamp:at(0),lat:54.7,lon:20.5,region:"Kaliningrad / Baltijsk",kind:"PUBLISHED_REPORT",details:"Named regional report",source:"Official newsroom",link:"https://example.test/report",sourceConfidence:"CONFIRMED_OFFICIAL"}]});
+assert.equal(sourced.correlatedSignals.length,1);assert.equal(sourced.correlatedSignals[0].source,"Official newsroom");assert.equal(sourced.correlatedSignals[0].link,"https://example.test/report");assert.equal(sourced.correlatedSignals[0].details,"Named regional report");
 console.log("situational engine tests passed");
