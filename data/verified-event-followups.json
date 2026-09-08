@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-09-08T19:45:35.378Z",
+  "checkMethod": "Original source and Yle pages fetched; English/Finnish/Swedish follow-up searches reviewed. No source confirming resolution found.",
+  "reports": [
+    {
+      "linkedEventId": "fi-pellinge-uav-2026-09-02",
+      "sourceUrl": "https://yle.fi/a/7-10104650",
+      "sourceName": "Yle",
+      "title": "Här är det senaste vi vet om drönaren i Pellinge",
+      "publishedAt": "2026-09-03T09:13:38Z",
+      "sourceUpdatedAt": "2026-09-03T09:13:38Z",
+      "assessment": "The Border Guard investigation into the drone recovered at Pellinge near Porvoo remained at an early stage. Its origin and purpose were still being examined.",
+      "evidenceKind": "VERIFIED_SOURCE_SUMMARY",
+      "locations": [
+        "Porvoo",
+        "Pellinge"
+      ],
+      "authorities": [
+        "Finnish Border Guard",
+        "police"
+      ]
+    },
+    {
+      "linkedEventId": "fi-pellinge-uav-2026-09-02",
+      "sourceUrl": "https://yle.fi/a/74-20244534",
+      "sourceName": "Yle",
+      "title": "Border Guard: Surveying drone found along Finnish coast is Russian-made",
+      "publishedAt": "2026-09-04T05:23:27Z",
+      "sourceUpdatedAt": "2026-09-04T11:17:16Z",
+      "assessment": "The Border Guard identified the Porvoo/Pellinge device as a Russian-made Geoscan 701. Its operator was not confirmed. Authorities continued investigating; the President said there was no immediate threat.",
+      "evidenceKind": "VERIFIED_SOURCE_SUMMARY",
+      "locations": [
+        "Porvoo",
+        "Pellinge"
+      ],
+      "authorities": [
+        "Finnish Border Guard",
+        "police"
+      ]
+    }
+  ]
+}

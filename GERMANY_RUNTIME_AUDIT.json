@@ -1,0 +1,64 @@
+{
+  "capturedAt": "2026-09-08T14:11:59.822Z",
+  "feeds": [
+    {
+      "url": "https://nordicwatch-event-feed.rospiggen.workers.dev/news",
+      "status": 200,
+      "count": 44
+    },
+    {
+      "url": "https://nordicwatch-event-feed.rospiggen.workers.dev/events",
+      "status": 200,
+      "count": 1
+    }
+  ],
+  "germanRecords": [
+    {
+      "originalRecord": {
+        "title": "From engineer to storyteller: Barrieau retires after 25 years",
+        "summary": "U.S. Army Master Sgt. Caleb P. Barrieau, regional chief of public affairs for the Army & Air Force Exchange Service’s Europe, Southwest Asia and Africa region, retires after 25 years of military service during a ceremony hosted by the 21st Theater Sustainment Command at Panzer Field on Panzer Kaserne in Kaiserslautern, Germany, Sept. 3, 2026. Barrieau began his career as an engineer in the Maine Army National Guard before transitioning to active duty, where he served as an Army broadcast journalist and public affairs noncommissioned officer. The ceremony also recognized his wife, Monica, and their children, Josephine, Emilia and Cooper, for their support and sacrifices throughout his career.",
+        "url": "https://www.dvidshub.net/news/574031/engineer-storyteller-barrieau-retires-after-25-years",
+        "publishedAt": "2026-09-05T17:28:47.000Z",
+        "sourceId": "dvids",
+        "sourceName": "DVIDS",
+        "signalId": "signal-yr3q79",
+        "ingestedAt": "2026-09-06T17:45:48.118Z",
+        "lastUpdatedAt": "2026-09-05T17:28:47.000Z",
+        "eventTime": "2026-09-05T17:28:47.000Z",
+        "expiresAt": "2026-09-06T17:28:47.000Z",
+        "freshness": "RECENT",
+        "timeStatus": "KNOWN",
+        "confidence": 65,
+        "eventId": "event-1b8opag"
+      },
+      "geography": {
+        "german": true,
+        "directGeographicRelevance": false,
+        "location": "Kaiserslautern",
+        "coordinates": {
+          "lat": 49.44,
+          "lon": 7.77
+        },
+        "coordinatePrecision": "PLACE_CENTROID"
+      },
+      "signal": null
+    }
+  ],
+  "signals": [],
+  "hotspots": [],
+  "gdelt": {
+    "capturedAt": "2026-09-08T14:16:48.821Z",
+    "requestUrl": "https://api.gdeltproject.org/api/v2/doc/doc?query=%28Germany+OR+Deutschland+OR+Kiel+OR+Rostock+OR+L%C3%BCbeck+OR+R%C3%BCgen+OR+Fehmarn+OR+Greifswald+OR+Stralsund%29+%28infrastructure+OR+Kraftwerk+OR+Umspannwerk+OR+Stromnetz+OR+%22power+grid%22+OR+railway+OR+telecom+OR+pipeline+OR+port%29+%28drone+OR+sabotage+OR+fire+OR+outage+OR+explosion%29&mode=ArtList&maxrecords=150&format=json&sort=DateDesc&timespan=3d",
+    "status": 429,
+    "responseText": "Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset: https://blog.gdeltproject.org/using-the-new-web-ngrams-dataset-to-find-relevant-coverage/. For trend analysis, please see our daily newsletter briefings: https://blog.gdeltproject.org/announcing-our-new-daily-todays-trends-on-capitol-hill-todays-media-trends-newsletter-briefings/.\n\n"
+  },
+  "limitation": "No current German infrastructure incident was returned by the available runtime feeds. Positive pattern behavior is covered only by deterministic unit tests, never synthetic runtime incidents.",
+  "localBrowserSmoke": {
+    "url": "http://127.0.0.1:8765/",
+    "mobileIntelligenceOpened": true,
+    "mobileIntelligenceClosed": true,
+    "germanStatus": "German infrastructure: insufficient coverage · 0/2 feeds · 0 temporary patterns",
+    "newLayerErrors": [],
+    "limitation": "Local-origin network coverage was unavailable. Existing application seed/demo layers were not used as German incident evidence."
+  }
+}

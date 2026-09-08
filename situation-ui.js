@@ -18,7 +18,7 @@ function refreshSituations(force=false){
     situationObservations=SX.accumulate(readArray(SITUATION_SIGNALS),incoming);
     // Store the complete accumulated history; the engine alone selects analytical windows.
     localStorage.setItem(SITUATION_SIGNALS,JSON.stringify(situationObservations));
-    situationClusters=SX.build(situationObservations,{now,previous:readArray(SITUATION_STATE)});
+    situationClusters=SX.build(situationObservations.filter(eventStateActive),{now,previous:readArray(SITUATION_STATE)});
     localStorage.setItem(SITUATION_STATE,JSON.stringify(situationClusters));const history=maritimeRead('NORDICWATCH_SITUATION_HISTORY',{});for(const s of situationClusters)history[s.situationId]=s;localStorage.setItem('NORDICWATCH_SITUATION_HISTORY',JSON.stringify(history));renderSituations();void notifySituations();
   }catch(error){console.warn('Situation layer unavailable; existing layers remain operational',error)}
 }

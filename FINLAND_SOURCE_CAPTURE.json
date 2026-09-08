@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-09-08T19:45:35.378Z",
+  "sources": [
+    {
+      "url": "https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b",
+      "status": 200,
+      "title": "Porvoon edustalta löytyi todennäköisesti vieraan valtion drooni – &quot;Kenen se on, selvitetään tutkinnassa&quot;",
+      "dates": [
+        "published_time\" content=\"2026-09-02T13:15:00.000Z",
+        "published_time\" content=\"2026-09-02T13:15:00.000Z",
+        "dateCreated\":\"2026-09-02T13:15:00.000Z",
+        "datePublished\":\"2026-09-02T13:15:00.000Z"
+      ]
+    },
+    {
+      "url": "https://yle.fi/a/7-10104650",
+      "status": 200,
+      "title": "Här är det senaste vi vet om drönaren i Pellinge",
+      "dates": [
+        "published_time\" content=\"2026-09-03T12:13:38+03:00",
+        "modified_time\" content=\"2026-09-03T12:13:38+03:00",
+        "datePublished\": \"2026-09-03T12:13:38+03:00",
+        "dateModified\": \"2026-09-03T12:13:38+03:00",
+        "datePublished\":\"2026-09-03T12:13:38+0300",
+        "datePublished\":\"2026-09-02T19:29:52+0300",
+        "datePublished\":\"2026-09-02T13:46:40+0300"
+      ]
+    },
+    {
+      "url": "https://yle.fi/a/74-20244534",
+      "status": 200,
+      "title": "Border Guard: Surveying drone found along Finnish coast is Russian-made",
+      "dates": [
+        "published_time\" content=\"2026-09-04T08:23:27+03:00",
+        "modified_time\" content=\"2026-09-04T14:17:16+03:00",
+        "datePublished\": \"2026-09-04T08:23:27+03:00",
+        "dateModified\": \"2026-09-04T14:17:16+03:00",
+        "datePublished\":\"2026-09-04T08:23:27+0300",
+        "datePublished\":\"2026-09-02T15:56:35+0300",
+        "datePublished\":\"2026-09-02T16:54:00+0300",
+        "datePublished\":\"2026-08-28T13:36:14+0300",
+        "datePublished\":\"2026-08-24T09:14:37+0300"
+      ]
+    }
+  ]
+}

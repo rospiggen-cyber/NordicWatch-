@@ -1,0 +1,142 @@
+{
+  "evaluatedAt": "2026-09-08T20:00:21.912Z",
+  "originalStoredRecord": {
+    "id": "fi-pellinge-uav-2026-09-02",
+    "incidentType": "UAV_RECOVERED",
+    "timestamp": "2026-09-02T12:00:00Z",
+    "timePrecision": "DATE",
+    "position": {
+      "latitude": 60.235,
+      "longitude": 25.87
+    },
+    "region": "Gulf of Finland",
+    "country": "Finland",
+    "sourceUrl": "https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b",
+    "sourceName": "STT report citing Finnish Ministry of Defence and Border Guard",
+    "sourceType": "SECONDARY_OFFICIAL_REPORT",
+    "aircraftType": "Fixed-wing UAV",
+    "estimatedSize": "Several metres",
+    "possibleFunctions": [
+      "mapping",
+      "surveillance"
+    ],
+    "explosivePayload": "NO",
+    "origin": "UNKNOWN",
+    "attribution": {
+      "status": "NONE",
+      "actor": null,
+      "confidence": "UNKNOWN"
+    },
+    "findingConfidence": "HIGH",
+    "originConfidence": "UNKNOWN",
+    "incidentStatus": "RECOVERED_PLATFORM",
+    "territorialViolation": "UNDER_INVESTIGATION",
+    "roleConfirmation": "ASSESSED",
+    "hostileIntent": "UNKNOWN",
+    "investigationStatus": "Finnish Border Guard and Police investigation; possible territorial violation under investigation",
+    "summary": "Fixed-wing UAV recovered near Porvoo/Pellinge, Finland. Preliminary assessment indicates mapping or surveillance use. No explosive payload reported. Origin and operator remain unknown. Possible territorial violation under investigation.",
+    "evidence": {
+      "observed": "Physical fixed-wing UAV recovered; several metres in size; authorities reported no explosive payload.",
+      "assessed": "Preliminary mapping or surveillance function; exact role remains under investigation."
+    }
+  },
+  "generatedSearches": [
+    "(\"Porvoo\" OR \"Pellinge\" OR \"Pellinki\" OR \"Pellingin\" OR \"Borgå\") (drone OR UAV OR UAS OR lennokki OR drooni OR drönare)",
+    "Porvoo Finnish Border Guard Rajavartiolaitos police  Finland drone incident — Porvoo update investigation restrictions lifted"
+  ],
+  "state": {
+    "id": "fi-pellinge-uav-2026-09-02",
+    "descriptor": {
+      "id": "fi-pellinge-uav-2026-09-02",
+      "title": "Finland drone incident — Porvoo",
+      "locationTerms": [
+        "Porvoo",
+        "Pellinge",
+        "Pellinki",
+        "Pellingin",
+        "Borgå"
+      ],
+      "entities": [],
+      "authorities": [
+        "Finnish Border Guard",
+        "Rajavartiolaitos",
+        "police"
+      ],
+      "topic": "UAV_RECOVERED",
+      "sourceUrl": "https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b",
+      "endTime": null
+    },
+    "status": "STALE",
+    "firstSeen": "2026-09-02T12:00:00.000Z",
+    "lastSeen": "2026-09-04T11:17:16.000Z",
+    "lastUpdated": "2026-09-04T11:17:16.000Z",
+    "lastChecked": "2026-09-08T19:45:35.378Z",
+    "lastSuccessfulCheck": "2026-09-08T19:45:35.378Z",
+    "latestAssessment": "No recent information confirms that this situation remains active. Last source assessment: The Border Guard identified the Porvoo/Pellinge device as a Russian-made Geoscan 701. Its operator was not confirmed. Authorities continued investigating; the President said there was no immediate threat.",
+    "sources": [
+      {
+        "sourceUrl": "https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b",
+        "source": "STT report citing Finnish Ministry of Defence and Border Guard",
+        "title": "Original observation",
+        "description": "Fixed-wing UAV recovered near Porvoo/Pellinge, Finland. Preliminary assessment indicates mapping or surveillance use. No explosive payload reported. Origin and operator remain unknown. Possible territorial violation under investigation.",
+        "timestamp": "2026-09-02T12:00:00.000Z",
+        "updated": "2026-09-02T12:00:00.000Z",
+        "timePrecision": "DATE",
+        "sourceConfidence": "HIGH",
+        "eventId": null,
+        "kind": "REPORT",
+        "signature": "[\"https://www.maaseuduntulevaisuus.fi/uutiset/abd72e1d-9f2c-4ba1-a85b-7ef0e1bf1b3b\",\"Original observation\",\"Fixed-wing UAV recovered near Porvoo/Pellinge, Finland. Preliminary assessment indicates mapping or surveillance use. No explosive payload reported. Origin and operator remain unknown. Possible territorial violation under investigation.\",\"2026-09-02T12:00:00.000Z\"]",
+        "originalSignalId": "fi-pellinge-uav-2026-09-02"
+      },
+      {
+        "sourceUrl": "https://yle.fi/a/7-10104650",
+        "source": "Yle",
+        "title": "Här är det senaste vi vet om drönaren i Pellinge",
+        "description": "The Border Guard investigation into the drone recovered at Pellinge near Porvoo remained at an early stage. Its origin and purpose were still being examined.",
+        "timestamp": "2026-09-03T09:13:38.000Z",
+        "updated": "2026-09-03T09:13:38.000Z",
+        "timePrecision": "TIMESTAMP",
+        "sourceConfidence": "UNKNOWN",
+        "eventId": "fi-pellinge-uav-2026-09-02",
+        "kind": "VERIFIED_SOURCE_SUMMARY",
+        "signature": "[\"https://yle.fi/a/7-10104650\",\"Här är det senaste vi vet om drönaren i Pellinge\",\"The Border Guard investigation into the drone recovered at Pellinge near Porvoo remained at an early stage. Its origin and purpose were still being examined.\",\"2026-09-03T09:13:38.000Z\"]",
+        "originalSignalId": null
+      },
+      {
+        "sourceUrl": "https://yle.fi/a/74-20244534",
+        "source": "Yle",
+        "title": "Border Guard: Surveying drone found along Finnish coast is Russian-made",
+        "description": "The Border Guard identified the Porvoo/Pellinge device as a Russian-made Geoscan 701. Its operator was not confirmed. Authorities continued investigating; the President said there was no immediate threat.",
+        "timestamp": "2026-09-04T05:23:27.000Z",
+        "updated": "2026-09-04T11:17:16.000Z",
+        "timePrecision": "TIMESTAMP",
+        "sourceConfidence": "UNKNOWN",
+        "eventId": "fi-pellinge-uav-2026-09-02",
+        "kind": "VERIFIED_SOURCE_SUMMARY",
+        "signature": "[\"https://yle.fi/a/74-20244534\",\"Border Guard: Surveying drone found along Finnish coast is Russian-made\",\"The Border Guard identified the Porvoo/Pellinge device as a Russian-made Geoscan 701. Its operator was not confirmed. Authorities continued investigating; the President said there was no immediate threat.\",\"2026-09-04T11:17:16.000Z\"]",
+        "originalSignalId": null
+      }
+    ],
+    "active": false,
+    "confidence": "LOW",
+    "latestSignature": "[\"https://yle.fi/a/74-20244534\",\"Border Guard: Surveying drone found along Finnish coast is Russian-made\",\"The Border Guard identified the Porvoo/Pellinge device as a Russian-made Geoscan 701. Its operator was not confirmed. Authorities continued investigating; the President said there was no immediate threat.\",\"2026-09-04T11:17:16.000Z\"]",
+    "checks": [
+      {
+        "timestamp": "2026-09-08T19:45:35.378Z",
+        "succeeded": true,
+        "method": "Original source and Yle pages fetched; English/Finnish/Swedish follow-up searches reviewed. No source confirming resolution found.",
+        "newSources": 3
+      }
+    ],
+    "lastTargetedCheck": null,
+    "followupQueries": [
+      "(\"Porvoo\" OR \"Pellinge\" OR \"Pellinki\" OR \"Pellingin\" OR \"Borgå\") (drone OR UAV OR UAS OR lennokki OR drooni OR drönare)",
+      "Porvoo Finnish Border Guard Rajavartiolaitos police  Finland drone incident — Porvoo update investigation restrictions lifted"
+    ],
+    "lastFollowupError": null
+  },
+  "beforeActiveHotspotContribution": 7,
+  "afterActiveHotspotContribution": 0,
+  "unchangedIncidentRisk": 35,
+  "conclusion": "STALE, not RESOLVED. No later source confirming that the Porvoo/Pellinge investigation concluded was found. The available 4 September report still describes an investigation and does not confirm the operator."
+}

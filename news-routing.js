@@ -1,9 +1,10 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.NordicWatchNewsRouting=api})(globalThis,function(){
   'use strict';
+  const G=typeof module==='object'&&module.exports?require('./germany-infrastructure.js'):globalThis.NordicWatchGermany;
   const H=3600000,F=typeof module==='object'&&module.exports?require('./news-freshness.js'):globalThis.NordicWatchFreshness;
   const text=v=>String(v||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').toLowerCase();
   const time=v=>v?+new Date(v):NaN;
-  const regions=[['Sweden','sweden|swedish|gotland'],['Finland','finland|finnish'],['Norway','norway|norwegian|finnmark'],['Denmark','denmark|danish|bornholm'],['Iceland','iceland|icelandic'],['Estonia','estonia|estonian|narva'],['Latvia','latvia|latvian|namejs'],['Lithuania','lithuania|lithuanian'],['Polish Baltic coast','polish baltic coast|gdansk|gdynia|szczecin|suwalki'],['Northeastern Poland','masurian patrol|bemowo piskie|masuria'],['Baltic Sea','baltic|gulf of finland'],['Kaliningrad / Baltijsk','kaliningrad|konigsberg|koenigsberg|baltijsk|baltiysk'],['Kola / Murmansk','kola|murmansk|severomorsk'],['Barents / Svalbard','barents|svalbard|spitsbergen|barentsburg'],['Jan Mayen / High North','jan mayen|high north'],['Northern Germany','schleswig holstein|mecklenburg vorpommern|kiel|rostock|lubeck|hamburg']];
+  const regions=[['Sweden','sweden|swedish|gotland'],['Finland','finland|finnish'],['Norway','norway|norwegian|finnmark'],['Denmark','denmark|danish|bornholm'],['Iceland','iceland|icelandic'],['Estonia','estonia|estonian|narva'],['Latvia','latvia|latvian|namejs'],['Lithuania','lithuania|lithuanian'],['Polish Baltic coast','polish baltic coast|gdansk|gdynia|szczecin|suwalki'],['Northeastern Poland','masurian patrol|bemowo piskie|masuria'],['Baltic Sea','baltic|gulf of finland'],['Kaliningrad / Baltijsk','kaliningrad|konigsberg|koenigsberg|baltijsk|baltiysk'],['Kola / Murmansk','kola|murmansk|severomorsk'],['Barents / Svalbard','barents|svalbard|spitsbergen|barentsburg'],['Jan Mayen / High North','jan mayen|high north'],['Northern Germany','schleswig[ -]holstein|mecklenburg[ -]vorpommern|kiel|rostock|lubeck|luebeck|rugen|ruegen|fehmarn|greifswald|stralsund|german baltic ports?|hamburg']];
   const topics=[['MILITARY_EXERCISE','exercise|training|namejs|airshow'],['MILITARY_ACTIVITY','military|defence|defense|naval|navy|aircraft|intercept(?:ion|ed|s)?|isr|awacs|fighters?|deployments?|airlift|submarines?|warships?|missiles?|troops'],['INFRASTRUCTURE','infrastructure|cable|pipeline|railway|telecom|power grid|energy'],['HYBRID_SECURITY','cyber|sabotage|drone|gnss|jamming|security'],['POLITICAL_SECURITY','sanctions|seizure|diplomatic|rhetoric|protest|nato|molchanov']];
   function evaluateNordicRelevance(item){
     if(!item||typeof item!=='object')throw new TypeError('Invalid relevance input');
@@ -12,11 +13,15 @@
     const matchedRegions=regions.filter(([,r])=>new RegExp('\\b(?:'+r+')\\b').test(content)).map(([name])=>name);
     const matchedTopics=topics.filter(([,r])=>new RegExp('\\b(?:'+r+')\\b').test(content)).map(([name])=>name);
     const matchedEntities=[...new Set(content.match(/\b(?:namejs(?:\s+20\d\d)?|s102b|korpen|il[- ]?20|rc[- ]?135|professor molchanov)\b/g)||[])];
-    const relevant=matchedRegions.length>0&&matchedTopics.length>0;
+    const german=G.geography(item);if(german.directGeographicRelevance&&!matchedRegions.includes('Northern Germany'))matchedRegions.push('Northern Germany');
+    const germanInfrastructure=german.directGeographicRelevance&&G.infrastructureIncidentTerms(item);
+    if(germanInfrastructure&&!matchedTopics.includes('INFRASTRUCTURE'))matchedTopics.push('INFRASTRUCTURE');
+    const genericGerman=matchedRegions.length>0&&matchedRegions.every(r=>r==='Northern Germany')&&!germanInfrastructure&&!/\b(?:military|defen[cs]e|naval|navy|bundeswehr|exercise|deployment|sabotage|drone|drohne|cyber|jamming|gnss|infrastructure|railway|telecom|power grid|energy|kraftwerk|stromnetz|umspannwerk|seekabel)\b/.test(content);
+    const relevant=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman;
     const matchedAliases=regions.flatMap(([,r])=>content.match(new RegExp('\\b(?:'+r+')\\b','g'))||[]);
     const extractedCountries=[...new Set(content.match(/\b(?:poland|polish|sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|iceland|estonia|latvia|lithuania)\b/g)||[])];
     const extractedPlaces=[...new Set([...matchedAliases,...(content.match(/\b(?:masuria|masurian|bemowo piskie)\b/g)||[])])];
-    return {normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
+    return {directGeographicRelevance:relevant,correlatedStrategicRelevance:false,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
   }
   function safeRelevance(item,evaluate=evaluateNordicRelevance){try{const result=evaluate(item);if(!result||typeof result.relevant!=='boolean')throw Error('Invalid relevance result');return result}catch{return {relevant:false,relevanceScore:0,matchedRegions:[],matchedEntities:[],matchedTopics:[],reason:['Relevance processing degraded'],degraded:true}}}
   const host=url=>{try{return new URL(url).hostname}catch{return ''}};
@@ -27,6 +32,7 @@
     return {...item,url,domain:source||item.domain||'External report',eventId:namejs?'exercise-namejs-'+namejs[1]:item.eventId||item.id||item.signalId||canonical(url)||text(item.title),publishedAt:dates.publishedAt||dates.updatedAt||F.parse(item.temporal?.articlePublishedAt)||F.parse(item.startTime),lastUpdatedAt:dates.updatedAt||F.parse(item.lastObservedAt)||(!item.routingSignature?F.parse(item.lastUpdated):null),lastChecked:item.lastChecked||item.lastCheckedAt||item.discovery?.lastPolledAt,evidenceType:evidence,eventType:namejs?'MILITARY_EXERCISE':item.eventType,ongoing:item.ongoing===true||(/exercise/i.test(item.eventType||'')&&time(item.endTime)>now)};
   }
   function windowFor(a,now){
+    if(a.eventState?.active===false)return {brief:false,context:false,reason:"Event state: "+a.eventState.status};
     const published=time(a.publishedAt),updated=time(a.lastUpdatedAt),effective=Number.isFinite(updated)&&updated>published?updated:published;
     const age=now-effective,ongoing=a.ongoing||/developing/i.test(a.lifecycle||a.status||'');
     if(/resolved|stale|ended|inactive/i.test(a.lifecycle||a.status||''))return {brief:false,context:false,reason:'Resolved or stale event'};
