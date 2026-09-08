@@ -841,6 +841,7 @@ async function loadNews(){
  const results=await Promise.allSettled([fetchJSON(endpoint.href,20000),fetchJSON(eventWorkerBase()+'/news',12000)]),successful=results.filter(r=>r.status==='fulfilled'&&Array.isArray(r.value?.articles)),rawFetched=successful.flatMap(r=>r.value.articles);
  window.nordicWatchFreshnessDiagnostics=window.NordicWatchFreshness.inspect(rawFetched,Date.now());
  const incoming=rawFetched.map(normalizeArticle).filter(Boolean);
+ window.nordicWatchGeoDiagnostics=rawFetched.map(raw=>({raw:NR.diagnose(raw),normalized:NR.diagnose(normalizeArticle(raw)||{})}));
  const archive=IC.ingest(readArray('NORDICWATCH_SIGNAL_ARCHIVE'),incoming);try{localStorage.setItem('NORDICWATCH_SIGNAL_ARCHIVE',JSON.stringify(archive));localStorage.setItem('NORDICWATCH_NEWS_EVENTS',JSON.stringify(IC.signalEvents(archive,readArray('NORDICWATCH_NEWS_EVENTS'))))}catch(error){console.warn('News archive persistence failed',error)}
  window.nordicWatchFetchStages={sources:results.length,fetchSucceeded:successful.length,fetched:rawFetched.length,parsed:rawFetched.length,normalized:incoming.length,normalizationRejected:rawFetched.length-incoming.length};
  const routed=routeNewsEvidence(),selection=BX.selectNews(routed.articles,{situations:situationClusters,geographic:a=>NR.safeRelevance(a).relevant});currentArticles=selection.articles.filter(a=>Date.now()<+new Date(a.expiresAt)).map(a=>({...a,date:parseNewsDate(a.publishedAt)}));
