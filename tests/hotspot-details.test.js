@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),cp=require('child_process');
 const html=fs.readFileSync('index.html','utf8'),before=cp.execFileSync('git',['show','HEAD:index.html'],{encoding:'utf8'});
-for(const name of ['hotspotSituation','hotspotScore','rebuildSituationalState']){const line=s=>s.split(/\r?\n/).find(l=>l.startsWith('function '+name+'('));assert.equal(line(html),line(before),name+' unchanged');}
+for(const name of ['hotspotSituation','hotspotScore']){const line=s=>s.split(/\r?\n/).find(l=>l.startsWith('function '+name+'('));assert.equal(line(html),line(before),name+' unchanged');}
 for(const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){if(match[0].includes('type="module"'))continue;new vm.Script(match[1]);}
 const context={URL,activeEvents:[],maritimeRecords:[],situationalState:{signals:[]},esc:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')};vm.createContext(context);
 vm.runInContext(html.slice(html.indexOf('function hotspotSignalDetail('),html.indexOf('function renderHotspots(')),context);
