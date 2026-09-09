@@ -9,21 +9,36 @@ on:
       - "cloudflare/event-feed-worker.js"
       - "cloudflare/news-reliability-core.mjs"
       - "cloudflare/event-discovery-core.mjs"
+      - "cloudflare/event-state-followup.mjs"
+      - "cloudflare/kv-catalog.mjs"
       - "external-report-core.mjs"
       - "situation-engine.js"
       - "intelligence-core.js"
+      - "aircraft-classifier.js"
+      - "event-state.js"
+      - "news-freshness.js"
+      - "news-routing.js"
+      - "germany-infrastructure.js"
+      - "mock/uav-incidents.json"
+      - "data/verified-event-followups.json"
       - ".github/workflows/deploy-event-feed.yml"
 
 permissions:
   contents: read
+
+concurrency:
+  group: deploy-event-feed-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      EVENTS_KV_ID: ${{ secrets.CLOUDFLARE_EVENTS_KV_ID }}
+      # Resource IDs are not credentials. Preserve existing secret overrides,
+      # support repository variables, and default to the verified live resources.
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '87bb63fea0d987f93dfc1fd28880307a' }}
+      EVENTS_KV_ID: ${{ vars.CLOUDFLARE_EVENTS_KV_ID || secrets.CLOUDFLARE_EVENTS_KV_ID || '829ba2495fab44d38d1f378a59c09b67' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,16 +52,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          missing=0
-          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID EVENTS_KV_ID; do
-            if [ -z "${!name:-}" ]; then
-              echo "::error::Missing required GitHub secret: $name"
-              missing=1
-            fi
-          done
-          if [ "$missing" -ne 0 ]; then
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error::Add the CLOUDFLARE_API_TOKEN repository secret in Settings > Secrets and variables > Actions. Local Wrangler login does not authenticate GitHub Actions."
             exit 1
           fi
+          for name in CLOUDFLARE_ACCOUNT_ID EVENTS_KV_ID; do
+            if [[ ! "${!name}" =~ ^[[:xdigit:]]{32}$ ]]; then
+              echo "::error::Invalid resource ID: $name"
+              exit 1
+            fi
+          done
 
       - name: Syntax and regression tests
         run: |
@@ -54,7 +69,7 @@ jobs:
           node --check cloudflare/event-feed-worker.js
           node --check intelligence-core.js
           node --check brief-engine.js
-          node --test tests/news-reliability.test.mjs
+          node --test tests/*.test.js tests/*.test.mjs
 
       - name: Build protected Wrangler config
         shell: bash
@@ -75,7 +90,15 @@ jobs:
 
           [triggers]
           crons = ["*/15 * * * *"]
+
+          [[durable_objects.bindings]]
+          name = "KV_CATALOG"
+          class_name = "KVCatalog"
+
+          [[migrations]]
+          tag = "kv-catalog-v1"
+          new_sqlite_classes = ["KVCatalog"]
           EOF
 
       - name: Deploy Cloudflare Worker
-        run: npx --yes wrangler@4 deploy --config wrangler.event-feed.deploy.toml --keep-vars
+        run: npx --yes wrangler@4.130.0 deploy --config wrangler.event-feed.deploy.toml --keep-vars
