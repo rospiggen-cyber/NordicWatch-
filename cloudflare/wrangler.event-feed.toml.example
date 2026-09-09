@@ -21,3 +21,12 @@ id = "REPLACE_WITH_KV_NAMESPACE_ID"
 
 [triggers]
 crons = ["*/15 * * * *"]
+
+# Serialized persistent manifest protects concurrent membership changes.
+[[durable_objects.bindings]]
+name = "KV_CATALOG"
+class_name = "KVCatalog"
+
+[[migrations]]
+tag = "kv-catalog-v1"
+new_sqlite_classes = ["KVCatalog"]

@@ -1,3 +1,5 @@
+import {catalog,indexedRecords,indexedPut,indexedDelete} from "./kv-catalog.mjs";
+export {KVCatalog} from "./kv-catalog.mjs";
 import "../aircraft-classifier.js";
 import "../background-monitor-core.js";
 
@@ -22,11 +24,11 @@ async function sendEmptyPush(env,sub){
  const token=await vapidJwt(env,sub.endpoint);
  return fetch(sub.endpoint,{method:"POST",headers:{TTL:"120",Urgency:"high",Authorization:"vapid t="+token+", k="+env.VAPID_PUBLIC_KEY}});
 }
-async function publish(env,alert){
+async function publish(env,alert,caller="collector:monitor"){
  const duplicate=await env.ALERT_STATE.get("alert:"+alert.key);if(duplicate)return {sent:0,deduplicated:true};
  await env.ALERT_STATE.put("alert:"+alert.key,JSON.stringify({at:Date.now(),level:alert.level}),{expirationTtl:86400});
  await env.ALERT_STATE.put("latest",JSON.stringify({level:alert.level,title:alert.title,detail:alert.detail,zone:alert.zone.name,at:Date.now()}),{expirationTtl:86400});
- let cursor,sent=0;do{const page=await env.SUBSCRIPTIONS.list({prefix:"sub:",cursor});for(const key of page.keys){const sub=JSON.parse(await env.SUBSCRIPTIONS.get(key.name));try{const response=await sendEmptyPush(env,sub);if(response.status===404||response.status===410)await env.SUBSCRIPTIONS.delete(key.name);else if(response.ok)sent++}catch(error){console.warn("push",error.message)}}cursor=page.list_complete?undefined:page.cursor}while(cursor);
+ let sent=0;for(const {key,value:sub} of await indexedRecords(env,"SUBSCRIPTIONS",caller)){try{const response=await sendEmptyPush(env,sub);if(response.status===404||response.status===410)await indexedDelete(env,"SUBSCRIPTIONS",key,caller);else if(response.ok)sent++}catch(error){console.warn("push",error.message)}}
  return {sent,deduplicated:false};
 }
 async function monitor(env){
@@ -43,11 +45,12 @@ export default {
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers});
   if(url.pathname==="/health")return json({ok:true,monitorEnabled:env.MONITOR_ENABLED==="1",providerVerified:Boolean(env.ADSB_ENDPOINT_VERIFIED_AT&&env.ADSB_TERMS_VERIFIED_AT),pushConfigured:Boolean(env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY)},200,headers);
   if(request.headers.get("Origin")!==env.APP_ORIGIN)return json({error:"origin_not_allowed"},403,headers);
+  if(url.pathname==="/kv-diagnostics"&&request.method==="GET")return json(await catalog(env,"SUBSCRIPTIONS","diagnostics","GET /kv-diagnostics"),200,headers);
   if(url.pathname==="/push/public-key"&&request.method==="GET")return json({publicKey:env.VAPID_PUBLIC_KEY||null},200,headers);
-  if(url.pathname==="/push/subscribe"&&request.method==="POST"){try{const sub=validateSubscription(await readBody(request));if(!sub)return json({error:"invalid_subscription"},400,headers);await env.SUBSCRIPTIONS.put(await subscriptionKey(sub.endpoint),JSON.stringify(sub));return json({ok:true},201,headers)}catch{return json({error:"invalid_request"},400,headers)}}
-  if(url.pathname==="/push/subscribe"&&request.method==="DELETE"){try{const body=await readBody(request);await env.SUBSCRIPTIONS.delete(await subscriptionKey(body.endpoint));return json({ok:true},200,headers)}catch{return json({error:"invalid_request"},400,headers)}}
+  if(url.pathname==="/push/subscribe"&&request.method==="POST"){try{const sub=validateSubscription(await readBody(request));if(!sub)return json({error:"invalid_subscription"},400,headers);await indexedPut(env,"SUBSCRIPTIONS",await subscriptionKey(sub.endpoint),JSON.stringify(sub),"POST /push/subscribe");return json({ok:true},201,headers)}catch{return json({error:"invalid_request"},400,headers)}}
+  if(url.pathname==="/push/subscribe"&&request.method==="DELETE"){try{const body=await readBody(request);await indexedDelete(env,"SUBSCRIPTIONS",await subscriptionKey(body.endpoint),"DELETE /push/subscribe");return json({ok:true},200,headers)}catch{return json({error:"invalid_request"},400,headers)}}
   if(url.pathname==="/alerts/latest"&&request.method==="GET")return json(JSON.parse(await env.ALERT_STATE.get("latest")||"null"),200,headers);
-  if(url.pathname==="/test/flash"&&request.method==="POST"&&env.MOCK_MODE==="1"&&request.headers.get("x-test-token")===env.TEST_TRIGGER_TOKEN){const alert={key:"mock:"+Math.floor(Date.now()/60000),level:"FLASH",title:"NordicWatch test FLASH",detail:"Mock background notification",zone:{name:"Test zone"}};return json(await publish(env,alert),200,headers)}
+  if(url.pathname==="/test/flash"&&request.method==="POST"&&env.MOCK_MODE==="1"&&request.headers.get("x-test-token")===env.TEST_TRIGGER_TOKEN){const alert={key:"mock:"+Math.floor(Date.now()/60000),level:"FLASH",title:"NordicWatch test FLASH",detail:"Mock background notification",zone:{name:"Test zone"}};return json(await publish(env,alert,"POST /test/flash"),200,headers)}
   return json({error:"not_found"},404,headers);
  },
  async scheduled(_event,env,ctx){ctx.waitUntil(monitor(env))}

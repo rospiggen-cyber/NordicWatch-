@@ -26,3 +26,12 @@ crons = ["* * * * *"]
 
 # Secrets: VAPID_PRIVATE_KEY and TEST_TRIGGER_TOKEN
 # Non-secret VAPID_PUBLIC_KEY is set as a Worker variable.
+
+# Serialized persistent manifest protects concurrent membership changes.
+[[durable_objects.bindings]]
+name = "KV_CATALOG"
+class_name = "KVCatalog"
+
+[[migrations]]
+tag = "kv-catalog-v1"
+new_sqlite_classes = ["KVCatalog"]
