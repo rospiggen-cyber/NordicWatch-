@@ -6,6 +6,9 @@
   const time=v=>v?+new Date(v):NaN;
   const regions=[['Sweden','sweden|swedish|gotland'],['Finland','finland|finnish'],['Norway','norway|norwegian|finnmark'],['Denmark','denmark|danish|bornholm'],['Iceland','iceland|icelandic'],['Estonia','estonia|estonian|narva'],['Latvia','latvia|latvian|namejs'],['Lithuania','lithuania|lithuanian'],['Polish Baltic coast','polish baltic coast|gdansk|gdynia|szczecin|suwalki'],['Northeastern Poland','masurian patrol|bemowo piskie|masuria'],['Baltic Sea','baltic|gulf of finland'],['Kaliningrad / Baltijsk','kaliningrad|konigsberg|koenigsberg|baltijsk|baltiysk'],['Kola / Murmansk','kola|murmansk|severomorsk'],['Barents / Svalbard','barents|svalbard|spitsbergen|barentsburg'],['Jan Mayen / High North','jan mayen|high north'],['Northern Germany','schleswig[ -]holstein|mecklenburg[ -]vorpommern|kiel|rostock|lubeck|luebeck|rugen|ruegen|fehmarn|greifswald|stralsund|german baltic ports?|hamburg']];
   const topics=[['MILITARY_EXERCISE','exercise|training|namejs|airshow'],['MILITARY_ACTIVITY','military|defence|defense|naval|navy|aircraft|intercept(?:ion|ed|s)?|isr|awacs|fighters?|deployments?|airlift|submarines?|warships?|missiles?|troops'],['INFRASTRUCTURE','infrastructure|cable|pipeline|railway|telecom|power grid|energy'],['HYBRID_SECURITY','cyber|sabotage|drone|gnss|jamming|security'],['POLITICAL_SECURITY','sanctions|seizure|diplomatic|rhetoric|protest|nato|molchanov']];
+  const outsideAoi=/\b(?:bangladesh|south asia|southeast asia|indo-pacific|ramstein|kaiserslautern|landstuhl|egypt|tunisia|indonesia|australia)\b/;
+  const nordicDemonym=/\b(?:swedish|finnish|norwegian|danish|icelandic|estonian|latvian|lithuanian)\b/;
+  const incidentalContext=/\b(?:company|firm|manufacturer|supplier|selected to (?:design|build)|commercial success|ruck march|medical center|ceremonial|charity)\b/;
   function evaluateNordicRelevance(item){
     if(!item||typeof item!=='object')throw new TypeError('Invalid relevance input');
     // Publisher location and a generic NATO affiliation alone are not operational linkage.
@@ -17,11 +20,14 @@
     const germanInfrastructure=german.directGeographicRelevance&&G.infrastructureIncidentTerms(item);
     if(germanInfrastructure&&!matchedTopics.includes('INFRASTRUCTURE'))matchedTopics.push('INFRASTRUCTURE');
     const genericGerman=matchedRegions.length>0&&matchedRegions.every(r=>r==='Northern Germany')&&!germanInfrastructure&&!/\b(?:military|defen[cs]e|naval|navy|bundeswehr|exercise|deployment|sabotage|drone|drohne|cyber|jamming|gnss|infrastructure|railway|telecom|power grid|energy|kraftwerk|stromnetz|umspannwerk|seekabel)\b/.test(content);
-    const relevant=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman;
+    // A Nordic adjective can identify a company, participant or ceremonial unit
+    // without locating the reported event in the Nordic/Baltic AOI.
+    const incidentalForeignMention=outsideAoi.test(content)&&nordicDemonym.test(content)&&incidentalContext.test(content);
+    const relevant=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman&&!incidentalForeignMention;
     const matchedAliases=regions.flatMap(([,r])=>content.match(new RegExp('\\b(?:'+r+')\\b','g'))||[]);
     const extractedCountries=[...new Set(content.match(/\b(?:poland|polish|sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|iceland|estonia|latvia|lithuania)\b/g)||[])];
     const extractedPlaces=[...new Set([...matchedAliases,...(content.match(/\b(?:masuria|masurian|bemowo piskie)\b/g)||[])])];
-    return {directGeographicRelevance:relevant,correlatedStrategicRelevance:false,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
+    return {directGeographicRelevance:relevant,correlatedStrategicRelevance:false,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[incidentalForeignMention?'Nordic entity or participant mentioned in an event explicitly located outside the AOI':matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
   }
   function safeRelevance(item,evaluate=evaluateNordicRelevance){try{const result=evaluate(item);if(!result||typeof result.relevant!=='boolean')throw Error('Invalid relevance result');return result}catch{return {relevant:false,relevanceScore:0,matchedRegions:[],matchedEntities:[],matchedTopics:[],reason:['Relevance processing degraded'],degraded:true}}}
   const host=url=>{try{return new URL(url).hostname}catch{return ''}};

@@ -22,6 +22,9 @@ const IMPACT = Object.freeze({
   SUPPLY_CHAIN: /\b(?:supply chain|semiconductor|rare earth|component shortage|explosive precursor|propellant|rocket motor)\b/i
 });
 const GLOBAL_CONTEXT = /\b(?:iran|israel|middle east|persian gulf|strait of hormuz|taiwan|south china sea|east china sea|indo-pacific|pacific|china|chinese|north korea|korean peninsula|red sea|yemen)\b/i;
+const OUTSIDE_AOI = /\b(?:bangladesh|south asia|southeast asia|indo-pacific|ramstein|kaiserslautern|landstuhl|egypt|tunisia|indonesia|australia)\b/i;
+const NORDIC_DEMONYM = /\b(?:swedish|finnish|norwegian|danish|icelandic|estonian|latvian|lithuanian)\b/i;
+const INCIDENTAL_CONTEXT = /\b(?:company|firm|manufacturer|supplier|selected to (?:design|build)|commercial success|ruck march|medical center|ceremonial|charity)\b/i;
 const GEO_GROUPS = Object.freeze([
   ["kaliningrad", "konigsberg", "baltijsk", "baltiysk"],
   ["svalbard", "spitsbergen", "barentsburg"],
@@ -59,6 +62,9 @@ export function configuredExternalFeedValue(value = "") {
 export function classifyScope(article) {
   const text = clean(`${article.title || ""} ${article.summary || article.description || ""}`, 8000);
   const impactPaths = Object.entries(IMPACT).filter(([, re]) => re.test(text)).map(([key]) => key);
+  if (OUTSIDE_AOI.test(text) && NORDIC_DEMONYM.test(text) && INCIDENTAL_CONTEXT.test(text)) {
+    return { scope: "IRRELEVANT", scopeReason: "Nordic entity or participant mentioned in an event explicitly located outside the AOI", impactPaths };
+  }
   if (CORE.test(text)) return { scope: "CORE", scopeReason: "Direct Nordic / Baltic geographic or entity match", impactPaths };
   if (ADJACENT.test(text)) return { scope: "ADJACENT", scopeReason: "Adjacent European / Arctic strategic context", impactPaths };
   if (GLOBAL_CONTEXT.test(text) && impactPaths.length) return { scope: "EXTERNAL", scopeReason: "External development with a plausible strategic dependency path", impactPaths };
@@ -99,18 +105,29 @@ export function retainRollingSignals(signals, now = Date.now(), hours = 72) {
 export function coverageFromRun(sourceHealth = [], articleCount = 0, retainedCount = 0, now = Date.now()) {
   const total = sourceHealth.length;
   const healthy = sourceHealth.filter(x => x.ok).length;
+  const regionalIds = new Set(["nato", "jef", "se", "fi", "ee", "lv", "lt", "no", "pl", "de", "nl"]);
+  const regional = sourceHealth.filter(x => regionalIds.has(String(x.id || "").toLowerCase()));
+  const regionalHealthy = regional.filter(x => x.ok).length;
   const availability = total ? healthy / total : 0;
   const hasMaterial = articleCount > 0 && retainedCount > 0;
-  const coverage = Math.round(100 * availability * (hasMaterial ? 1 : 0.55));
+  const hasRegionalCoverage = regionalHealthy > 0;
+  const coverage = Math.min(hasRegionalCoverage ? 100 : 59, Math.round(100 * availability * (hasMaterial ? 1 : 0.55)));
+  const warning = !hasMaterial
+    ? "Insufficient news coverage — absence of articles must not be interpreted as evidence of no change."
+    : !hasRegionalCoverage
+      ? "No healthy Nordic, Baltic, NATO or JEF source was available; broad defence feeds cannot establish regional coverage."
+      : null;
   return {
-    status: !total || healthy === 0 ? "INSUFFICIENT" : coverage < 60 || !hasMaterial ? "DEGRADED" : "HEALTHY",
+    status: !total || healthy === 0 ? "INSUFFICIENT" : coverage < 60 || !hasMaterial || !hasRegionalCoverage ? "DEGRADED" : "HEALTHY",
     coverage,
     sourcesHealthy: healthy,
     sourcesTotal: total,
+    regionalSourcesHealthy: regionalHealthy,
+    regionalSourcesTotal: regional.length,
     articlesFetched: articleCount,
     rollingSignals: retainedCount,
     assessedAt: new Date(now).toISOString(),
-    warning: !hasMaterial ? "Insufficient news coverage — absence of articles must not be interpreted as evidence of no change." : null
+    warning
   };
 }
 
@@ -161,10 +178,21 @@ function geographyTerms(event) {
   return expandGeoTerms(raw);
 }
 
+function identityAnchors(event) {
+  const entities = event?.entities && typeof event.entities === "object" ? event.entities : {};
+  return [...new Set([
+    ...(entities.exercises || []),
+    ...(entities.aircraft || []),
+    ...(entities.ships || []),
+    ...(entities.weaponSystems || [])
+  ].map(norm).filter(x => x.length >= 5))];
+}
+
 export function findFollowUps(event, signals = [], now = Date.now()) {
   const existing = new Set(event.sourceSignals || []);
   const eTokens = new Set(tokens(eventText(event)));
   const geo = geographyTerms(event);
+  const anchors = identityAnchors(event);
   if (!geo.length) return [];
   return (Array.isArray(signals) ? signals : []).filter(signal => {
     if (!signal?.signalId || existing.has(signal.signalId)) return false;
@@ -173,8 +201,9 @@ export function findFollowUps(event, signals = [], now = Date.now()) {
     const sText = clean(`${signal.title || ""} ${signal.summary || signal.description || ""}`, 8000);
     const n = norm(sText);
     if (!geo.some(g => n.includes(g))) return false;
+    if (anchors.length && !anchors.some(anchor => n.includes(anchor))) return false;
     const overlap = tokens(sText).filter(x => eTokens.has(x)).length;
-    return overlap >= 2;
+    return overlap >= (anchors.length ? 2 : 3);
   }).sort((a, b) => +new Date(b.lastUpdatedAt || b.eventTime || b.publishedAt) - +new Date(a.lastUpdatedAt || a.eventTime || a.publishedAt)).slice(0, 12);
 }
 
