@@ -40,7 +40,7 @@
   return {status:'UPDATED',active:true,confidence:qualified?'MEDIUM':'LOW',text:e.description||e.title};
  }
  function reconcile(raw,previous=null,incoming=[],{now=Date.now(),checked=false,checkSucceeded=false,checkMethod=null}={}){
-  const d=raw.incidentType==='UAV_RECOVERED'?descriptor(raw):previous?.descriptor||descriptor(raw),initial=evidence({...raw,url:d.sourceUrl}),sources=[...(previous?.sources||[])];
+  const incomingDescriptor=descriptor(raw),d=raw.incidentType==='UAV_RECOVERED'?incomingDescriptor:previous?.descriptor?{...previous.descriptor,endTime:incomingDescriptor.endTime||previous.descriptor.endTime}:incomingDescriptor,initial=evidence({...raw,url:d.sourceUrl}),sources=[...(previous?.sources||[])];
   for(const e of [initial,...incoming.map(evidence)].filter(Boolean)){
    if(!related(d,e)||+new Date(e.updated)>now||previous&&+new Date(e.timestamp)<+new Date(previous.firstSeen)-24*H)continue;
    const existing=sources.find(s=>s.signature===e.signature||canonical(s.sourceUrl)===canonical(e.sourceUrl)&&s.title===e.title&&s.description===e.description);

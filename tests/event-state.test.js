@@ -46,6 +46,14 @@ test('actual August restriction lifting resolves its own event, not the Septembe
 test('news routing and event normalization retain inactive state and remove only current eligibility',()=>{
  const R=require('../news-routing'),state=current(),attached=E.attach({url:raw.sourceUrl,title:raw.summary,publishedAt:raw.timestamp}, {[state.id]:state});assert.equal(attached.eventId,raw.id);assert.equal(attached.eventState.status,'STALE');assert.equal(R.windowFor(attached,now).context,false);
 });
+
+test('an explicit corrected exercise end date repairs a stored lifecycle descriptor',()=>{
+ const start='2026-09-01T00:00:00.000Z',wrongEnd='2026-09-19T00:00:00.000Z',correctEnd='2026-09-03T23:59:59.999Z';
+ const exercise={id:'exercise-dates',eventId:'exercise-dates',title:'Exercise Masurian Patrol in Poland',eventType:'military_exercise',description:'Exercise Masurian Patrol from Sept. 1 to 3.',sourceUrl:'https://www.dvidshub.net/news/exercise-dates',publishedAt:'2026-09-05T07:00:00Z',startTime:start,endTime:wrongEnd};
+ const old=E.reconcile(exercise,null,[],{now:Date.parse('2026-09-05T08:00:00Z')});
+ const repaired=E.reconcile({...exercise,endTime:correctEnd},old,[],{now:Date.parse('2026-09-12T12:00:00Z')});
+ assert.equal(repaired.descriptor.endTime,correctEnd);assert.equal(repaired.status,'STALE');assert.equal(repaired.active,false);
+});
 test('scheduled Worker follow-up preserves the real event across repeat polling',async(t)=>{
  const {reconcileWorkerEvents}=await import('../cloudflare/event-state-followup.mjs');require('../news-routing');const records=new Map(),env={EVENTS:{get:async key=>records.get(key)||null,put:async(key,value)=>records.set(key,JSON.parse(value))}};
  let calls=0;t.mock.method(globalThis,'fetch',async()=>{calls++;return new Response(JSON.stringify({articles:followups.reports}),{status:200})});
