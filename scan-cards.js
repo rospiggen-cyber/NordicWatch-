@@ -1,0 +1,7 @@
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.NordicWatchScanCards=api})(globalThis,function(){
+  'use strict';
+  const text=(el,value)=>{el.textContent=String(value??'');return el};
+  const age=t=>{if(!t)return'No current evidence';const m=Math.max(0,Math.round((Date.now()-t)/60000));return m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+  function render(container,cards,{onOpen}={}){if(!container)return;container.replaceChildren();for(const card of cards){const button=document.createElement('button');button.className='scan-card scan-'+card.priority.toLowerCase();button.type='button';button.dataset.collector=card.collectorId;button.setAttribute('aria-label',card.title+' scan details');const top=document.createElement('span');top.className='scan-card-top';top.append(text(document.createElement('b'),card.title),text(document.createElement('span'),card.status));const metric=document.createElement('span');metric.className='scan-card-metric';metric.append(text(document.createElement('strong'),card.score),text(document.createElement('small'),' / 100'));const meta=text(document.createElement('span'),card.observationCount+' observations · '+card.sourceCount+' sources · '+age(card.latestAt));meta.className='scan-card-meta';button.append(top,metric,meta);button.onclick=()=>onOpen?.(card);container.append(button)}}
+  return {render};
+});
