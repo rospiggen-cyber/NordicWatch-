@@ -6,6 +6,10 @@ for(const [text,type,role] of [["Il-20 SIGINT","IL-20","ISR"],["Il-22 EW","IL-22
 assert.equal(classifyEvent("fighters intercepted reconnaissance aircraft"),"intercept");
 const geo=geolocate("approximately 30 km north of Łeba over the Baltic Sea");assert(geo);assert.equal(geo.locationConfidence,"APPROXIMATE");assert.equal(geo.locationText,"30 km north of Łeba");assert(Math.abs(geo.latitude-55.0304)<.02);
 const report=normalizeReport(fixture.reports[0]);assert(report);assert.equal(report.evidenceType,"CONFIRMED_EXTERNAL");assert.equal(report.aircraftType,"IL-20");assert.equal(report.aircraftRole,"ISR");assert.deepEqual(report.aircraftCapabilities,["SIGINT","ELINT"]);assert.equal(report.eventType,"intercept");assert.equal(report.trackObserved,false);assert.equal(report.locationConfidence,"APPROXIMATE");assert.equal(report.interestScore,100);assert.equal(sourceTrust("https://x.com/example/status/1"),null);
+assert.equal(sourceTrust("https://www.dr.dk/nyheder/indland/example")?.sourceType,"PUBLIC_BROADCASTER");
+assert.equal(sourceTrust("https://www.lrt.lt/naujienos/lietuvoje/example")?.sourceType,"PUBLIC_BROADCASTER");
+assert.equal(sourceTrust("https://www.forsvaret.dk/da/nyheder/example")?.sourceType,"OFFICIAL");
+assert.equal(sourceTrust("https://kam.lt/en/example")?.sourceType,"OFFICIAL");
 const low=normalizeReport({...fixture.reports[0],id:"low",sourceUrl:"https://www.navalnews.com/naval-news/2026/08/example/"});assert.equal(low.evidenceType,"INFERRED","defence publication alone must remain a candidate");
 const duplicate={...fixture.reports[0],id:"other-article",sourceUrl:"https://www.polskieradio.pl/395/7784/Artykul/1"};const imported=importReports([fixture.reports[0],duplicate]);assert.equal(imported.reports.length,1);assert.equal(imported.reports[0].sources.length,2);
 const noTrack=correlate(report,[],[],60);assert.equal(noTrack.trackObserved,false);assert.equal(noTrack.observed.length,0);
