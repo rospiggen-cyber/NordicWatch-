@@ -1,8 +1,9 @@
 const clean=(v,n=1500)=>String(v??"").replace(/<!\[CDATA\[/gi,"").replace(/\]\]>/g,"").replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/[\u0000-\u001f\u007f]/g," ").replace(/\s+/g," ").trim().slice(0,n);
 const safeUrl=v=>{try{const u=new URL(String(v));return u.protocol==="https:"?u.href:null}catch{return null}};
 export const SOURCE_TIERS=Object.freeze([
- {sourceType:"OFFICIAL",trust:100,confirmed:true,hosts:["nato.int","gov.pl","wojsko-polskie.pl","wp.mil.pl","forsvarsmakten.se","puolustusvoimat.fi","mil.ee","mil.lv","mod.gov.lv","kariuomene.lt","forsvaret.no","gov.uk","defense.gov","war.gov","navy.mil","marines.mil","af.mil","army.mil","dvidshub.net"]},
+ {sourceType:"OFFICIAL",trust:100,confirmed:true,hosts:["nato.int","gov.pl","wojsko-polskie.pl","wp.mil.pl","forsvarsmakten.se","puolustusvoimat.fi","mil.ee","mil.lv","mod.gov.lv","kariuomene.lt","kam.lt","forsvaret.dk","forsvaret.no","gov.uk","defense.gov","war.gov","navy.mil","marines.mil","af.mil","army.mil","dvidshub.net"]},
  {sourceType:"MAJOR_NEWS_AGENCY",trust:85,confirmed:true,hosts:["reuters.com","apnews.com","afp.com","pap.pl","polskieradio.pl","rtve.es"]},
+ {sourceType:"PUBLIC_BROADCASTER",trust:80,confirmed:false,hosts:["dr.dk","lrt.lt"]},
  {sourceType:"REPUTABLE_DEFENCE_PUBLICATION",trust:65,confirmed:false,hosts:["janes.com","defensenews.com","navalnews.com"]}
 ]);
 const SOCIAL_HOSTS=["x.com","twitter.com","facebook.com","t.me","telegram.me","instagram.com","reddit.com","tiktok.com"];
