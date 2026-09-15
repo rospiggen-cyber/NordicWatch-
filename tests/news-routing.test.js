@@ -15,3 +15,18 @@ test('ongoing seven day context is retained without using polls to renew evidenc
 test('official event and same URL article share one normalized event',()=>{const r=R.route([report('Latvia military exercise',{id:'article'}),report('Latvia military exercise',{id:'event',eventType:'military_exercise',sourceUrl:'https://www.nato.int/report'})],{now});assert.equal(r.events.length,1);assert.equal(r.articles.length,1)});
 test('worker routing metadata does not refresh a stale report on re-ingestion',()=>{const first=R.route([report('NAMEJS 2026')],{now});const later=R.route(first.articles,{now:now+50*H});assert.equal(later.articles.length,0)});
 test('explicit source signal associations connect distinct report titles',()=>{const r=R.route([report('Baltic Il-20 interception',{signalId:'s1',eventId:'one'}),report('Polish fighters over Baltic Sea',{signalId:'s2',eventId:'two',url:'https://other.example/story'}),report('Baltic intercept event',{eventId:'intercept',sourceSignals:['s1','s2'],url:'https://third.example/story'})],{now});assert.equal(r.events.length,1);assert.equal(r.events[0].sourceCount,3)});
+test('Danish and Lithuanian local-language incidents reach What changed and Daily Brief',()=>{
+ const incidentNow=Date.parse('2026-09-15T06:31:00Z');
+ const rows=[
+  {title:'Russisk fregat affyrede flares mod dansk militærhelikopter ved Gedser',description:'Forsvaret oplyser, at en russisk fregat affyrede to flares mod en dansk helikopter under overvågning syd for Gedser.',publishedAt:'2026-09-14T21:02:00Z',url:'https://www.dr.dk/nyheder/indland/russisk-fregat-affyrede-flares'},
+  {title:'NATO naikintuvai sunaikino į Lietuvos oro erdvę įskridusį droną Kauno rajone',description:'Dronas įskrido į Lietuvos oro erdvę, o NATO naikintuvai jį sunaikino Kauno rajone.',publishedAt:'2026-09-14T22:13:00Z',url:'https://www.lrt.lt/naujienos/lietuvoje/drone-kauno'}
+ ];
+ const routed=R.route(rows,{now:incidentNow});
+ assert.equal(routed.articles.length,2);
+ assert.equal(routed.counters.dailyBriefEvaluated,2);
+ assert.equal(routed.counters.whatChanged,2);
+ assert(routed.events.some(e=>e.relevance.matchedRegions.includes('Denmark')));
+ assert(routed.events.some(e=>e.relevance.matchedRegions.includes('Lithuania')));
+ const brief=B.build({articles:routed.articles,now:incidentNow});
+ assert.equal(brief.relevantStoredNewsEvaluated,2);
+});
