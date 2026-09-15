@@ -8,10 +8,12 @@ export const DEFAULT_EXTERNAL_FEEDS = Object.freeze([
   "https://www.defensenews.com/arc/outboundfeeds/rss/category/global/?outputType=xml",
   "https://www.defensenews.com/arc/outboundfeeds/rss/category/air/?outputType=xml",
   "https://www.defensenews.com/arc/outboundfeeds/rss/category/naval/?outputType=xml",
-  "https://www.navalnews.com/feed/"
+  "https://www.navalnews.com/feed/",
+  "https://www.dr.dk/nyheder/service/feeds/allenyheder",
+  "https://www.lrt.lt/naujienos/lietuvoje?rss="
 ]);
 
-const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|estonia|estonian|latvia|latvian|lithuania|lithuanian|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|severomorsk|narva|gulf of finland|suwa[lł]ki)\b/i;
+const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|danmark|dansk|gedser|estonia|estonian|latvia|latvian|lithuania|lithuanian|lietuva|lietuvos|lietuvoje|kaunas|kauno|kaisiadorys|kaisiadoriu|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|severomorsk|narva|gulf of finland|suwa[lł]ki)\b/i;
 const ADJACENT = /\b(?:germany|german|poland|polish|united kingdom|britain|british|north sea|north atlantic|ukraine|ukrainian|belarus|belarusian|netherlands|dutch|iceland|arctic)\b/i;
 const IMPACT = Object.freeze({
   WEAPONS_STOCKPILE: /\b(?:stockpile|inventory|munition|missile stock|interceptor|ammunition|weapons? shortage|weapons? depletion|expenditure rate)\b/i,
@@ -23,7 +25,7 @@ const IMPACT = Object.freeze({
 });
 const GLOBAL_CONTEXT = /\b(?:iran|israel|middle east|persian gulf|strait of hormuz|taiwan|south china sea|east china sea|indo-pacific|pacific|china|chinese|north korea|korean peninsula|red sea|yemen)\b/i;
 const OUTSIDE_AOI = /\b(?:bangladesh|south asia|southeast asia|indo-pacific|ramstein|kaiserslautern|landstuhl|egypt|tunisia|indonesia|australia)\b/i;
-const NORDIC_DEMONYM = /\b(?:swedish|finnish|norwegian|danish|icelandic|estonian|latvian|lithuanian)\b/i;
+const NORDIC_DEMONYM = /\b(?:swedish|finnish|norwegian|danish|dansk|icelandic|estonian|latvian|lithuanian|lietuvisk\w*)\b/i;
 const INCIDENTAL_CONTEXT = /\b(?:company|firm|manufacturer|supplier|selected to (?:design|build)|commercial success|ruck march|medical center|ceremonial|charity)\b/i;
 const GEO_GROUPS = Object.freeze([
   ["kaliningrad", "konigsberg", "baltijsk", "baltiysk"],
@@ -36,7 +38,7 @@ const GEO_GROUPS = Object.freeze([
 const STOP = new Set("the and for with from that this into over under near after before have has had was were will would could should about against amid among their there they them its our your new says said report reports military defence defense security activity forces force region regional official update updates".split(/\s+/));
 
 const clean = (v, n = 5000) => String(v ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
-const norm = v => clean(v).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const norm = v => clean(v).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[æÆ]/g,"ae").replace(/[øØ]/g,"o").toLowerCase();
 const iso = v => v != null && v !== "" && Number.isFinite(+new Date(v)) ? new Date(v).toISOString() : null;
 const canonical = value => {
   try {
@@ -60,7 +62,7 @@ export function configuredExternalFeedValue(value = "") {
 }
 
 export function classifyScope(article) {
-  const text = clean(`${article.title || ""} ${article.summary || article.description || ""}`, 8000);
+  const text = norm(`${article.title || ""} ${article.summary || article.description || ""}`);
   const impactPaths = Object.entries(IMPACT).filter(([, re]) => re.test(text)).map(([key]) => key);
   if (OUTSIDE_AOI.test(text) && NORDIC_DEMONYM.test(text) && INCIDENTAL_CONTEXT.test(text)) {
     return { scope: "IRRELEVANT", scopeReason: "Nordic entity or participant mentioned in an event explicitly located outside the AOI", impactPaths };
@@ -105,7 +107,7 @@ export function retainRollingSignals(signals, now = Date.now(), hours = 72) {
 export function coverageFromRun(sourceHealth = [], articleCount = 0, retainedCount = 0, now = Date.now()) {
   const total = sourceHealth.length;
   const healthy = sourceHealth.filter(x => x.ok).length;
-  const regionalIds = new Set(["nato", "jef", "se", "fi", "ee", "lv", "lt", "no", "pl", "de", "nl"]);
+  const regionalIds = new Set(["nato", "jef", "se", "fi", "ee", "lv", "lt", "no", "pl", "de", "nl", "public_broadcaster"]);
   const regional = sourceHealth.filter(x => regionalIds.has(String(x.id || "").toLowerCase()));
   const regionalHealthy = regional.filter(x => x.ok).length;
   const availability = total ? healthy / total : 0;
