@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import intelligence from "../intelligence-core.js";
 import {
+  DEFAULT_EXTERNAL_FEEDS,
+  configuredExternalFeedValue,
   classifyScope,
   normalizeArticle,
   retainRollingSignals,
@@ -22,6 +24,21 @@ test("normalizes external feed timestamps and URLs", () => {
   assert.equal(item.url, "https://example.com/story");
   assert.equal(item.scope, "EXTERNAL");
   assert.ok(item.impactPaths.includes("WEAPONS_STOCKPILE"));
+});
+
+test("default external feeds include regional public broadcasters", () => {
+  assert(DEFAULT_EXTERNAL_FEEDS.includes("https://www.dr.dk/nyheder/service/feeds/allenyheder"));
+  assert(DEFAULT_EXTERNAL_FEEDS.includes("https://www.lrt.lt/naujienos/lietuvoje?rss="));
+  const configured = configuredExternalFeedValue("").split(",");
+  assert(configured.includes("https://www.dr.dk/nyheder/service/feeds/allenyheder"));
+  assert(configured.includes("https://www.lrt.lt/naujienos/lietuvoje?rss="));
+});
+
+test("local-language Danish and Lithuanian security reports are CORE scope", () => {
+  const danish=classifyScope({title:"Russisk fregat affyrede flares mod dansk militærhelikopter ved Gedser"});
+  const lithuanian=classifyScope({title:"NATO naikintuvai sunaikino į Lietuvos oro erdvę įskridusį droną Kauno rajone"});
+  assert.equal(danish.scope,"CORE");
+  assert.equal(lithuanian.scope,"CORE");
 });
 
 test("does not classify unrelated global stories as Nordic strategic context", () => {
@@ -67,6 +84,8 @@ test("broad defence feeds alone cannot claim healthy Nordic coverage", () => {
   assert.match(broadOnly.warning, /regional coverage/i);
   const regional = coverageFromRun([...Array(2).fill({ id: "REPUTABLE_DEFENCE_PUBLICATION", ok: true }), { id: "fi", ok: true }], 100, 4, NOW);
   assert.equal(regional.status, "HEALTHY");
+  const publicBroadcaster = coverageFromRun([{ id: "PUBLIC_BROADCASTER", ok: true }], 10, 2, NOW);
+  assert.equal(publicBroadcaster.status, "HEALTHY");
 });
 
 test("follow-up matching understands regional aliases", () => {
