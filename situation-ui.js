@@ -57,7 +57,7 @@ async function generateBrief(kind){
   try {
   briefNewsCoverage=null;briefExternalCoverage=false;
   await Promise.allSettled([loadNews(),initEventEngine()]);
-  const routed=routeNewsEvidence();refreshSituations(true);const previous=maritimeRead('NORDICWATCH_BRIEF_V2',null),brief=BX.build({articles:routed.articles,situations:situationClusters,signals:situationObservations,previous,coverage:{newsChecked:!routed.degraded&&briefNewsCoverage?.healthy===true,externalChecked:briefExternalCoverage},geographic:a=>NR.safeRelevance(a).relevant});
+  const routed=routeNewsEvidence();refreshSituations(true);const previous=maritimeRead('NORDICWATCH_BRIEF_V2',null),brief=BX.build({articles:routed.articles,situations:situationClusters,signals:situationObservations,upstreamTriggers:typeof upstreamTriggerSnapshot==='function'?upstreamTriggerSnapshot():[],previous,coverage:{newsChecked:!routed.degraded&&briefNewsCoverage?.healthy===true,externalChecked:briefExternalCoverage},geographic:a=>NR.safeRelevance(a).relevant});
   generateBriefLiveDetails(kind);const content=document.getElementById('briefContent'),details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Current coverage, live observations and legacy brief detail';details.append(summary);while(content.firstChild)details.append(content.firstChild);content.append(details);
   const top=document.createElement('section');const heading=document.createElement('h3');heading.textContent='Daily Brief 2.0 · top developments';top.append(heading);
   for(const d of brief.developments){const row=briefItem(d.evidence==='CONFIRMED EXTERNAL REPORT'?'external':d.evidence==='DIRECT OBSERVATION'?'obs':'infer',d.title,d.text,{label:'Explain evidence',run:()=>d.situation?showSituation(d.situation):showEventExplanation(d.article||d.signal)});top.append(row)}
@@ -65,7 +65,7 @@ async function generateBrief(kind){
   explanationText(top,'Coverage: '+brief.coverageStatus+' · Assessment confidence: '+brief.confidence,brief.coverageStatus==='SUFFICIENT'?'External reporting checked. Confidence is separate from EventScore.':brief.limitation);
   if(!brief.developments.length)explanationText(top,brief.assessment,brief.limitation);
   const news=document.createElement('details'),label=document.createElement('summary');label.textContent=`Relevant stored news evaluated: ${brief.news.articles.length}`;news.append(label);for(const a of brief.news.articles)news.append(briefItem(a.evidenceType==='CONFIRMED_EXTERNAL'||/CONFIRMED/.test(a.risk?.sourceConfidence)?'external':'infer',a.title,`Brief ranking ${a.briefRanking.score} · ${a.publishedAt||a.ingestedAt}`,{label:'Explain EventScore',run:()=>showEventExplanation(a)}));top.append(news);
-  explanationText(top,'What NordicWatch is watching',brief.watching.map(s=>`${s.title}: ${s.level}. Watch for further independent observations, frequency changes and corroboration.`).join('\n')||'Further independent signals and deviations from regional baseline.');
+  explanationText(top,'What NordicWatch is watching',brief.watching.map(s=>s.scope==='EXTERNAL_TRIGGER'?`${s.title}: external trigger only, not an AOI incident. Watch ${s.watchTargets.join(', ')} around ${s.watchAreas.join(', ')}.`:`${s.title}: ${s.level}. Watch for further independent observations, frequency changes and corroboration.`).join('\n')||'Further independent signals and deviations from regional baseline.');
   content.prepend(top);localStorage.setItem('NORDICWATCH_BRIEF_V2',JSON.stringify(brief.snapshot));
   }finally{briefPending=false}
 }
