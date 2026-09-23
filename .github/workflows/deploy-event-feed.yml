@@ -19,6 +19,10 @@ on:
       - "news-freshness.js"
       - "news-routing.js"
       - "germany-infrastructure.js"
+      # The full regression suite validates client-side event discovery and
+      # filters in index.html. Re-run deployment checks when that integration
+      # surface changes so a later repair cannot leave the last deploy red.
+      - "index.html"
       - "mock/uav-incidents.json"
       - "data/verified-event-followups.json"
       - ".github/workflows/deploy-event-feed.yml"
