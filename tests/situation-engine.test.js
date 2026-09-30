@@ -23,4 +23,22 @@ test('France Navy Xingu and S102B identity outweigh civilian-looking airframe',(
 test('AIS gaps require healthy coverage before disappearance inference',()=>{const r={id:'ship',mmsi:'123456789',type:'vessel_position',timestamp:now-4*H,lat:60,lon:20};assert.equal(M.analyze([r],{now})[0].disappearance,false);assert.equal(M.analyze([r],{now,coverageHealthy:true})[0].disappearance,true)});
 test('compressed occurrence frequency raises acceleration independently of EventScore',()=>{const recent=Array.from({length:5},(_,i)=>signal('r'+i,{timestamp:now-i*H})),spread=recent.map((s,i)=>({...s,timestamp:now-i*24*H}));const a=S.build(recent,{now})[0],b=S.build(spread,{now})[0];assert(a.acceleration.score>b.acceleration.score);assert(a.situationScore>b.situationScore)});
 test('unscored upstream infrastructure reports reach the situation adapter',()=>{const a=S.fromArticle({signalId:'weak-raw',eventId:'weak-event',title:'Rostock power grid disruption',url:'https://authority.example/report',publishedAt:new Date(now).toISOString()});assert(a);assert.equal(a.eventScore,20);assert.equal(a.region,'Northern Germany')});
+
+test('Analyst Lens prioritises review without turning priority into a threat score',()=>{
+  const rows=Array.from({length:5},(_,i)=>signal('lens-'+i,{timestamp:now-i*H,title:['Power grid failure','Rail infrastructure disruption','Telecom cable outage','Drone over energy plant','Cyber power-grid anomaly'][i]}));
+  const s=S.build(rows,{now})[0];
+  assert.equal(s.analyst.reviewPriority,'REVIEW');
+  assert.match(s.analyst.whyNow,/Observation frequency increased/);
+  assert.match(s.analyst.meaning,/not a threat or escalation score/);
+  assert.equal(s.escalation.confirmedMilitaryEscalation,false);
+  assert(s.analyst.evidenceProfile.observations>=5);
+});
+
+test('Analyst Lens keeps isolated evidence in background and names evidence gaps',()=>{
+  const s=S.build([signal('lens-single',{domain:'NEWS',eventScore:95})],{now})[0];
+  assert.equal(s.analyst.reviewPriority,'BACKGROUND');
+  assert.match(s.analyst.whyNow,/Single observation/);
+  assert(s.analyst.whatWouldChangeAssessment.some(x=>/baseline|independent source|analytical domain/.test(x)));
+});
+
 test('brief selection limits primary developments to three without losing evaluated news',()=>{const articles=Array.from({length:5},(_,i)=>({id:'n'+i,title:'Baltic report '+i,publishedAt:new Date(now-H).toISOString(),risk:{score:40}})),b=B.build({articles,now});assert.equal(b.developments.length,3);assert.equal(b.news.articles.length,5)});

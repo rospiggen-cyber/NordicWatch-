@@ -12,9 +12,14 @@ on:
       - "news-routing.js"
       - "intelligence-core.js"
       - "brief-engine.js"
+      - "situation-engine.js"
+      - "situation-ui.js"
       - "tests/news-reliability.test.mjs"
       - "tests/news-routing.test.js"
       - "tests/external-report.test.mjs"
+      - "tests/situation-engine.test.js"
+      - "tests/situation-evidence.test.js"
+      - "tests/brief-coverage.test.js"
       - ".github/workflows/step1-reliability-tests.yml"
 
 permissions:
@@ -38,5 +43,9 @@ jobs:
           node --check cloudflare/event-feed-worker.js
           node --check intelligence-core.js
           node --check brief-engine.js
+          node --check situation-engine.js
+          node --check situation-ui.js
       - name: Regression tests
-        run: node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/external-report.test.mjs
+        run: |
+          node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/external-report.test.mjs
+          node --test tests/situation-engine.test.js tests/situation-evidence.test.js tests/brief-coverage.test.js
