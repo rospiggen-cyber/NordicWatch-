@@ -1,7 +1,8 @@
 /* Presentation/adapters for the independent situation and brief engines. */
-const SX=window.NordicWatchSituations, BX=window.NordicWatchBrief;
+const SX=window.NordicWatchSituations, BX=window.NordicWatchBrief, RX=window.NordicWatchRegionalDelta;
+if(!RX)throw new Error('NordicWatch Regional Delta unavailable');
 let situationClusters=[],situationObservations=[],situationLayer=null,situationRefreshAt=0;
-const SITUATION_SIGNALS='NORDICWATCH_SITUATION_SIGNALS',SITUATION_STATE='NORDICWATCH_SITUATION_STATE',SITUATION_ALERTS='NORDICWATCH_SITUATION_ALERTS';
+const SITUATION_SIGNALS='NORDICWATCH_SITUATION_SIGNALS',SITUATION_STATE='NORDICWATCH_SITUATION_STATE',SITUATION_ALERTS='NORDICWATCH_SITUATION_ALERTS',REGIONAL_DELTA_STATE='NORDICWATCH_REGIONAL_DELTA_STATE';
 function situationRegion(lat,lon,fallback='Regional'){
   const areas=[{name:'Svalbard / Barentsburg',lat:78.06,lon:14.22,r:600},{name:'Jan Mayen / High North',lat:70.98,lon:-8.46,r:500},{name:'Kola / Murmansk',lat:68.97,lon:33.07,r:600},{name:'Northern Germany',lat:54.1,lon:11,r:280},{name:'Kaliningrad / Baltijsk',lat:54.7,lon:20.5,r:400}];
   return areas.find(a=>SX.km({lat,lon},a)<=a.r)?.name||fallback;
@@ -19,7 +20,7 @@ function refreshSituations(force=false){
     // Store the complete accumulated history; the engine alone selects analytical windows.
     localStorage.setItem(SITUATION_SIGNALS,JSON.stringify(situationObservations));
     situationClusters=SX.build(situationObservations.filter(eventStateActive),{now,previous:readArray(SITUATION_STATE)});
-    localStorage.setItem(SITUATION_STATE,JSON.stringify(situationClusters));const history=maritimeRead('NORDICWATCH_SITUATION_HISTORY',{});for(const s of situationClusters)history[s.situationId]=s;localStorage.setItem('NORDICWATCH_SITUATION_HISTORY',JSON.stringify(history));renderSituations();void notifySituations();
+    localStorage.setItem(SITUATION_STATE,JSON.stringify(situationClusters));const history=maritimeRead('NORDICWATCH_SITUATION_HISTORY',{});for(const s of situationClusters)history[s.situationId]=s;localStorage.setItem('NORDICWATCH_SITUATION_HISTORY',JSON.stringify(history));renderSituations();renderRegionalDeltaPreview();void notifySituations();
   }catch(error){console.warn('Situation layer unavailable; existing layers remain operational',error)}
 }
 function renderSituations(){
@@ -30,6 +31,23 @@ function renderSituations(){
   for(const s of visible.slice(0,8)){const row=document.createElement('button');row.className='situation-card';row.textContent=`${s.level} · SituationScore ${s.situationScore} · ${s.title}`;row.onclick=()=>showSituation(s);const desc=document.createElement('p');desc.className='desc';desc.textContent=(s.analyst?.reviewPriority||'MONITOR')+' · confidence '+s.confidence+' · '+s.baseline.status+' — '+(s.analyst?.whyNow||s.summary);row.append(desc);box.append(row);
     if(s.lat!==null){const circle=L.circle([s.lat,s.lon],{radius:90000,color:s.situationScore>=65?'#f7c948':'#61dafb',weight:2,fillOpacity:.035,dashArray:'3 7'});const content=document.createElement('button');content.className='primary';content.textContent=`${s.title} · SituationScore ${s.situationScore} — explain`;content.onclick=()=>showSituation(s);circle.bindPopup(content).addTo(situationLayer)}
   }
+}
+function regionalDeltaSnapshot(){return RX.snapshot(situationObservations.filter(eventStateActive),situationClusters,{now:Date.now(),previous:maritimeRead(REGIONAL_DELTA_STATE,null)})}
+function deltaArrow(direction){return direction==='UP'?'↑':direction==='DOWN'?'↓':'→'}
+function deltaDrivers(row){return row.drivers.length?row.drivers.map(d=>d.domain+' '+d.count).join(' · '):'No current 24 h drivers'}
+function renderRegionalDeltaPreview(){
+  const box=document.getElementById('regionalDeltaPreview');if(!box)return;box.replaceChildren();
+  const snap=regionalDeltaSnapshot(),rows=snap.regions.filter(r=>r.current24h||r.previous24h).slice(0,4);
+  if(!rows.length){box.textContent='No regional change data available yet.';return}
+  for(const r of rows){const b=document.createElement('button');b.className='delta-preview '+(r.direction==='UP'?'delta-up':r.direction==='DOWN'?'delta-down':'delta-stable');b.textContent=`${deltaArrow(r.direction)} ${r.region} · ${r.delta24h>=0?'+':''}${r.delta24h} vs previous 24 h`;const p=document.createElement('span');p.textContent=`${r.newSinceViewed} new since last check · ${r.confidence} confidence · ${deltaDrivers(r)}`;b.append(p);b.onclick=showRegionalDelta;box.append(b)}
+}
+function showRegionalDelta(){
+  const snap=regionalDeltaSnapshot(),previous=maritimeRead(REGIONAL_DELTA_STATE,null),drawer=document.getElementById('regionalDeltaDrawer'),box=document.getElementById('regionalDeltaContent');box.replaceChildren();
+  const intro=document.createElement('section');const h=document.createElement('h3'),p=document.createElement('p');h.textContent='Regional Delta';p.textContent=previous?.t?`Compared with your last check at ${new Date(previous.t).toLocaleString()} plus rolling 24 h and 7-day reference windows.`:'First check: no previous viewed snapshot is available yet. Rolling 24 h and 7-day comparisons are still shown.';intro.append(h,p);box.append(intro);
+  const rows=snap.regions.filter(r=>r.current24h||r.previous24h).slice(0,12);
+  if(!rows.length){explanationText(box,'No regional delta available','NordicWatch does not yet have enough regional observations to compare.');}
+  for(const r of rows){const item=document.createElement('article');item.className='regional-delta-row '+(r.direction==='UP'?'delta-up':r.direction==='DOWN'?'delta-down':'delta-stable');const title=document.createElement('h3');title.textContent=`${deltaArrow(r.direction)} ${r.region}`;const metric=document.createElement('p');metric.className='delta-metric';metric.textContent=`24 h: ${r.current24h} · previous 24 h: ${r.previous24h} · Δ ${r.delta24h>=0?'+':''}${r.delta24h} · new since last check: ${r.newSinceViewed}`;const detail=document.createElement('p');detail.textContent=r.comparison+' Drivers: '+deltaDrivers(r)+`. Confidence: ${r.confidence}.`;const caveat=document.createElement('small');caveat.textContent=r.coverageNote;item.append(title,metric,detail,caveat);const situation=situationClusters.filter(s=>s.observations.some(o=>o.region===r.region)).sort((a,b)=>b.situationScore-a.situationScore)[0];if(situation){const explain=document.createElement('button');explain.textContent=`Explain SituationScore ${situation.situationScore}`;explain.onclick=()=>showSituation(situation);item.append(explain)}box.append(item)}
+  localStorage.setItem(REGIONAL_DELTA_STATE,JSON.stringify(snap.state));renderRegionalDeltaPreview();drawer.classList.add('show');
 }
 function openExplanation(title){const drawer=document.getElementById('explanationDrawer');document.getElementById('explanationTitle').textContent=title;const body=document.getElementById('explanationContent');body.replaceChildren();drawer.classList.add('show');return body}
 function explanationText(parent,title,value){const block=document.createElement('section'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=title;p.textContent=value;block.append(h,p);parent.append(block)}
@@ -71,6 +89,10 @@ async function generateBrief(kind){
   }finally{briefPending=false}
 }
 function initSituationUI(){
+  document.getElementById('regionalDeltaButton').onclick=showRegionalDelta;
+  document.getElementById('regionalDeltaOpen').onclick=showRegionalDelta;
+  document.getElementById('regionalDeltaClose').onclick=()=>document.getElementById('regionalDeltaDrawer').classList.remove('show');
+  document.getElementById('regionalDeltaDrawer').onclick=e=>{if(e.target.id==='regionalDeltaDrawer')e.currentTarget.classList.remove('show')};
   document.getElementById('explanationClose').onclick=()=>document.getElementById('explanationDrawer').classList.remove('show');
   document.getElementById('explanationDrawer').onclick=e=>{if(e.target.id==='explanationDrawer')e.currentTarget.classList.remove('show')};
   document.getElementById('mobileIntel').onclick=()=>document.querySelector('.side').classList.add('mobile-open');
@@ -79,5 +101,5 @@ function initSituationUI(){
   document.getElementById('situationFile').onchange=async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>2*1024*1024)throw new Error('Maximum file size is 2 MiB');const result=SX.importSignals(JSON.parse(await file.text()));localStorage.setItem(SITUATION_SIGNALS,JSON.stringify(SX.accumulate(readArray(SITUATION_SIGNALS),result.accepted)));document.getElementById('situationImportStatus').textContent=`${result.accepted.length} accepted · ${result.rejected.length} rejected`;refreshSituations(true)}catch(error){document.getElementById('situationImportStatus').textContent=error.message}finally{e.target.value=''}};
   document.addEventListener('click',e=>{const button=e.target.closest('[data-explain-event]');if(button){const event=allEvents.find(x=>x.id===button.dataset.explainEvent);if(event)showEventExplanation(event)}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.drawer.show').forEach(x=>x.classList.remove('show'));document.querySelector('.side').classList.remove('mobile-open')}});
-  refreshSituations(true);const id=new URLSearchParams(location.search).get('situation');if(id){const s=situationClusters.find(s=>s.situationId===id);if(s)showSituation(s)}
+  refreshSituations(true);renderRegionalDeltaPreview();const id=new URLSearchParams(location.search).get('situation');if(id){const s=situationClusters.find(s=>s.situationId===id);if(s)showSituation(s)}
 }
