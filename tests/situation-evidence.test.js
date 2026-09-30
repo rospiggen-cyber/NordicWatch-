@@ -55,7 +55,7 @@ test('a baseline-supported actual zero remains a measured value and numerical th
 test('UI renders unavailable baseline safely and exposes source/observation trace',()=>{
   const vm=require('node:vm'),fs=require('node:fs'),rendered=[];
   const element=()=>({append(){},className:'',textContent:'',set href(v){assert.match(v,/^https:/)}});
-  const context={window:{NordicWatchSituations:S,NordicWatchBrief:{}},document:{createElement:element},console};
+  const context={window:{NordicWatchSituations:S,NordicWatchBrief:{},NordicWatchRegionalDelta:require('../regional-delta.js')},document:{createElement:element},console};
   vm.createContext(context);vm.runInContext(fs.readFileSync(require.resolve('../situation-ui.js'),'utf8'),context);
   context.openExplanation=()=>element();context.explanationText=(_parent,title,value)=>rendered.push({title,value});
   context.showSituation(S.build(spaced().map(s=>({...s,lat:null,lon:null})),{now})[0]);
