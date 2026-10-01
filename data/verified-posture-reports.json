@@ -1,0 +1,20 @@
+{
+  "articles": [
+    {
+      "title": "Sweden to provide Gripen fighter jets for NATO operation in Poland",
+      "summary": "Swedish Gripen fighters will support NATO air and missile defence in Poland from October, helping safeguard deliveries to Ukraine.",
+      "url": "https://www.government.se/press-releases/2026/09/sweden-to-provide-combat-aircraft-for-nato-operation-in-poland/",
+      "publishedAt": "2026-09-30T00:00:00Z",
+      "captureType": "VERIFIED_SOURCE_SNAPSHOT",
+      "capturedAt": "2026-10-01T09:55:00Z"
+    },
+    {
+      "title": "Poland to set quicker air defence procedures, defence minister says",
+      "summary": "Poland announced new airspace engagement procedures for October. Sensor-based identification can replace the previous requirement to identify a threat visually.",
+      "url": "https://www.reuters.com/business/aerospace-defense/poland-set-quicker-air-defence-procedures-defence-minister-says-2026-09-30/",
+      "publishedAt": "2026-09-30T19:54:29Z",
+      "captureType": "VERIFIED_SOURCE_SNAPSHOT",
+      "capturedAt": "2026-10-01T09:55:00Z"
+    }
+  ]
+}
