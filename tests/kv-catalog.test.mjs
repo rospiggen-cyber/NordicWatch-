@@ -30,8 +30,8 @@ test('one full day of endpoint polls and scheduled reads stays below 100 lists, 
   assert.equal(kv.listCalls,1);
   const response=await worker.fetch(new Request('https://worker/kv-diagnostics'),env),report=await response.json();
   const counters=report.days[0].callers;
-  assert.equal(counters['GET /events'].invocations,1440);
-  assert.equal(counters['GET /news'].invocations,144);
+  assert.equal(counters['GET /events']?.invocations||0,1,'only the first /events request should build the snapshot');
+  assert.equal(counters['GET /news']?.invocations||0,0,'/news should reuse the event snapshot without catalog reads');
   assert.equal(counters['collector:discovery'].invocations,96);
   assert.equal(counters['GET /events'].listCalls,1);
   assert.equal(counters['GET /news'].listCalls,0);
