@@ -496,7 +496,7 @@ function renderAircraft(){
 }
  function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));rebuildSituationalState();const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0)),escalationInterest=Math.min(8,activeEvents.reduce((max,x)=>Math.max(max,x.escalation?.escalationScore||0),0)/12),baselineInterest=Math.min(10,(situationalState.baseline?.baselineDeviation||0)/10),correlationInterest=Math.min(10,(situationalState.topCorrelation?.correlationScore||0)/10),specialInterest=Math.min(15,rawAircraft.reduce((max,a)=>{const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,pattern);return Math.max(max,assessment?.score||0)},0)/5),maritimeInterest=Math.min(18,maritimeEvents.reduce((max,x)=>Math.max(max,x.behavior?.score||0),0)/5);document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+specialInterest+maritimeInterest+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+Math.min(10,readArray("NORDICWATCH_SIGNAL_ARCHIVE").filter(eventStateActive).reduce((m,a)=>Math.max(m,(a.risk?.score||0)*IC.decay(a)),0)/10)+eventDeviation+escalationInterest+baselineInterest+correlationInterest+uavActivityContribution()))}
 
-const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS";
+const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS",EVENT_REFRESH_MS=5*60*1000;
 const eventWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
 const eventTypeLabel=value=>String(value).replace(/_/g," ").toUpperCase();
 const eventTime=value=>new Date(value).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
@@ -949,7 +949,7 @@ document.getElementById("changes").replaceChildren();
 const eventStartAlerts=document.getElementById("eventStartAlerts");eventStartAlerts.checked=localStorage.getItem(EVENT_START_ALERT_KEY)==="1";eventStartAlerts.onchange=()=>localStorage.setItem(EVENT_START_ALERT_KEY,eventStartAlerts.checked?"1":"0");
 const trailWindow=document.getElementById("trailWindow"),patternLabels=document.getElementById("patternLabels");trailWindow.value=localStorage.getItem("NORDICWATCH_TRAIL_WINDOW")||"60";trailWindow.onchange=()=>{localStorage.setItem("NORDICWATCH_TRAIL_WINDOW",trailWindow.value);renderAircraftTrails();renderAircraft()};patternLabels.checked=localStorage.getItem("NORDICWATCH_PATTERN_LABELS")==="1";patternLabels.onchange=()=>{localStorage.setItem("NORDICWATCH_PATTERN_LABELS",patternLabels.checked?"1":"0");renderAircraftTrails()};
 initEventEngine();
-setInterval(initEventEngine,60000);
+setInterval(initEventEngine,EVENT_REFRESH_MS);
 initExternalReports();
 initUAVIncidents();
 initAircraftTrails().then(loadMilitary);setInterval(loadMilitary,30000);
