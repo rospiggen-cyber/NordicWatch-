@@ -34,7 +34,7 @@ test('one full day of endpoint polls and scheduled reads stays below 100 lists, 
   assert.equal(counters['GET /news']?.invocations||0,0,'/news should reuse the event snapshot without catalog reads');
   assert.equal(counters['collector:discovery'].invocations,96);
   assert.equal(counters['GET /events'].listCalls,1);
-  assert.equal(counters['GET /news'].listCalls,0);
+  assert.equal(counters['GET /news']?.listCalls||0,0);
   assert.equal(kv.listCalls,1,'diagnostics must not enumerate KV');
 });
 
