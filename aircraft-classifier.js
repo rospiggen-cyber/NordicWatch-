@@ -15,6 +15,8 @@
     {match:/\b(?:RC135W|R135|RIVETJOINT|BOEINGRC135W|RC135|BOEINGRC135)\b/,platformFamily:"RC-135",platformVariant:"RC-135W",platformName:"RC-135W RIVET JOINT",role:ROLE.ISR,subrole:"SIGINT / ELINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR},
     {match:/\bEP3(?:E|C)?\b/,platformFamily:"EP-3",platformVariant:"EP-3E",platformName:"EP-3",role:ROLE.ISR,subrole:"SIGINT / ELINT",interestClass:INTEREST_CLASS.HIGH_VALUE_ISR},
     {match:/\bP8A?\b|\bPOSEIDON\b/,platformFamily:"P-8",platformVariant:"P-8A",platformName:"P-8A POSEIDON",role:ROLE.ASW,subrole:"MARITIME ISR / ASW",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
+    {match:/\bP3[ABC]?\b|\bORION\b/,platformFamily:"P-3",platformVariant:"P-3",platformName:"P-3 ORION",role:ROLE.ASW,subrole:"MARITIME PATROL / ASW",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
+    {match:/\bATL2\b|\bATLANTIQUE2\b|\bATLANTIC2\b/,platformFamily:"Atlantique 2",platformVariant:"ATL2",platformName:"ATLANTIQUE 2",role:ROLE.ASW,subrole:"MARITIME PATROL / ASW",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
     {match:/\bE3[ABCDF]?\b|\bSENTRY\b/,platformFamily:"E-3",platformVariant:"E-3",platformName:"E-3 SENTRY",role:ROLE.AWACS,subrole:"AIRBORNE EARLY WARNING",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
     {match:/^(?:E7|E7A|E7T|E7WEDGETAIL|BOEINGE7|WEDGETAIL)$/,platformFamily:"E-7",platformVariant:"E-7",platformName:"E-7 WEDGETAIL",role:ROLE.AWACS,subrole:"AIRBORNE EARLY WARNING",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
     {match:/\bGLOBALEYE\b|\bS100D\b/,platformFamily:"GlobalEye",platformVariant:"GlobalEye",platformName:"GLOBALEYE",role:ROLE.AWACS,subrole:"AIRBORNE EARLY WARNING / ISR",interestClass:INTEREST_CLASS.HIGH_VALUE_SPECIAL_MISSION},
@@ -35,7 +37,7 @@
     TANKER:new Set(["KC135","K35R","K35E","KC46","K46A"]),
     ISR:new Set(["RC135","RC135W","R135","EP3","IL20","GLF4","GLEX","CL60"]),
     EW:new Set(["EA37","EA37B","IL22"]),
-    ASW:new Set(["P8","P8A","IL38","TU142"]),
+    ASW:new Set(["P8","P8A","P3","P3A","P3B","P3C","ATL2","IL38","TU142"]),
     TRANSPORT:new Set(["E121","EMB121","EMB121AA","C17","C17A","C130","C30J","A400","A400M","C5","C5M","C295","CN35"]),
     FIGHTER:new Set(["F15","F16","F18","F22","F35","JAS39","EUFI","RFAL","SU27","SU30","SU35","MG29","MIG29"])
   };
