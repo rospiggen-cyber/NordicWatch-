@@ -1,0 +1,42 @@
+name: ASW maritime-watch regression tests
+
+on:
+  push:
+    branches:
+      - feature/asw-maritime-watch-20261008
+  pull_request:
+    paths:
+      - "aircraft-classifier.js"
+      - "maritime-patrol-analysis.js"
+      - "background-monitor-core.js"
+      - "cloudflare/adsb-monitor-worker.js"
+      - "collector-swarm.js"
+      - "index.html"
+      - "sw.js"
+      - "tests/maritime-patrol-analysis.test.js"
+      - "tests/aircraft-classifier.test.js"
+      - "tests/background-monitor-core.test.js"
+      - "tests/collector-swarm.test.js"
+      - ".github/workflows/asw-maritime-watch-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax
+        run: |
+          node --check aircraft-classifier.js
+          node --check maritime-patrol-analysis.js
+          node --check background-monitor-core.js
+          node --check cloudflare/adsb-monitor-worker.js
+          node --check collector-swarm.js
+          node --check tests/maritime-patrol-analysis.test.js
+      - name: All regression tests
+        run: node --test tests/*.test.js tests/*.test.mjs
