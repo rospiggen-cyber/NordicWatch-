@@ -1,6 +1,7 @@
 import {catalog,indexedRecords,indexedPut,indexedDelete} from "./kv-catalog.mjs";
 export {KVCatalog} from "./kv-catalog.mjs";
 import "../aircraft-classifier.js";
+import "../maritime-patrol-analysis.js";
 import "../background-monitor-core.js";
 
 const AC=globalThis.NordicWatchAircraft,BG=globalThis.NordicWatchBackground;

@@ -20,6 +20,7 @@
   const has=(v,re)=>re.test(clean(v).toLowerCase());
   function defaults(){return createSwarm([
     {id:'air-activity',title:'Air activity',description:'Military and state aircraft observations.',windowMs:6*3600000,select:s=>s.air||[],score:e=>Math.min(100,e.length*12+unique(e.map(x=>x.kind)).length*8)},
+    {id:'asw-maritime',title:'ASW / Maritime Patrol',description:'Open ADS-B observations of positively identified ASW and maritime patrol aircraft; not evidence of a submarine contact.',windowMs:6*3600000,select:s=>(s.air||[]).filter(x=>has(x.kind||x.role,/^asw$|maritime.patrol/)),score:e=>Math.min(74,e.length*22+unique(e.map(x=>x.region)).length*12)},
     {id:'maritime',title:'Maritime',description:'Vessel observations and maritime behavioural indicators.',windowMs:24*3600000,select:s=>s.maritime||[],score:e=>Math.min(100,e.length*10+Math.max(0,...e.map(x=>x.score)))},
     {id:'infrastructure',title:'Infrastructure',description:'Infrastructure, energy, telecom and transport incidents.',windowMs:72*3600000,select:s=>s.infrastructure||[],score:e=>Math.min(100,e.length*12+unique(e.map(x=>x.kind)).length*7)},
     {id:'isr-ew',title:'ISR / EW',description:'ISR, SIGINT, AWACS, EW and supporting air activity.',windowMs:24*3600000,select:s=>(s.air||[]).filter(x=>has(x.kind||x.role||x.title,/isr|sigint|awacs|aew|electronic warfare|\bew\b/)),score:e=>Math.min(100,e.length*16+unique(e.map(x=>x.kind||x.role)).length*8)},

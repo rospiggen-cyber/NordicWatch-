@@ -1,7 +1,7 @@
 (function(root,factory){
- const api=factory(typeof module!=="undefined"&&module.exports?require("./aircraft-classifier.js"):root.NordicWatchAircraft);
+ const api=factory(typeof module!=="undefined"&&module.exports?require("./aircraft-classifier.js"):root.NordicWatchAircraft,typeof module!=="undefined"&&module.exports?require("./maritime-patrol-analysis.js"):root.NordicWatchMaritimePatrol);
  if(typeof module!=="undefined"&&module.exports)module.exports=api;else root.NordicWatchBackground=api;
-})(typeof globalThis!=="undefined"?globalThis:this,function(AC){
+})(typeof globalThis!=="undefined"?globalThis:this,function(AC,MP){
  "use strict";
  if(!AC)throw new Error("aircraft classifier required");
  const ZONES=[
@@ -29,6 +29,8 @@
     alerts.push({kind:"high-interest-aircraft",level:"WATCH",zone,role:x.result.role,members:[x],identities:[identity(x.aircraft)],timestamp:now,title:x.result.role+" observation",detail:x.result.confidence+" military identification"});
    }
   }
+  // ASW observations use the same deduplicated alert stream; a multi-aircraft alert is not a submarine-contact claim.
+  if(MP)alerts.push(...MP.analyze(aircraft,now).alerts);
   return {militaryCount:military.length,alerts:alerts.map(x=>({...x,key:alertKey(x)}))};
  }
  return Object.freeze({ZONES,km,identity,alertKey,analyze});
