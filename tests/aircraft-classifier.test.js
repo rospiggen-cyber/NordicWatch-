@@ -28,6 +28,13 @@ for(const aircraft of [{t:"RC135"},{t:"RC-135W"},{t:"R135"},{model:"Rivet Joint"
  assert.equal(result.base,"MILITARY");assert.equal(result.role,"ISR");assert.equal(result.subrole,"SIGINT / ELINT");assert.equal(result.platformFamily,"RC-135");assert.equal(result.platformVariant,"RC-135W");assert.equal(result.platformName,"RC-135W RIVET JOINT");assert.equal(result.interestClass,"HIGH_VALUE_ISR");assert.equal(result.specialMission,true)
 }
 for(const [metadata,role] of [[{t:"RC135S"},"ISR"],[{model:"Combat Sent"},"ISR"],[{t:"P8A"},"ASW"],[{t:"E3A"},"AWACS"],[{model:"E-7 Wedgetail"},"AWACS"],[{description:"GlobalEye"},"AWACS"],[{t:"EA37B"},"EW"],[{t:"IL20"},"ISR"],[{t:"IL38"},"ASW"],[{t:"TU142"},"ASW"]]){const result=classify({...metadata,military:true});assert.equal(result.role,role);assert.notEqual(result.role,"OTHER");assert.equal(result.specialMission,true)}
+for(const [aircraft,family] of [
+ [{t:"P8A"},"P-8"],[{t:"P3C"},"P-3"],[{t:"ATL2"},"Atlantique 2"],
+ [{model:"Breguet Atlantique 2"},"Atlantique 2"]
+]){
+ const result=classify(aircraft);assert.equal(result.base,"MILITARY");assert.equal(result.role,"ASW");assert.equal(result.platformFamily,family);assert.equal(result.specialMission,true);
+}
+assert.equal(classify({t:"A320",flight:"HELLOP3"}).role,null,"partial flight callsign cannot masquerade as ASW");
 assert.equal(classify({flight:"NJE7AB",t:"E55P",operator:"NetJets Europe"}).specialMission,undefined,"partial callsign text must not identify an E-7");
 
 const fixture=[];
