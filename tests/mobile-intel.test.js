@@ -16,5 +16,5 @@ test('navigation survives missing Leaflet, situation module failure and synchron
 test('navigation survives rejected data loading',async()=>{const h=setup();await assert.rejects(vm.runInContext('Promise.reject(new Error("data unavailable"))',h.context));cycle(h)});
 test('mobile navigation initializes before Leaflet and situation code and is cached offline',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),ui=fs.readFileSync(require.resolve('../situation-ui.js'),'utf8'),sw=fs.readFileSync(require.resolve('../sw.js'),'utf8');
- assert(html.indexOf('src="mobile-intel.js"')<html.indexOf('src="https://unpkg.com/leaflet'));assert(html.indexOf('src="mobile-intel.js"')<html.indexOf('src="situation-ui.js"'));assert(!ui.includes("getElementById('mobileIntel')"));assert(!ui.includes("classList.remove('mobile-open')"));assert.match(sw,/"\.\/mobile-intel.js"/);assert.match(html,/id="mobileIntelPanel"/);
+ assert(html.indexOf('src="mobile-intel.js"')<html.indexOf('src="vendor/leaflet/leaflet.js"'));assert(html.indexOf('src="mobile-intel.js"')<html.indexOf('src="situation-ui.js"'));assert(!ui.includes("getElementById('mobileIntel')"));assert(!ui.includes("classList.remove('mobile-open')"));assert.match(sw,/"\.\/mobile-intel.js"/);assert.match(html,/id="mobileIntelPanel"/);
 });

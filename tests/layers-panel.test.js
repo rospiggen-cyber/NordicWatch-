@@ -35,6 +35,6 @@ test('closing still works if browser history push is unavailable',()=>{
 test('panel is closed in initial markup and its controller loads before Leaflet and app startup',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),sw=fs.readFileSync(require.resolve('../sw.js'),'utf8');
  assert.match(html,/class="layers collapsed" id="layersPanel"/);assert.match(html,/id="layersClose" hidden>× Close/);
- assert(html.indexOf('src="layers-panel.js"')<html.indexOf('src="https://unpkg.com/leaflet'));
+ assert(html.indexOf('src="layers-panel.js"')<html.indexOf('src="vendor/leaflet/leaflet.js"'));
  assert.match(sw,/"\.\/layers-panel.js"/);assert.match(html,/window\.NordicWatchLayers\.close/);
 });
