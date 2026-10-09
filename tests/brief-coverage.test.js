@@ -9,12 +9,32 @@ test('event lifecycle preserves first seen, tracks real updates, resolution and 
 test('same incident reports contribute one development with source count',()=>{const b=B.build({articles:[articles[0],{...articles[1],eventId:articles[0].eventId}],now});assert.equal(b.developments.length,1);assert.equal(b.events[0].sourceCount,2)});
 test('stale and out of region evidence cannot provide sufficient coverage',()=>{assert.equal(B.build({articles,coverage,now:now+80*H}).coverageStatus,'INSUFFICIENT');assert.equal(B.build({articles,coverage,now,geographic:()=>false}).coverageStatus,'INSUFFICIENT')});
 test('external trigger appears only on the watch list, not as a local development',()=>{const trigger={id:'upstream-1',title:'Mass upstream drone operation',timestamp:new Date(now-H).toISOString(),watchAreas:['Kaliningrad'],watchTargets:['EW','GNSS']},b=B.build({articles,coverage,now,upstreamTriggers:[trigger]});assert.equal(b.triggerWatch.length,1);assert.equal(b.triggerWatch[0].directAoiEvent,false);assert(!b.developments.some(d=>String(d.id).includes('upstream-1')))});
+test('Morning Brief includes official events even when no RSS article was selected',()=>{
+ const events=[{id:'kaliningrad-cluster',title:'Kaliningrad aviation cluster',areaName:'Kaliningrad / Baltijsk',startTime:new Date(now-2*H).toISOString(),lastObservedAt:new Date(now-H).toISOString(),status:'ACTIVE',confidence:'CONFIRMED_EXTERNAL',eventScore:82,sourceCount:3}];
+ const b=B.build({events,coverage:{externalChecked:true},now,kind:'morning',geographic:()=>true});
+ assert.equal(b.developments.length,1);assert.equal(b.developments[0].type,'OFFICIAL_EVENT');assert.equal(b.developments[0].title,'Kaliningrad aviation cluster');assert.equal(b.coverageStatus,'PARTIAL');
+});
+test('Morning Brief fuses situation before its duplicate news report',()=>{
+ const article={...articles[0],eventId:'shared-event',risk:{score:70,eventScore:70,components:{geographicRelevance:90,militarySignificance:80,sourceConfidence:80}}};
+ const situation={situationId:'s1',title:'Fused Baltic event',summary:'Three related observations',situationScore:70,signalIds:['signal-1','signal-2'],observations:[{id:'signal-1',incidentId:'shared-event'},{id:'signal-2',incidentId:'shared-event'}],level:'HIGH'};
+ const b=B.build({articles:[article],situations:[situation],coverage,now,kind:'morning'});
+ assert.equal(b.developments.filter(d=>d.eventId==='shared-event').length,0);assert.equal(b.developments[0].type,'FUSED_SITUATION');
+});
+test('Evening Brief only includes official events materially changed since the previous brief',()=>{
+ const base={id:'navwarn-s6',title:'Polish S-6 exercise window',areaName:'Polish Baltic coast',startTime:new Date(now-H).toISOString(),lastObservedAt:new Date(now-H).toISOString(),status:'ACTIVE',confidence:'CONFIRMED',eventScore:55};
+ const morning=B.build({events:[base],coverage:{externalChecked:true},now,kind:'morning',geographic:()=>true});
+ const unchanged=B.build({events:[base],coverage:{externalChecked:true},now:now+6*H,kind:'evening',previous:morning.snapshot,geographic:()=>true});
+ assert.equal(unchanged.developments.length,0);
+ const updated={...base,lastObservedAt:new Date(now+5*H).toISOString(),description:'Exercise window extended'};
+ const evening=B.build({events:[updated],coverage:{externalChecked:true},now:now+6*H,kind:'evening',previous:morning.snapshot,geographic:()=>true});
+ assert.equal(evening.developments.length,1);assert.equal(evening.developments[0].eventId,'navwarn-s6');
+});
 test('requested standalone regional aliases remain in coverage',()=>{for(const title of ['Königsberg','Baltijsk','Narva','Finnmark','Polish Baltic coast'])assert.equal(IC.perimeter({title}).visible,true,title)});
 test('Morning and Evening UI await failed refreshes and still render insufficient coverage',async()=>{
  const vm=require('node:vm'),fs=require('node:fs');
  for(const kind of ['morning','evening']){
  const rendered=[];const node=()=>({append(){},prepend(){},firstChild:null,set textContent(v){rendered.push(v)}});
- const context=vm.createContext({window:{NordicWatchBrief:B,NordicWatchSituations:{},NordicWatchRegionalDelta:require('../regional-delta.js')},document:{getElementById:()=>node(),createElement:()=>node()},routeNewsEvidence:()=>({articles:[],degraded:false}),NR:require('../news-routing.js'),IC:{perimeter:()=>({visible:true})},briefNewsCoverage:null,briefExternalCoverage:false,readArray:()=>[],maritimeRead:()=>null,localStorage:{setItem(){}},loadNews:async()=>{throw Error('network failure')},initEventEngine:async()=>{throw Error('parser failure')},generateBriefLiveDetails(){},briefItem:()=>node()});
+ const context=vm.createContext({window:{NordicWatchBrief:B,NordicWatchSituations:{},NordicWatchRegionalDelta:require('../regional-delta.js')},document:{getElementById:()=>node(),createElement:()=>node()},routeNewsEvidence:()=>({articles:[],degraded:false}),NR:require('../news-routing.js'),IC:{perimeter:()=>({visible:true})},allEvents:[],briefNewsCoverage:null,briefExternalCoverage:false,readArray:()=>[],maritimeRead:()=>null,localStorage:{setItem(){}},loadNews:async()=>{throw Error('network failure')},initEventEngine:async()=>{throw Error('parser failure')},generateBriefLiveDetails(){},briefItem:()=>node()});
  vm.runInContext(fs.readFileSync(require.resolve('../situation-ui.js'),'utf8'),context);
  vm.runInContext('refreshSituations=()=>{};',context);
  await vm.runInContext('generateBrief('+JSON.stringify(kind)+')',context);
