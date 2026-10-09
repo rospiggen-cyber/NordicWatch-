@@ -97,11 +97,9 @@ function initSituationUI(){
   document.getElementById('regionalDeltaDrawer').onclick=e=>{if(e.target.id==='regionalDeltaDrawer')e.currentTarget.classList.remove('show')};
   document.getElementById('explanationClose').onclick=()=>document.getElementById('explanationDrawer').classList.remove('show');
   document.getElementById('explanationDrawer').onclick=e=>{if(e.target.id==='explanationDrawer')e.currentTarget.classList.remove('show')};
-  document.getElementById('mobileIntel').onclick=()=>document.querySelector('.side').classList.add('mobile-open');
-  document.getElementById('mobileIntelClose').onclick=()=>document.querySelector('.side').classList.remove('mobile-open');
   document.getElementById('importSituation').onclick=()=>document.getElementById('situationFile').click();
   document.getElementById('situationFile').onchange=async e=>{try{const file=e.target.files?.[0];if(!file)return;if(file.size>2*1024*1024)throw new Error('Maximum file size is 2 MiB');const result=SX.importSignals(JSON.parse(await file.text()));localStorage.setItem(SITUATION_SIGNALS,JSON.stringify(SX.accumulate(readArray(SITUATION_SIGNALS),result.accepted)));document.getElementById('situationImportStatus').textContent=`${result.accepted.length} accepted · ${result.rejected.length} rejected`;refreshSituations(true)}catch(error){document.getElementById('situationImportStatus').textContent=error.message}finally{e.target.value=''}};
   document.addEventListener('click',e=>{const button=e.target.closest('[data-explain-event]');if(button){const event=allEvents.find(x=>x.id===button.dataset.explainEvent);if(event)showEventExplanation(event)}});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.drawer.show').forEach(x=>x.classList.remove('show'));document.querySelector('.side').classList.remove('mobile-open')}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.drawer.show').forEach(x=>x.classList.remove('show'))}});
   refreshSituations(true);renderRegionalDeltaPreview();const id=new URLSearchParams(location.search).get('situation');if(id){const s=situationClusters.find(s=>s.situationId===id);if(s)showSituation(s)}
 }
