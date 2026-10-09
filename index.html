@@ -26,7 +26,7 @@ h1,h2{margin:0}.eye{font-size:10px;letter-spacing:1.4px;color:var(--muted);margi
 button{border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);padding:8px 10px;border-radius:9px}button.on,.primary{border-color:rgba(97,218,251,.4);background:rgba(97,218,251,.13)}
 main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{height:calc(100vh - 122px);min-height:600px;background:#08111d}.mapwrap{position:relative}
 .layers{position:absolute;z-index:500;top:10px;left:10px;background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:0;font-size:11px;max-width:245px;display:flex;flex-direction:column;overflow:hidden}.layers label{display:block;margin:7px 0}
- .layers-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto;padding:9px 11px;background:var(--panel);position:sticky;top:0;z-index:2}.layers-body{min-height:0;padding:0 11px 9px}.layers-toggle{padding:2px 7px;font-size:16px;line-height:1;min-width:44px;min-height:44px}.layers.collapsed .layers-body{display:none}
+ .layers-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto;padding:9px 11px;background:var(--panel);position:sticky;top:0;z-index:2}.layers-body{min-height:0;padding:0 11px 9px}.layers-toggle{padding:2px 7px;font-size:16px;line-height:1;min-width:44px;min-height:44px}.layers.collapsed .layers-body{display:none}.layers-close{min-height:44px;white-space:nowrap}.layers-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45)}.layers-backdrop[hidden],.layers-close[hidden]{display:none}
 .status{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);color:var(--muted);line-height:1.35}.status b{color:var(--accent)}
 .filterbar{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}.filterbar button{padding:5px 7px;font-size:10px}.filterbar button.on{background:rgba(97,218,251,.16)}
 .side{padding:10px;border-left:1px solid var(--border)}.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px}.head{display:flex;justify-content:space-between}.live{color:var(--danger)}
@@ -45,7 +45,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.8fr)}#map{
 .news-status{font-size:10px;color:var(--muted);margin-top:4px}.news-item{padding:11px 0;border-top:1px solid var(--border);scroll-margin-top:12px}.news-item:first-of-type{border-top:0}.news-item.selected{background:rgba(97,218,251,.08);margin:0 -7px;padding:11px 7px;border-radius:8px}.news-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.risk{font-size:11px;font-weight:800;border:1px solid currentColor;border-radius:8px;padding:3px 6px;white-space:nowrap}.news-title{color:var(--text);font-size:13px;font-weight:700;text-decoration:none;line-height:1.35}.news-title:hover{text-decoration:underline}.news-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tag{font-size:9px;color:var(--accent);border:1px solid rgba(97,218,251,.25);border-radius:7px;padding:2px 5px}.news-empty{font-size:11px;color:var(--muted);padding:10px 0}
 .brief-actions{display:flex;gap:6px}.brief-actions button{font-size:11px}.brief-sheet{max-height:calc(100vh - 24px);max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px)}.brief-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.brief-stat{border:1px solid var(--border);border-radius:11px;padding:9px;background:rgba(255,255,255,.025)}.brief-stat small{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.brief-stat b{font-size:16px}.brief-section{margin-top:15px}.brief-item{border-top:1px solid var(--border);padding:10px 0}.brief-item button{margin-top:7px;padding:5px 8px;font-size:10px}.evidence{display:inline-block;border:1px solid currentColor;border-radius:7px;padding:2px 5px;font-size:8px;font-weight:800;letter-spacing:.5px;margin-bottom:5px}.evidence.obs{color:var(--accent)}.evidence.infer{color:var(--warn)}.evidence.external{color:var(--ok)}.brief-note{color:var(--muted);font-size:10px;line-height:1.45}.confidence{font-weight:800}.confidence.low{color:var(--danger)}.confidence.medium{color:var(--warn)}.confidence.high{color:var(--ok)}
 @media(max-width:560px){.brief-summary{grid-template-columns:1fr}.brief-actions{flex-wrap:wrap}}
-@media(max-width:850px){main{grid-template-columns:1fr}#map{height:58vh;height:58dvh;min-height:430px}.side{border-left:0}.toolbar{position:sticky;top:var(--safe-top);z-index:900;background:#07101c}.layers{font-size:10px;max-height:calc(58vh - 20px);max-height:min(calc(58dvh - var(--safe-bottom) - 20px),calc(100dvh - var(--safe-top) - var(--safe-bottom) - 200px))}.layers-body{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:calc(12px + var(--safe-bottom))}.leaflet-popup-content{max-height:min(70vh,calc(58vh - 80px),calc(100dvh - 190px - var(--safe-bottom)))}.leaflet-popup{margin-bottom:calc(10px + var(--safe-bottom))}.side .card{max-height:calc(100vh - 24px);max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}.side .card>.head{position:sticky;top:-13px;z-index:2;margin:-13px -13px 0;padding:13px;background:var(--panel);border-radius:14px 14px 0 0}}
+@media(max-width:850px){.layers:not(.collapsed){position:fixed;z-index:1001;top:calc(10px + var(--safe-top));left:10px;max-width:calc(100vw - 20px)}main{grid-template-columns:1fr}#map{height:58vh;height:58dvh;min-height:430px}.side{border-left:0}.toolbar{position:sticky;top:var(--safe-top);z-index:900;background:#07101c}.layers{font-size:10px;max-height:calc(58vh - 20px);max-height:min(calc(58dvh - var(--safe-bottom) - 20px),calc(100dvh - var(--safe-top) - var(--safe-bottom) - 200px))}.layers-body{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-bottom:calc(12px + var(--safe-bottom))}.leaflet-popup-content{max-height:min(70vh,calc(58vh - 80px),calc(100dvh - 190px - var(--safe-bottom)))}.leaflet-popup{margin-bottom:calc(10px + var(--safe-bottom))}.side .card{max-height:calc(100vh - 24px);max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}.side .card>.head{position:sticky;top:-13px;z-index:2;margin:-13px -13px 0;padding:13px;background:var(--panel);border-radius:14px 14px 0 0}}
 @media(max-width:560px){.toolbar{flex-wrap:wrap;align-items:flex-start}.ranges{width:100%}.ranges button{flex:1}.brief-actions{width:100%}}
 #map:has(.leaflet-popup) .layers{visibility:hidden}
 details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weight:700;padding:8px 0}.leaflet-popup-content{min-width:min(280px,calc(100vw - 64px))}
@@ -61,7 +61,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <div class="toolbar"><div class="ranges"><button data-r="6h">6h</button><button class="on" data-r="24h">24h</button><button data-r="3d">3d</button><button data-r="7d">7d</button><button data-r="30d">30d</button></div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button id="intelligenceHistory">Signal / event history</button><button id="regionalDeltaButton">Regional Delta</button><button class="primary" id="changed">What changed?</button></div></div>
 <button id="mobileIntel" class="primary mobile-intel">Situations · news · hotspots</button>
 <main>
-<section class="mapwrap"><div id="map"><div class="layers" id="layersPanel"><div class="layers-head"><b>Layers</b><button class="layers-toggle" id="layersToggle">−</button></div><div class="layers-body">
+<section class="mapwrap"><div id="map"><div id="layersBackdrop" class="layers-backdrop" hidden></div><div class="layers collapsed" id="layersPanel"><div class="layers-head"><b>Layers</b><button type="button" class="layers-toggle" id="layersToggle" aria-expanded="false" aria-controls="layersBody" aria-label="Open Layers">+</button><button type="button" class="layers-close" id="layersClose" hidden>× Close</button></div><div class="layers-body" id="layersBody">
 <label><input type="checkbox" data-l="hotspots" checked> Hotspots</label>
 <label><input type="checkbox" data-l="military" checked> Live military ✈</label>
 <label><input type="checkbox" data-l="trails" checked> Aircraft trails</label>
@@ -86,6 +86,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <div class="drawer" id="regionalDeltaDrawer"><div class="sheet"><div class="sheethead"><div><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2></div><button id="regionalDeltaClose">Close</button></div><div id="regionalDeltaContent"></div></div></div>
 <div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v1.1</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <div class="drawer" id="explanationDrawer"><div class="sheet"><div class="sheethead"><h2 id="explanationTitle">Evidence</h2><button id="explanationClose">Close</button></div><div id="explanationContent"></div></div></div>
+<script src="layers-panel.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="aircraft-classifier.js"></script>
 <script src="special-mission-analysis.js"></script>
@@ -969,15 +970,9 @@ document.getElementById("eveningBrief").onclick=()=>generateBrief("evening");
 document.getElementById("briefClose").onclick=()=>briefDrawer.classList.remove("show");
 briefDrawer.onclick=e=>{if(e.target===briefDrawer)briefDrawer.classList.remove("show")};
 const layersPanel=document.getElementById("layersPanel");
-const layersToggle=document.getElementById("layersToggle");
-if(matchMedia("(max-width:850px)").matches){layersPanel.classList.add("collapsed");layersToggle.textContent="+"}
 function isolateMapTouch(surface){if(!surface||surface.dataset.mapTouchIsolated)return;surface.dataset.mapTouchIsolated="1";L.DomEvent.disableScrollPropagation(surface);L.DomEvent.disableClickPropagation(surface);L.DomEvent.on(surface,"touchstart touchmove pointerdown wheel",L.DomEvent.stopPropagation)}
 isolateMapTouch(layersPanel);
 
-layersToggle.addEventListener("click",()=>{
-  const collapsed=layersPanel.classList.toggle("collapsed");
-  layersToggle.textContent=collapsed?"+":"−";
-});
 initSituationUI();
 // Offset the dedicated query from the main GDELT request (public rate limit).
 setTimeout(()=>{loadGermanyInfrastructure();setInterval(loadGermanyInfrastructure,15*60*1000)},6000);
@@ -987,7 +982,7 @@ setInterval(()=>{reconcileStoredEvents();renderUAVIncidents();updateActivityScor
 map.on("popupopen",event=>{
  const content=event.popup.getElement()?.querySelector(".leaflet-popup-content");
  isolateMapTouch(content);
- if(matchMedia("(max-width:850px)").matches&&!layersPanel.classList.contains("collapsed")){layersPanel.classList.add("collapsed");layersToggle.textContent="+"}
+ if(matchMedia("(max-width:850px)").matches)window.NordicWatchLayers.close({restoreFocus:false});
 });
 </script>
 </body></html>
