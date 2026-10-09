@@ -7,9 +7,10 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new 
  const origin='http://127.0.0.1:'+server.address().port;
  const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
  try{
- for(const scenario of ['local-leaflet','missing-leaflet','situation-startup-failure','data-startup-failure']){
+ for(const scenario of ['storage-quota','local-leaflet','missing-leaflet','situation-startup-failure','data-startup-failure']){
   const context=await browser.newContext({...devices['Pixel 7'],serviceWorkers:'block'}),page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
+  if(scenario==='storage-quota')await page.addInitScript(()=>{Storage.prototype.setItem=function(){throw new DOMException('Storage full','QuotaExceededError')}});
   await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
    if(url.origin!==origin)return route.abort();
@@ -30,7 +31,15 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new 
   // The independent Layers controller must also survive the same startup errors.
   await page.locator('#layersToggle').tap();assert(!await page.locator('#layersPanel').evaluate(el=>el.classList.contains('collapsed')));await page.locator('#layersClose').tap();assert(await page.locator('#layersPanel').evaluate(el=>el.classList.contains('collapsed')));
   const expected=scenario==='missing-leaflet'?'L is not defined':scenario==='situation-startup-failure'?'injected situation startup failure':'injected data startup failure';
-  if(scenario==='local-leaflet'){assert.equal(await page.evaluate(()=>L.version),'1.9.4');assert(await page.locator('#map').evaluate(el=>el.classList.contains('leaflet-container')));assert.deepEqual(errors,[])}else assert(errors.some(e=>e.includes(expected)),JSON.stringify(errors));
+  if(scenario==='local-leaflet'||scenario==='storage-quota'){assert.equal(await page.evaluate(()=>L.version),'1.9.4');assert(await page.locator('#map').evaluate(el=>el.classList.contains('leaflet-container')));assert.deepEqual(errors,[])}else assert(errors.some(e=>e.includes(expected)),JSON.stringify(errors));
+  if(scenario==='storage-quota'){
+   await page.waitForFunction(()=>document.querySelectorAll('#scanCards .scan-card').length>0);
+   assert(await page.evaluate(()=>{briefNewsCoverage=null;return scanSnapshot().coverage.infrastructure.available===false}));
+   assert(await page.evaluate(()=>NordicWatchStorage.degraded));
+   assert(await page.evaluate(()=>{NordicWatchStorage.setItem('quota-smoke','new evidence');return NordicWatchStorage.getItem('quota-smoke')==='new evidence'}));
+   await page.locator('#morningBrief').click();await page.locator('#briefDrawer').waitFor({state:'visible'});await page.locator('#briefClose').click();
+   assert.deepEqual(errors,[]);
+  }
   console.log('Pixel 7: '+scenario+' — open, Close, Escape and Layers passed');
   await context.close();
  }

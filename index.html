@@ -86,6 +86,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <div class="drawer" id="regionalDeltaDrawer"><div class="sheet"><div class="sheethead"><div><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2></div><button id="regionalDeltaClose">Close</button></div><div id="regionalDeltaContent"></div></div></div>
 <div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v1.1</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <div class="drawer" id="explanationDrawer"><div class="sheet"><div class="sheethead"><h2 id="explanationTitle">Evidence</h2><button id="explanationClose">Close</button></div><div id="explanationContent"></div></div></div>
+<script src="storage-safe.js"></script>
 <script src="mobile-intel.js"></script>
 <script src="layers-panel.js"></script>
 <script src="vendor/leaflet/leaflet.js"></script>
@@ -241,7 +242,7 @@ const SPECIAL_SEEN_KEY="NORDICWATCH_SPECIAL_MISSION_SEEN";
 const alertState=document.getElementById("alertState");
 const alertsBtn=document.getElementById("alertsBtn");
 let swReg=null;
-const backgroundWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_BACKGROUND_WORKER")||"https://nordicwatch-background-monitor.rospiggen.workers.dev").replace(/\/$/,"");
+const backgroundWorkerBase=()=>String(NordicWatchStorage.getItem("NORDICWATCH_BACKGROUND_WORKER")||"https://nordicwatch-background-monitor.rospiggen.workers.dev").replace(/\/$/,"");
 const pushKey=value=>{const pad="=".repeat((4-value.length%4)%4),raw=atob((value+pad).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(raw,c=>c.charCodeAt(0))};
 async function syncBackgroundPush(on){
  const base=backgroundWorkerBase();if(!base||!swReg?.pushManager)return false;
@@ -302,8 +303,8 @@ const trailTracks=new Map(),trailVisuals=new Map(),patternAnalyses=new Map();let
 const aircraftHex=a=>String(a?.hex||"").toLowerCase().replace(/[^a-f0-9]/g,"").slice(0,12);
 const trackableAircraft=a=>isMilitaryAircraft(a)||aircraftClass(a).governmentRole==="COAST_GUARD";
 function openTrailDb(){return new Promise((resolve,reject)=>{if(typeof indexedDB==="undefined")return reject(new Error("IndexedDB unavailable"));const request=indexedDB.open(TRAIL_DB,1);request.onupgradeneeded=()=>request.result.createObjectStore("tracks",{keyPath:"hex"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
-function trailFallbackRead(){try{const value=JSON.parse(localStorage.getItem(TRAIL_FALLBACK_KEY)||"[]");return Array.isArray(value)?value:[]}catch{return []}}
-function trailFallbackWrite(){try{const rows=[...trailTracks.values()].sort((a,b)=>(b.points.at(-1)?.timestamp||0)-(a.points.at(-1)?.timestamp||0)).slice(0,50);localStorage.setItem(TRAIL_FALLBACK_KEY,JSON.stringify(rows))}catch(e){console.warn("trail fallback storage",e)}}
+function trailFallbackRead(){try{const value=JSON.parse(NordicWatchStorage.getItem(TRAIL_FALLBACK_KEY)||"[]");return Array.isArray(value)?value:[]}catch{return []}}
+function trailFallbackWrite(){try{const rows=[...trailTracks.values()].sort((a,b)=>(b.points.at(-1)?.timestamp||0)-(a.points.at(-1)?.timestamp||0)).slice(0,50);NordicWatchStorage.setItem(TRAIL_FALLBACK_KEY,JSON.stringify(rows))}catch(e){console.warn("trail fallback storage",e)}}
 async function initAircraftTrails(){let rows=[];try{trailDb=await openTrailDb();rows=await new Promise((resolve,reject)=>{const request=trailDb.transaction("tracks","readonly").objectStore("tracks").getAll();request.onsuccess=()=>resolve(request.result||[]);request.onerror=()=>reject(request.error)})}catch(e){console.warn("IndexedDB trail store unavailable; using localStorage",e);rows=trailFallbackRead()}const cutoff=Date.now()-TRAIL_MAX_AGE;rows.sort((a,b)=>(b.points?.at(-1)?.timestamp||0)-(a.points?.at(-1)?.timestamp||0));for(const row of rows.slice(0,TRAIL_MAX_TRACKS)){const points=RP.normalize(row.points).filter(x=>x.timestamp>=cutoff).slice(-TRAIL_MAX_POINTS);if(points.length)trailTracks.set(row.hex,{hex:row.hex,points})}if(trailDb){const keep=new Set(trailTracks.keys()),store=trailDb.transaction("tracks","readwrite").objectStore("tracks");for(const row of rows)if(!keep.has(row.hex))store.delete(row.hex)}scheduleTrailRender()}
 function persistTrail(row){if(trailDb){try{trailDb.transaction("tracks","readwrite").objectStore("tracks").put(row)}catch(e){console.warn("trail persistence",e)}}else trailFallbackWrite()}
 function pruneTrails(now=Date.now()){
@@ -329,10 +330,10 @@ function renderAircraftTrails(){
   if(visual.label){G.trails.removeLayer(visual.label);visual.label=null}if(labelsOn&&labelCount<maxLabels&&analysis.confidence>=60&&analysis.pattern!=="UNKNOWN"&&simplified.length){const last=simplified.at(-1),text=aircraftClass(a).role==="ISR"&&analysis.pattern==="REPEATED PASS"?"ISR PASS":analysis.pattern;visual.label=L.marker([last.lat,last.lon],{interactive:false,icon:L.divIcon({className:"",html:`<div class="trail-label">${esc(text)}</div>`,iconSize:[100,18],iconAnchor:[50,28]})}).addTo(G.trails);labelCount++}}
 }
 function updatePatternChanges(){
- let states={};try{states=JSON.parse(localStorage.getItem(PATTERN_STATE_KEY)||"{}")||{}}catch{}const now=Date.now(),changes=[],current=[];
+ let states={};try{states=JSON.parse(NordicWatchStorage.getItem(PATTERN_STATE_KEY)||"{}")||{}}catch{}const now=Date.now(),changes=[],current=[];
  for(const a of rawAircraft.filter(trackableAircraft)){const hex=aircraftHex(a),analysis=RP.detect(trailWindowPoints(hex)),previous=states[hex],call=(a.flight||"").trim()||a.r||hex,result=aircraftClass(a),zone=nearestZone(a),special=SM.assess(a,rawAircraft,aircraftClass,analysis),actorText=`${a.cou||a.country||""} ${a.operator||a.ownOp||""} ${a.r||""}`,russian=/\b(?:russia|russian)\b|\bRA-\d/i.test(actorText);current.push({a,hex,analysis,result,zone});if(analysis.confidence>=60&&previous?.pattern&&previous.pattern!==analysis.pattern&&previous.pattern!=="UNKNOWN")changes.push(`${call} changed from ${previous.pattern} to ${analysis.pattern}.`);if(russian&&analysis.confidence>=60&&analysis.pattern==="REPEATED PASS"&&result.role==="ISR"&&zone?.name==="Kaliningrad / Baltijsk"&&previous?.pattern!==analysis.pattern)changes.push(`Russian ISR began repeated passes near Kaliningrad.`);if(special&&!previous?.specialSeen)changes.push({text:`${result.platformName} detected${special.strategic?" near "+special.strategic.name:""}.`,detail:`OBSERVED in live aircraft data. INFERRED interest ${special.level}; ${special.inference}.`});else if(special&&previous?.specialSignature&&previous.specialSignature!==special.signature)changes.push({text:`${result.platformName} analytical context changed.`,detail:`OBSERVED aircraft remains visible. INFERRED context: ${special.reasons.join(", ")}.`});states[hex]={pattern:analysis.pattern,confidence:analysis.confidence,time:now,specialSeen:Boolean(special),specialSignature:special?.signature||null}}
  const zonesWithSupport=new Set(current.filter(x=>x.analysis.pattern==="RACETRACK"&&x.analysis.confidence>=60&&["AWACS","TANKER"].includes(x.result.role)&&x.zone).map(x=>x.zone.name));for(const zone of zonesWithSupport){const matches=current.filter(x=>x.zone?.name===zone&&x.analysis.pattern==="RACETRACK"),hasAwacs=matches.some(x=>x.result.role==="AWACS"),hasTanker=matches.some(x=>x.result.role==="TANKER"),key=`support:${zone}`;if(hasAwacs&&hasTanker&&now-(states[key]?.time||0)>ALERT_COOLDOWN_MS){changes.push(`AWACS and tanker racetracks now overlap over ${zone}.`);states[key]={pattern:"COORDINATED_RACETRACK",time:now}}}
- for(const [hex,value] of Object.entries(states))if(now-value.time>TRAIL_MAX_AGE)delete states[hex];localStorage.setItem(PATTERN_STATE_KEY,JSON.stringify(states));const box=document.getElementById("changes");if(box)for(const change of changes){const row=document.createElement("div");row.className="change pattern-change";const b=document.createElement("b");b.textContent=typeof change==="string"?change:change.text;const span=document.createElement("span");span.textContent=typeof change==="string"?"INFERRED from ADS-B track geometry.":change.detail;row.append(b,document.createElement("br"),span);box.prepend(row)}
+ for(const [hex,value] of Object.entries(states))if(now-value.time>TRAIL_MAX_AGE)delete states[hex];NordicWatchStorage.setItem(PATTERN_STATE_KEY,JSON.stringify(states));const box=document.getElementById("changes");if(box)for(const change of changes){const row=document.createElement("div");row.className="change pattern-change";const b=document.createElement("b");b.textContent=typeof change==="string"?change:change.text;const span=document.createElement("span");span.textContent=typeof change==="string"?"INFERRED from ADS-B track geometry.":change.detail;row.append(b,document.createElement("br"),span);box.prepend(row)}
 }
 // Correlation engine: looks for mission-role combinations inside the same watch zone.
 function detectKillChains(all){
@@ -391,14 +392,14 @@ async function notifyCluster(e){
 }
 
 function alertLevel(score){return score>=85?"CRITICAL":score>=70?"ALERT":score>=58?"WATCH":null}
-function seenMap(){try{return JSON.parse(localStorage.getItem(SEEN_KEY)||"{}")||{}}catch{return {}}}
-function readObject(key){try{const value=JSON.parse(localStorage.getItem(key)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return {}}}
+function seenMap(){try{return JSON.parse(NordicWatchStorage.getItem(SEEN_KEY)||"{}")||{}}catch{return {}}}
+function readObject(key){try{const value=JSON.parse(NordicWatchStorage.getItem(key)||"{}");return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}catch{return {}}}
 function canNotify(id,level,signature=""){
  const m=seenMap(),now=Date.now(),prev=m[id];
  if(prev && now-prev.time<ALERT_COOLDOWN_MS && prev.level===level && (prev.signature||"")===signature) return false;
  m[id]={time:now,level,signature};
  for(const [k,v] of Object.entries(m)) if(now-v.time>24*60*60*1000) delete m[k];
- localStorage.setItem(SEEN_KEY,JSON.stringify(m));
+ NordicWatchStorage.setItem(SEEN_KEY,JSON.stringify(m));
  return true;
 }
 async function notifyEvent(a,e){
@@ -413,7 +414,7 @@ async function notifyEvent(a,e){
    if(swReg) await swReg.showNotification(title,opts);
    else if("Notification" in window && Notification.permission==="granted") new Notification(title,opts);
  }catch(err){console.warn("notification",err)}
- if(e.special){const seen=readObject(SPECIAL_SEEN_KEY);seen[aircraftHex(a)||aircraftClass(a).platformFamily]={time:Date.now(),signature};localStorage.setItem(SPECIAL_SEEN_KEY,JSON.stringify(seen))}
+ if(e.special){const seen=readObject(SPECIAL_SEEN_KEY);seen[aircraftHex(a)||aircraftClass(a).platformFamily]={time:Date.now(),signature};NordicWatchStorage.setItem(SPECIAL_SEEN_KEY,JSON.stringify(seen))}
  prependSignal(level,e.special?aircraftClass(a).platformName:`${e.cat.toUpperCase()} ${call}`,`${e.zone.name} · activity score ${e.score}`);
 }
 function prependSignal(meta,title,desc){
@@ -424,7 +425,7 @@ function prependSignal(meta,title,desc){
 }
 async function evaluateAlerts(ac){
  ac=ac.filter(isMilitaryAircraft);
- if(localStorage.getItem(ALERT_KEY)!=="1" || !("Notification" in window) || Notification.permission!=="granted") return;
+ if(NordicWatchStorage.getItem(ALERT_KEY)!=="1" || !("Notification" in window) || Notification.permission!=="granted") return;
  const clusters=detectKillChains(ac);
  for(const e of clusters) await notifyCluster(e);
  // Individual alerts remain useful, but clusters are evaluated first.
@@ -432,7 +433,7 @@ async function evaluateAlerts(ac){
 }
 async function initAlerts(){
  if("serviceWorker" in navigator){try{swReg=await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}) }catch(e){console.warn("SW",e)}}
- const enabled=localStorage.getItem(ALERT_KEY)==="1";
+ const enabled=NordicWatchStorage.getItem(ALERT_KEY)==="1";
  alertState.textContent=enabled&&Notification.permission==="granted"?"armed":Notification.permission==="denied"?"blocked":"off";
  alertsBtn.textContent=enabled?"Alerts on":"Enable alerts";
  if(enabled&&Notification.permission==="granted")syncBackgroundPush(true).catch(e=>console.warn("background push",e));
@@ -442,8 +443,8 @@ alertsBtn.onclick=async()=>{
  if(Notification.permission!=="granted"){
    const p=await Notification.requestPermission(); if(p!=="granted"){alertState.textContent=p;return}
  }
- const on=localStorage.getItem(ALERT_KEY)!=="1";
- localStorage.setItem(ALERT_KEY,on?"1":"0"); alertsBtn.textContent=on?"Alerts on":"Enable alerts"; alertState.textContent=on?"armed":"off";
+ const on=NordicWatchStorage.getItem(ALERT_KEY)!=="1";
+ NordicWatchStorage.setItem(ALERT_KEY,on?"1":"0"); alertsBtn.textContent=on?"Alerts on":"Enable alerts"; alertState.textContent=on?"armed":"off";
  try{await syncBackgroundPush(on)}catch(e){alertState.textContent=on?"armed · foreground only":"off";console.warn("background push",e)}
  if(on) await evaluateAlerts(rawAircraft);
 };
@@ -452,7 +453,7 @@ initAlerts();
 const COAST_GUARD_TRACK_KEY="NORDICWATCH_COAST_GUARD_TRACKS";
 const COAST_GUARD_PLACES=[{name:"East of Hammarö, Vänern",lat:59.27,lon:13.66},{name:"Gotland",lat:57.47,lon:18.49},{name:"Gulf of Finland",lat:59.75,lon:25.5},{name:"Bornholm",lat:55.13,lon:14.92}];
 let rawAircraft=[],activeFilter="all",coastGuardObservations=[];
-function coastGuardStore(){try{const value=JSON.parse(localStorage.getItem(COAST_GUARD_TRACK_KEY)||"{}");return value&&typeof value==="object"?value:{}}catch{return {}}}
+function coastGuardStore(){try{const value=JSON.parse(NordicWatchStorage.getItem(COAST_GUARD_TRACK_KEY)||"{}");return value&&typeof value==="object"?value:{}}catch{return {}}}
 function coastGuardLocation(point){let best=null;for(const place of COAST_GUARD_PLACES){const distance=CG.km(point,place);if(distance<=80&&(!best||distance<best.distance))best={...place,distance}}return best?.name||`${(+point.lat).toFixed(3)}, ${(+point.lon).toFixed(3)}`}
 function coastGuardContext(){
  const records=typeof maritimeRecords!=="undefined"?maritimeRecords:[],has=(r,words)=>new RegExp(words,"i").test(`${r.title||""} ${r.description||""} ${(r.tags||[]).join(" ")}`);
@@ -466,7 +467,7 @@ function updateCoastGuardTracks(aircraft){
   const entry=store[id]||{aircraft:{}};entry.aircraft={operator:a.ownOp||a.operator||"Swedish Coast Guard",r:a.r,flight:a.flight,hex:a.hex,t:a.t};entry.points=[...(entry.points||[]),point];store[id]=entry
  }
  for(const [id,entry] of Object.entries(store)){entry.points=CG.normalizeTrack(entry.points,now);if(!entry.points.length)delete store[id]}
- localStorage.setItem(COAST_GUARD_TRACK_KEY,JSON.stringify(store));renderCoastGuardBehavior(store,now)
+ NordicWatchStorage.setItem(COAST_GUARD_TRACK_KEY,JSON.stringify(store));renderCoastGuardBehavior(store,now)
 }
 function renderCoastGuardBehavior(store=coastGuardStore(),now=Date.now()){
  G.behavior.clearLayers();coastGuardObservations=[];const context=coastGuardContext();
@@ -499,7 +500,7 @@ function renderAircraft(){
  function updateActivityScore(summary=aircraftSummary(rawAircraft)){eventAssessments=activeEvents.map(event=>EE.assessEvent(event,rawAircraft,{classify:aircraftClass}));rebuildSituationalState();const eventDeviation=Math.min(20,eventAssessments.reduce((max,x)=>Math.max(max,x.interestModifier||0),0)),escalationInterest=Math.min(8,activeEvents.reduce((max,x)=>Math.max(max,x.escalation?.escalationScore||0),0)/12),baselineInterest=Math.min(10,(situationalState.baseline?.baselineDeviation||0)/10),correlationInterest=Math.min(10,(situationalState.topCorrelation?.correlationScore||0)/10),specialInterest=Math.min(15,rawAircraft.reduce((max,a)=>{const pattern=patternAnalyses.get(aircraftHex(a))||RP.detect(trailWindowPoints(aircraftHex(a))),assessment=SM.assess(a,rawAircraft,aircraftClass,pattern);return Math.max(max,assessment?.score||0)},0)/5),maritimeInterest=Math.min(18,maritimeEvents.reduce((max,x)=>Math.max(max,x.behavior?.score||0),0)/5);document.getElementById("score").textContent=Math.min(99,Math.round(20+Math.min(45,summary.military*3)+specialInterest+maritimeInterest+coastGuardObservations.reduce((sum,x)=>sum+x.activityDelta,0)+Math.min(10,readArray("NORDICWATCH_SIGNAL_ARCHIVE").filter(eventStateActive).reduce((m,a)=>Math.max(m,(a.risk?.score||0)*IC.decay(a)),0)/10)+eventDeviation+escalationInterest+baselineInterest+correlationInterest+uavActivityContribution()))}
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS",EVENT_REFRESH_MS=5*60*1000;
-const eventWorkerBase=()=>String(localStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
+const eventWorkerBase=()=>String(NordicWatchStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
 const eventTypeLabel=value=>String(value).replace(/_/g," ").toUpperCase();
 const eventTime=value=>new Date(value).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
 const eventCountry=e=>e.areaName||e.countries[0]||"regional event area";
@@ -530,17 +531,17 @@ function renderExternalReportSignals(){const box=document.getElementById("signal
 function renderExternalChanges(previous=[]){const box=document.getElementById("changes");box.querySelectorAll(".external-report-change").forEach(x=>x.remove());for(const report of externalReports.filter(x=>!previous.includes(x.id)&&NR.safeRelevance(x).relevant&&NR.windowFor(NR.normalize(x),Date.now()).brief)){const row=document.createElement("div");row.className="change external-report-change";row.innerHTML=`<b>${esc(report.evidenceType.replace("_"," "))}: ${esc(report.aircraftType)} ${esc(report.eventType.replaceAll("_"," ").toUpperCase())} near ${esc(report.areaName)}.</b><br><span>Track not observed by NordicWatch · location ${esc(report.locationConfidence.toLowerCase())} · interest ${report.interestScore}.</span>`;box.prepend(row)}}
 const EXTERNAL_REPORT_SNAPSHOT_KEY="NORDICWATCH_EXTERNAL_REPORT_SNAPSHOT",EXTERNAL_REPORT_ALERT_KEY="NORDICWATCH_EXTERNAL_REPORT_ALERTS";
 function rebuildExternalEvents(render=true){if(!ER)return;const history=readArray(HISTORY_KEY);externalCorrelations=externalReports.map(report=>ER.correlate(report,rawAircraft.map(a=>({...a,role:classify(a)})),history,60));externalEventRecords=externalReports.map(report=>ER.toEvent(report,externalCorrelations.find(x=>x.reportId===report.id)));allEvents=EE.importEvents([...eventFeedEvents,...externalEventRecords]).events.map(e=>IC.event(e,allEvents.find(p=>p.id===e.id)));if(render)renderEvents()}
-async function notifyExternalReports(){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(EXTERNAL_REPORT_ALERT_KEY)||"{}")||{}}catch{}for(const report of externalReports.filter(x=>x.evidenceType==="CONFIRMED_EXTERNAL"&&x.interestScore>=75)){if(seen[report.id])continue;seen[report.id]=Date.now();const body=`${report.aircraftCountry} ${report.aircraftType} ${report.aircraftRole} reported near ${report.areaName}. Track not observed by NordicWatch. Source: ${report.sourceName}.`;const options={body,tag:`nw-external-${report.id}`,data:{url:new URL(`?event=${encodeURIComponent("external-event-"+report.id)}`,location.href).href},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification(`NordicWatch Alert — ${report.aircraftType} ${report.eventType.replaceAll("_"," ")}`,options);else new Notification(`NordicWatch Alert — ${report.aircraftType} ${report.eventType.replaceAll("_"," ")}`,options)}catch(e){console.warn("external report notification",e)}}localStorage.setItem(EXTERNAL_REPORT_ALERT_KEY,JSON.stringify(seen))}
-async function initExternalReports(){try{ER=await import("./external-report-core.mjs");const data=await fetchJSON("mock/external-military-reports.json",5000),imported=ER.importReports(data.reports||[]);externalReports=imported.reports;let previous=[];try{previous=JSON.parse(localStorage.getItem(EXTERNAL_REPORT_SNAPSHOT_KEY)||"[]")}catch{}rebuildExternalEvents();renderExternalChanges(previous);localStorage.setItem(EXTERNAL_REPORT_SNAPSHOT_KEY,JSON.stringify(externalReports.map(x=>x.id)));await notifyExternalReports()}catch(e){console.warn("external military reports unavailable; core app remains operational",e)}}
+async function notifyExternalReports(){if(NordicWatchStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(NordicWatchStorage.getItem(EXTERNAL_REPORT_ALERT_KEY)||"{}")||{}}catch{}for(const report of externalReports.filter(x=>x.evidenceType==="CONFIRMED_EXTERNAL"&&x.interestScore>=75)){if(seen[report.id])continue;seen[report.id]=Date.now();const body=`${report.aircraftCountry} ${report.aircraftType} ${report.aircraftRole} reported near ${report.areaName}. Track not observed by NordicWatch. Source: ${report.sourceName}.`;const options={body,tag:`nw-external-${report.id}`,data:{url:new URL(`?event=${encodeURIComponent("external-event-"+report.id)}`,location.href).href},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification(`NordicWatch Alert — ${report.aircraftType} ${report.eventType.replaceAll("_"," ")}`,options);else new Notification(`NordicWatch Alert — ${report.aircraftType} ${report.eventType.replaceAll("_"," ")}`,options)}catch(e){console.warn("external report notification",e)}}NordicWatchStorage.setItem(EXTERNAL_REPORT_ALERT_KEY,JSON.stringify(seen))}
+async function initExternalReports(){try{ER=await import("./external-report-core.mjs");const data=await fetchJSON("mock/external-military-reports.json",5000),imported=ER.importReports(data.reports||[]);externalReports=imported.reports;let previous=[];try{previous=JSON.parse(NordicWatchStorage.getItem(EXTERNAL_REPORT_SNAPSHOT_KEY)||"[]")}catch{}rebuildExternalEvents();renderExternalChanges(previous);NordicWatchStorage.setItem(EXTERNAL_REPORT_SNAPSHOT_KEY,JSON.stringify(externalReports.map(x=>x.id)));await notifyExternalReports()}catch(e){console.warn("external military reports unavailable; core app remains operational",e)}}
 function renderEventChanges(changes){
  changes=changes.filter(c=>["NEW","UPDATED","STARTED","ESCALATED","CONFIRMED"].includes(c.kind)&&NR.safeRelevance(c.event).relevant&&NR.windowFor(NR.normalize(c.event),Date.now()).brief);
  const box=document.getElementById("changes");box.querySelectorAll(".event-change").forEach(x=>x.remove());
  for(const change of changes){const row=document.createElement("div");row.className="change event-change";const b=document.createElement("b");b.textContent=change.event.escalation?`${change.event.escalation.isPreviouslyAnnounced&&!change.event.escalation.isAcceleration&&!change.event.escalation.isNewDecision?"Background retained":"State behaviour changed"}: ${change.event.title}`:change.text;const detail=document.createElement("span");detail.textContent=change.event.escalation?`${change.event.escalation.assessment} Escalation ${change.event.escalation.escalationLevel} (${change.event.escalation.escalationScore}) · ${change.event.escalation.sourceConfidence.replaceAll("_"," ")}.`:change.kind==="STARTED"?`Expected ${change.event.expectedActivity.join(", ").toLowerCase()} baseline increased within the confirmed event area.`:"Confirmed event context updated from its official record.";row.append(b,document.createElement("br"),detail);box.prepend(row)}
 }
 async function notifyEventStarts(changes){
- if(localStorage.getItem(EVENT_START_ALERT_KEY)!=="1"||localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
+ if(NordicWatchStorage.getItem(EVENT_START_ALERT_KEY)!=="1"||NordicWatchStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
  const ledger=maritimeRead("NORDICWATCH_EVENT_NOTIFICATIONS",{});
- for(const e of allEvents.map(e=>IC.event(e))){const decision=IC.notification(e,ledger[e.eventId]);if(!decision.shouldNotify)continue;const options={body:eventCountry(e),tag:'nw-event-'+e.eventId,data:{url:'?event='+encodeURIComponent(e.id)},icon:'icon-192.png',badge:'icon-192.png'};try{if(swReg)await swReg.showNotification('NordicWatch · '+e.title,options);else new Notification('NordicWatch · '+e.title,options);ledger[e.eventId]=decision.record;localStorage.setItem("NORDICWATCH_EVENT_NOTIFICATIONS",JSON.stringify(ledger))}catch(error){console.warn('event notification',error)}}
+ for(const e of allEvents.map(e=>IC.event(e))){const decision=IC.notification(e,ledger[e.eventId]);if(!decision.shouldNotify)continue;const options={body:eventCountry(e),tag:'nw-event-'+e.eventId,data:{url:'?event='+encodeURIComponent(e.id)},icon:'icon-192.png',badge:'icon-192.png'};try{if(swReg)await swReg.showNotification('NordicWatch · '+e.title,options);else new Notification('NordicWatch · '+e.title,options);ledger[e.eventId]=decision.record;NordicWatchStorage.setItem("NORDICWATCH_EVENT_NOTIFICATIONS",JSON.stringify(ledger))}catch(error){console.warn('event notification',error)}}
 }
 const NR=window.NordicWatchNewsRouting;
 let briefNewsCoverage=null,briefExternalCoverage=false;
@@ -549,7 +550,7 @@ function routeNewsEvidence(){
  const inputs=[...readArray('NORDICWATCH_SIGNAL_ARCHIVE'),...readArray('NORDICWATCH_EVENT_ARCHIVE')].map(x=>{const n=NR.normalize(x),a=normalizeArticle(n);return a?{...n,...a,eventId:n.eventId}:n});
  inputs.forEach(registerEventState);reconcileStoredEvents(inputs);
  const route=NR.route(inputs.filter(eventStateActive),{previous:readArray('NORDICWATCH_ROUTED_EVENTS'),stages:window.nordicWatchFetchStages||{}});
- localStorage.setItem('NORDICWATCH_ROUTED_EVENTS',JSON.stringify(route.events));
+ NordicWatchStorage.setItem('NORDICWATCH_ROUTED_EVENTS',JSON.stringify(route.events));
  window.nordicWatchNewsDiagnostics={counters:route.counters,articles:route.diagnostics,degraded:route.degraded};
  if(new URLSearchParams(location.search).has('debugNews')){const target=document.getElementById('newsDebug');if(target)target.textContent=JSON.stringify(route.counters)+(route.degraded?' · Relevance processing degraded':'');}
  return route;
@@ -560,7 +561,7 @@ async function initEventEngine(){
  try{seed=(await fetchJSON("mock/events.json",5000)).events||[]}catch(e){console.warn("event seed",e)}
  try{const response=await fetchJSON(eventWorkerBase()+"/events",8000);if(!Array.isArray(response.events)||response.degraded)throw new Error("External event coverage unavailable");remote=response.events;briefExternalCoverage=true}catch(e){briefExternalCoverage=false;degraded=true;console.warn("event feed unavailable; using validated seed",e)}
  const imported=EE.importEvents([...seed,...remote]);imported.events.forEach(registerEventState);saveEventStates();eventFeedEvents=imported.events;allEvents=EE.importEvents([...eventFeedEvents,...externalEventRecords]).events;activeEvents=allEvents.filter(e=>EE.statusAt(e)==="ACTIVE");
- let previous=[];try{previous=JSON.parse(localStorage.getItem(EVENT_SNAPSHOT_KEY)||"[]")}catch{}allEvents=allEvents.map(e=>IC.event(e,previous.find(p=>p.id===e.id)));const archive=readArray("NORDICWATCH_EVENT_ARCHIVE");localStorage.setItem("NORDICWATCH_EVENT_ARCHIVE",JSON.stringify([...archive.filter(e=>!allEvents.some(x=>x.id===e.id)),...allEvents]));const changes=IC.changes(previous,allEvents);localStorage.setItem(EVENT_SNAPSHOT_KEY,JSON.stringify(allEvents.map(e=>({...e,snapshotStatus:EE.statusAt(e)}))));
+ let previous=[];try{previous=JSON.parse(NordicWatchStorage.getItem(EVENT_SNAPSHOT_KEY)||"[]")}catch{}allEvents=allEvents.map(e=>IC.event(e,previous.find(p=>p.id===e.id)));const archive=readArray("NORDICWATCH_EVENT_ARCHIVE");NordicWatchStorage.setItem("NORDICWATCH_EVENT_ARCHIVE",JSON.stringify([...archive.filter(e=>!allEvents.some(x=>x.id===e.id)),...allEvents]));const changes=IC.changes(previous,allEvents);NordicWatchStorage.setItem(EVENT_SNAPSHOT_KEY,JSON.stringify(allEvents.map(e=>({...e,snapshotStatus:EE.statusAt(e)}))));
  status.textContent=`${activeEvents.length} active${degraded?" · seed fallback":" · official feed"}`;routeNewsEvidence();renderEvents();renderEventChanges(changes);await notifyEventStarts(changes.filter(c=>NR.safeRelevance(c.event).relevant))
 }
 
@@ -580,8 +581,8 @@ function renderUAVIncidents(){
 }
 function renderUAVSignals(){const box=document.getElementById("signals");box.querySelectorAll(".uav-signal").forEach(x=>x.remove());for(const incident of uavIncidents.filter(eventStateActive)){const row=document.createElement("div");row.className="signal uav-signal";row.innerHTML=`<div class="meta">OBSERVED · ${esc(incident.findingConfidence)} CONFIDENCE</div><div class="title">Recovered UAV — ${esc(incident.region)}</div><div class="desc">${esc(incident.aircraftType)} · origin unknown · attribution none · risk ${UI.riskScore(incident).score}. ASSESSED role: ${esc(incident.possibleFunctions.join(" / ")||"unknown")}.</div>`;box.prepend(row)}for(const pattern of uavPatterns){const row=document.createElement("div");row.className="signal uav-signal";row.innerHTML=`<div class="meta">ASSESSED · ${pattern.confidence}% CONFIDENCE</div><div class="title">${esc(pattern.title)}</div><div class="desc">${pattern.count} incidents · ${esc(pattern.region)} · no common operator inferred.</div>`;box.prepend(row)}}
 function renderUAVChanges(previousIds=[]){const box=document.getElementById("changes");box.querySelectorAll(".uav-change").forEach(x=>x.remove());for(const incident of uavIncidents.filter(x=>eventStateActive(x)&&!previousIds.includes(x.id))){const row=document.createElement("div");row.className="change uav-change";row.innerHTML=`<b>Recovered UAV recorded in ${esc(incident.region)}.</b><br><span>OBSERVED physical recovery · origin unknown · attribution none · investigation ongoing.</span>`;box.prepend(row)}}
-async function notifyUAVIncidents(){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(UAV_ALERT_SEEN_KEY)||"{}")||{}}catch{}for(const incident of uavIncidents.filter(x=>eventStateActive(x)&&UI.riskScore(x).score>=35)){if(seen[incident.id])continue;seen[incident.id]=Date.now();const options={body:`A fixed-wing UAV has been recovered near Porvoo, Finland. Origin unknown. Authorities are investigating a possible territorial violation.`,tag:`nw-uav-${incident.id}`,data:{url:new URL(`?uav=${encodeURIComponent(incident.id)}`,location.href).href},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options);else new Notification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options)}catch(e){console.warn("uav notification",e)}}localStorage.setItem(UAV_ALERT_SEEN_KEY,JSON.stringify(seen))}
-async function initUAVIncidents(){try{const data=await fetchJSON("mock/uav-incidents.json",5000),imported=UI.importIncidents(data.incidents||[]);uavIncidents=imported.incidents;uavIncidents.forEach(registerEventState);await loadEventReconciliation();uavPatterns=UI.detectPatterns(uavIncidents);let previous=[];try{previous=JSON.parse(localStorage.getItem(UAV_SNAPSHOT_KEY)||"[]")}catch{}renderUAVIncidents();renderUAVChanges(previous);localStorage.setItem(UAV_SNAPSHOT_KEY,JSON.stringify(uavIncidents.map(x=>x.id)));updateActivityScore();await notifyUAVIncidents()}catch(e){console.warn("uav incident feed unavailable; app remains operational",e)}}
+async function notifyUAVIncidents(){if(NordicWatchStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(NordicWatchStorage.getItem(UAV_ALERT_SEEN_KEY)||"{}")||{}}catch{}for(const incident of uavIncidents.filter(x=>eventStateActive(x)&&UI.riskScore(x).score>=35)){if(seen[incident.id])continue;seen[incident.id]=Date.now();const options={body:`A fixed-wing UAV has been recovered near Porvoo, Finland. Origin unknown. Authorities are investigating a possible territorial violation.`,tag:`nw-uav-${incident.id}`,data:{url:new URL(`?uav=${encodeURIComponent(incident.id)}`,location.href).href},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options);else new Notification("NordicWatch Alert — Recovered UAV in Gulf of Finland",options)}catch(e){console.warn("uav notification",e)}}NordicWatchStorage.setItem(UAV_ALERT_SEEN_KEY,JSON.stringify(seen))}
+async function initUAVIncidents(){try{const data=await fetchJSON("mock/uav-incidents.json",5000),imported=UI.importIncidents(data.incidents||[]);uavIncidents=imported.incidents;uavIncidents.forEach(registerEventState);await loadEventReconciliation();uavPatterns=UI.detectPatterns(uavIncidents);let previous=[];try{previous=JSON.parse(NordicWatchStorage.getItem(UAV_SNAPSHOT_KEY)||"[]")}catch{}renderUAVIncidents();renderUAVChanges(previous);NordicWatchStorage.setItem(UAV_SNAPSHOT_KEY,JSON.stringify(uavIncidents.map(x=>x.id)));updateActivityScore();await notifyUAVIncidents()}catch(e){console.warn("uav incident feed unavailable; app remains operational",e)}}
 function hotspotSituation(h){const currentCount=rawAircraft.filter(a=>isMilitaryAircraft(a)&&kmBetween(+a.lat,+a.lon,h[1],h[2])<=300).length,history=readArray(HISTORY_KEY).map(x=>({timestamp:x.t,region:h[0],activity:(x.observations||[]).filter(o=>o.region===h[0]).length,military:(x.observations||[]).filter(o=>o.region===h[0]).length}));return SE.hotspotAssessment({name:h[0],lat:h[1],lon:h[2],radiusKm:300},{current:{activity:currentCount*12,military:currentCount},history,signals:situationalState.signals,events:activeEvents})}
 function hotspotScore(h){const situation=hotspotSituation(h),contextDelta=Math.min(10,Math.round((situation.deviation+(situation.correlatedSignals.length?20:0))/20));return Math.min(99,h[3]+UI.hotspotImpact(uavIncidents,{latitude:h[1],longitude:h[2]}).scoreDelta+contextDelta)}
 function hotspotSignalSource(signal){const label=signal.source&&signal.source!=="UNKNOWN"?signal.source:"Source unavailable",link=safeHttpUrl(signal.link),when=signal.timestamp?eventTime(signal.timestamp):"time unavailable",title=signal.details||signal.kind||signal.domain||"Signal",evidence=signal.evidence||"AUTOMATIC ASSESSMENT";return `<div class="hotspot-source"><b>${esc(title)}</b><br>${esc(evidence)} · ${esc(when)}<br>${link?`<a href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">${esc(label)} ↗</a>`:esc(label)}</div>`}
@@ -618,12 +619,12 @@ const HISTORY_MAX_AGE=31*24*60*60*1000;
 
 function saveHistorySnapshot(ac){
   try{
-    const now=Date.now();let history=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");
+    const now=Date.now();let history=JSON.parse(NordicWatchStorage.getItem(HISTORY_KEY)||"[]");
     if(history.length&&now-history[history.length-1].t<HISTORY_INTERVAL)return;
     const summary=aircraftSummary(ac),cats=Object.fromEntries(Object.entries(summary.roles).map(([k,v])=>[k.toLowerCase(),v]));
     const specialPlatforms=[...new Set(ac.map(aircraftClass).filter(x=>x.specialMission).map(x=>x.platformFamily))],observations=ac.filter(trackableAircraft).slice(0,80).map(a=>{const result=aircraftClass(a),zone=nearestZone(a),analysis=RP.detect(trailWindowPoints(aircraftHex(a)));return {timestamp:new Date(now).toISOString(),identity:aircraftHex(a)||(a.flight||"").trim()||a.r,platform:result.platformFamily||a.t||"UNKNOWN",role:result.role||result.governmentRole||"UNKNOWN",region:zone?.name||"Nordic–Baltic area",behaviour:analysis.confidence>=55?analysis.pattern:"UNKNOWN",durationMs:analysis.metrics?.durationMs||0,evidence:"OBSERVATION"}});
     history.push({t:now,schemaVersion:2,militaryTotal:summary.military,nonMilitaryTotal:summary.nonMilitary,baseCounts:summary.base,cats,specialPlatforms,observations});
-    history=history.filter(x=>now-x.t<HISTORY_MAX_AGE);localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
+    history=history.filter(x=>now-x.t<HISTORY_MAX_AGE);NordicWatchStorage.setItem(HISTORY_KEY,JSON.stringify(history));
   }catch(e){console.warn("history",e)}
 }
 
@@ -633,11 +634,11 @@ if(!MC)throw new Error("NordicWatchMaritime core unavailable");
 const MARITIME_DATA_KEY="NORDICWATCH_MARITIME_DATA",MARITIME_HISTORY_KEY="NORDICWATCH_MARITIME_SIGNAL_HISTORY",MARITIME_QUARANTINE_KEY="NORDICWATCH_MARITIME_QUARANTINE",MARITIME_SEEN_KEY="NORDICWATCH_MARITIME_SEEN";
 const MARITIME_ALERT_SCORE=65;
 let maritimeRecords=[],maritimeEvents=[],rawVessels=[],maritimePatterns=[];
-function maritimeRead(key,fallback){try{const v=JSON.parse(localStorage.getItem(key)||"null");return v??fallback}catch{return fallback}}
+function maritimeRead(key,fallback){try{const v=JSON.parse(NordicWatchStorage.getItem(key)||"null");return v??fallback}catch{return fallback}}
 function maritimeConfig(){
  const km=Math.max(5,Math.min(500,Number(document.getElementById("corrKm")?.value)||100));
  const hours=Math.max(1,Math.min(168,Number(document.getElementById("corrHours")?.value)||24));
- localStorage.setItem("NORDICWATCH_CORRELATION_KM",String(km));localStorage.setItem("NORDICWATCH_CORRELATION_HOURS",String(hours));
+ NordicWatchStorage.setItem("NORDICWATCH_CORRELATION_KM",String(km));NordicWatchStorage.setItem("NORDICWATCH_CORRELATION_HOURS",String(hours));
  return {distanceKm:km,timeHours:hours}
 }
 function maritimeContext(){
@@ -682,14 +683,14 @@ function renderMaritimeSignals(){
 function saveMaritimeHistory(){
  const now=Date.now(),history=maritimeRead(MARITIME_HISTORY_KEY,[]);
  history.push({t:now,count:maritimeRecords.length,highRisk:maritimeEvents.filter(x=>x.risk.total>=MARITIME_ALERT_SCORE).length,types:Object.fromEntries(MC.TYPES.map(t=>[t,maritimeRecords.filter(x=>x.type===t).length]))});
- localStorage.setItem(MARITIME_HISTORY_KEY,JSON.stringify(history.filter(x=>now-x.t<31*86400000).slice(-300)))
+ NordicWatchStorage.setItem(MARITIME_HISTORY_KEY,JSON.stringify(history.filter(x=>now-x.t<31*86400000).slice(-300)))
 }
 function maritimeSeen(){
  const now=Date.now(),seen=maritimeRead(MARITIME_SEEN_KEY,{});
  Object.entries(seen).forEach(([k,t])=>{if(now-t>7*86400000)delete seen[k]});return seen
 }
 async function notifyMaritimeSignals(){
- if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
+ if(NordicWatchStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;
  const seen=maritimeSeen(),now=Date.now();
  for(const event of maritimeEvents.filter(x=>x.risk.total>=MARITIME_ALERT_SCORE)){
   const key=event.behavior?MC.behaviorEventKey(event.record,event.behavior):MC.eventKey(event.record);if(seen[key])continue;seen[key]=now;
@@ -697,16 +698,16 @@ async function notifyMaritimeSignals(){
   const opts={body,tag:"nw-maritime-"+key,data:{lat:event.record.lat,lon:event.record.lon,id:event.record.id},icon:"icon-192.png",badge:"icon-192.png"};
   try{if(swReg)await swReg.showNotification(title,opts);else new Notification(title,opts)}catch(error){console.warn("maritime notification",error)}
  }
- localStorage.setItem(MARITIME_SEEN_KEY,JSON.stringify(seen))
+ NordicWatchStorage.setItem(MARITIME_SEEN_KEY,JSON.stringify(seen))
 }
 function mergeMaritime(records){
  const map=new Map(maritimeRecords.map(x=>[MC.eventKey(x),x]));records.forEach(x=>map.set(MC.eventKey(x),x));
  maritimeRecords=[...map.values()].sort((a,b)=>b.timestamp-a.timestamp).slice(0,10000);
- localStorage.setItem(MARITIME_DATA_KEY,JSON.stringify(maritimeRecords));analyzeMaritime()
+ NordicWatchStorage.setItem(MARITIME_DATA_KEY,JSON.stringify(maritimeRecords));analyzeMaritime()
 }
 function quarantineImport(file,result){
  const entry={t:Date.now(),file:String(file.name||"import").slice(0,120),summary:result.summary,records:result.quarantine.slice(0,500).map(x=>({index:x.index,errors:x.errors}))};
- const q=maritimeRead(MARITIME_QUARANTINE_KEY,[]);q.push(entry);localStorage.setItem(MARITIME_QUARANTINE_KEY,JSON.stringify(q.slice(-20)))
+ const q=maritimeRead(MARITIME_QUARANTINE_KEY,[]);q.push(entry);NordicWatchStorage.setItem(MARITIME_QUARANTINE_KEY,JSON.stringify(q.slice(-20)))
 }
 async function importMaritimeFile(file){
  const status=document.getElementById("importStatus");
@@ -726,8 +727,8 @@ async function loadMaritimeMock(){
  }catch(error){status.textContent="Mockdata unavailable";console.warn("maritime mock",error)}
 }
 function initMaritimeSignals(){
- document.getElementById("corrKm").value=localStorage.getItem("NORDICWATCH_CORRELATION_KM")||"100";
- document.getElementById("corrHours").value=localStorage.getItem("NORDICWATCH_CORRELATION_HOURS")||"24";
+ document.getElementById("corrKm").value=NordicWatchStorage.getItem("NORDICWATCH_CORRELATION_KM")||"100";
+ document.getElementById("corrHours").value=NordicWatchStorage.getItem("NORDICWATCH_CORRELATION_HOURS")||"24";
  const stored=maritimeRead(MARITIME_DATA_KEY,[]),validated=MC.importDataset({name:"stored.json",mime:"application/json",content:JSON.stringify(stored)});
  maritimeRecords=validated.accepted;analyzeMaritime();
  document.getElementById("importMaritimeBtn").onclick=()=>document.getElementById("maritimeFile").click();
@@ -770,14 +771,14 @@ function renderNews(articles){
 function saveNewsSnapshot(articles){
  try{
   const now=Date.now();
-  let history=JSON.parse(localStorage.getItem(NEWS_HISTORY_KEY)||"[]");
+  let history=JSON.parse(NordicWatchStorage.getItem(NEWS_HISTORY_KEY)||"[]");
   if(history.length&&now-history[history.length-1].t<30*60*1000)return;
   history.push({t:now,articles:articles.slice(0,20).map(a=>({id:a.id,title:a.title,url:a.url,score:a.risk.score,places:a.risk.places.map(p=>p.name),date:a.date?a.date.getTime():null}))});
   // Preserve historical news snapshots.
-  localStorage.setItem(NEWS_HISTORY_KEY,JSON.stringify(history));
+  NordicWatchStorage.setItem(NEWS_HISTORY_KEY,JSON.stringify(history));
  }catch(e){console.warn("news history",e)}
 }
-function readArray(key){try{const v=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
+function readArray(key){try{const v=JSON.parse(NordicWatchStorage.getItem(key)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
 function defencePostureCards(){return window.NordicWatchPosture?.correlate(readArray("NORDICWATCH_SIGNAL_ARCHIVE"))||[]}
 function collectorRecord(id,timestamp,title,extra={}){return {id:String(id||title),timestamp,title:String(title||id),...extra}}
 function upstreamTriggerSnapshot(){return readArray('NORDICWATCH_SIGNAL_ARCHIVE').filter(a=>{const text=(a.title+' '+(a.description||'')).toLowerCase();return /ukraine|ukrainian|russia|russian/.test(text)&&/(mass|large.scale|wave|hundreds|long.range).{0,40}(drone|missile|strike|attack)|(drone|missile).{0,40}(wave|attack)/.test(text)&&Date.now()-new Date(a.eventTime||a.publishedAt||a.ingestedAt).getTime()<=48*3600000}).map(a=>collectorRecord('upstream-'+(a.signalId||a.id),a.eventTime||a.publishedAt||a.ingestedAt,a.title,{kind:'EXTERNAL_UPSTREAM_TRIGGER',domain:'EXTERNAL',region:'Outside primary AOI',source:a.domain||a.sourceName||'External reporting',sourceUrl:a.url||a.sourceUrl,score:55,confidence:a.risk?.sourceConfidence||'CONFIRMED_EXTERNAL',evidenceType:'CONFIRMED_EXTERNAL',directAoiEvent:false,watchAreas:['Kaliningrad / Baltijsk','Kola / Murmansk','Baltic eastern flank'],watchTargets:['GNSS','EW','AEW','ISR','FIGHTER_CAP','AIR_DEFENCE_READINESS']}))}
@@ -791,7 +792,7 @@ function scanSnapshot(){
  events=activeEvents.map(x=>collectorRecord('event-'+x.id,x.startTime,x.title,{kind:x.eventType,domain:'OFFICIAL',region:x.areaName,source:x.sourceName||'Official event feed',sourceUrl:x.sourceUrl,score:x.escalation?.escalationScore||0,confidence:x.confidence})),
  escalation=events.filter((_,i)=>activeEvents[i]?.escalation?.qualifies),upstreamTriggers=upstreamTriggerSnapshot(),all=[...air,...maritime,...news,...drone,...events],adsb=document.getElementById('adsbStatus')?.textContent||'',feed=document.getElementById('newsStatus')?.textContent||'';
  const posture=readArray("NORDICWATCH_SIGNAL_ARCHIVE").map(a=>window.NordicWatchPosture?.classify(a)).filter(Boolean).map(a=>collectorRecord(a.id,a.timestamp,a.title,{kind:a.kind,domain:"POSTURE",region:a.regions.join(" / "),source:a.source,sourceUrl:a.url,confidence:a.sourceConfidence,score:55}));
- return {posture,air,maritime,infrastructure,drone,gnss,escalation,upstreamTriggers,all,coverage:{'air-activity':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},maritime:{checked:true,available:true,message:maritime.length?'Local maritime evidence loaded':'Local datasets checked'},infrastructure:{checked:!/^Loading|^Evaluating/.test(feed),available:briefNewsCoverage.available>0,message:feed},'isr-ew':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},'drone-gnss':{checked:uavIncidents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'high-north':{checked:!/^Loading|^Evaluating/.test(feed)&&adsb!=='loading…',available:briefNewsCoverage.available>0||air.length>0},escalation:{checked:activeEvents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'defence-posture':{checked:!/^Loading|^Evaluating/.test(feed),available:briefNewsCoverage.available>0,message:feed},'upstream-triggers':{checked:!/^Loading|^Evaluating/.test(feed),available:briefNewsCoverage.available>0,message:feed}}}
+ return {posture,air,maritime,infrastructure,drone,gnss,escalation,upstreamTriggers,all,coverage:{'air-activity':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},maritime:{checked:true,available:true,message:maritime.length?'Local maritime evidence loaded':'Local datasets checked'},infrastructure:{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'isr-ew':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},'drone-gnss':{checked:uavIncidents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'high-north':{checked:!/^Loading|^Evaluating/.test(feed)&&adsb!=='loading…',available:(briefNewsCoverage?.available||0)>0||air.length>0},escalation:{checked:activeEvents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'defence-posture':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'upstream-triggers':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed}}}
 }
 function openScanCard(card){const content=document.getElementById('explanationContent');content.replaceChildren();const intro=document.createElement('p');intro.textContent=card.description+' Status '+card.status+' · score '+card.score+'/100 · '+card.observationCount+' observations from '+card.sourceCount+' source labels.';content.append(intro);if(!card.evidence.length){const p=document.createElement('p');p.textContent=card.health.message||'No current evidence in this collector window.';content.append(p)}for(const e of card.evidence){const row=document.createElement('div');row.className='evidence-record';const title=document.createElement('b');title.textContent=e.title;const meta=document.createElement('div');meta.className='meta';meta.textContent=new Date(e.timestamp).toLocaleString()+' · '+(e.region||'Location unavailable')+' · '+e.source+' · '+(e.confidence||'confidence unavailable');row.append(title,meta);if(e.sourceUrl){const a=document.createElement('a');a.href=e.sourceUrl;a.target='_blank';a.rel='noopener noreferrer nofollow';a.textContent='Open source';row.append(a)}content.append(row)}document.getElementById('explanationTitle').textContent=card.title+' Scan Card';document.getElementById('explanationDrawer').classList.add('show')}
 function refreshScanCards(){try{const cards=collectorSwarm.run(scanSnapshot()),active=cards.filter(x=>x.status==='ACTIVE').length,degraded=cards.filter(x=>x.status==='DEGRADED'||x.status==='NO DATA').length;SC.render(document.getElementById('scanCards'),cards,{onOpen:openScanCard});document.getElementById('scanStatus').textContent=active+' active · '+degraded+' without confirmed coverage · '+cards.length+' collectors isolated'}catch(error){document.getElementById('scanStatus').textContent='Collector swarm degraded';console.warn('collector swarm',error)}}
@@ -830,7 +831,7 @@ function durationText(ms){
 }
 function generateBriefLiveDetails(kind){
  const now=Date.now(),flightHistory=readArray(HISTORY_KEY).filter(x=>x.schemaVersion===2),newsHistory=readArray(NEWS_HISTORY_KEY);
- const last=(()=>{try{return JSON.parse(localStorage.getItem(BRIEF_LAST_KEY)||"null")}catch{return null}})();
+ const last=(()=>{try{return JSON.parse(NordicWatchStorage.getItem(BRIEF_LAST_KEY)||"null")}catch{return null}})();
  const previous=flightHistory.length>1?flightHistory[flightHistory.length-2]:null;
  const aircraftNow=aircraftSummary(rawAircraft);
  const counts=Object.fromEntries(Object.entries(aircraftNow.roles).map(([k,v])=>[k.toLowerCase(),v]));
@@ -893,11 +894,11 @@ function generateBriefLiveDetails(kind){
  const p=document.createElement("div");p.className="desc";p.textContent="Situation "+level.toLowerCase()+". The score combines currently visible aviation, stored local baseline deviations and risk-ranked external reporting. It is an indicator, not an intelligence conclusion.";
  const cf=document.createElement("div");cf.className="brief-note";cf.append("Confidence: ");const strong=document.createElement("span");strong.className="confidence "+(confidence==="MEDIUM"?"medium":"low");strong.textContent=confidence;cf.append(strong);
  assessment.append(badge,p,cf);content.append(assessment);
- localStorage.setItem(BRIEF_LAST_KEY,JSON.stringify({t:now,kind,score,level,events:allEvents}));
+ NordicWatchStorage.setItem(BRIEF_LAST_KEY,JSON.stringify({t:now,kind,score,level,events:allEvents}));
  document.getElementById("briefTitle").textContent=(kind==="morning"?"Morning Brief":"Evening Brief")+" · "+new Date().toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
  document.getElementById("briefDrawer").classList.add("show");
 }
-async function notifyHighRiskNews(articles){if(localStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(localStorage.getItem(NEWS_SEEN_KEY)||"{}")||{}}catch{}const now=Date.now();for(const a of articles){if(a.temporal.isHistoricalEvent&&!a.temporal.containsNewDevelopment)continue;const correlation=situationalState.correlations.find(x=>x.correlatedSignals.some(s=>s.id===`news-${a.id}`)),appPath=`?news=${encodeURIComponent(a.id)}#news-${encodeURIComponent(a.id)}`,decision=SE.alertDecision({eventScore:a.risk.eventScore,correlationScore:correlation?.correlationScore||0,baselineDeviation:situationalState.baseline?.baselineDeviation||0,sourceConfidence:a.risk.components.sourceConfidence,persistence:0,domains:correlation?.correlatedSignals.map(x=>x.domain)||["NEWS"],deepLink:appPath,newDomain:Boolean(correlation),newConfirmation:/CONFIRMED/.test(a.risk.sourceConfidence)}),dedupKey=a.eventId||a.signalId,previous=seen[dedupKey];if(previous?.signature===decision.signature||!decision.shouldNotify)continue;seen[dedupKey]={time:now,signature:decision.signature,priority:decision.priority};const appUrl=new URL(decision.deepLink,location.href).href,opts={body:`${a.risk.places.map(p=>p.name).join(", ")||"Regional"} · EventScore ${a.risk.score} · ${a.risk.confidence} confidence`,tag:`nw-news-${dedupKey}`,data:{url:appUrl},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification(`NordicWatch · ${decision.priority}`,opts);else new Notification(`NordicWatch · ${decision.priority}`,opts)}catch(e){console.warn("news notification",e)}}localStorage.setItem(NEWS_SEEN_KEY,JSON.stringify(seen))}
+async function notifyHighRiskNews(articles){if(NordicWatchStorage.getItem(ALERT_KEY)!=="1"||!("Notification" in window)||Notification.permission!=="granted")return;let seen={};try{seen=JSON.parse(NordicWatchStorage.getItem(NEWS_SEEN_KEY)||"{}")||{}}catch{}const now=Date.now();for(const a of articles){if(a.temporal.isHistoricalEvent&&!a.temporal.containsNewDevelopment)continue;const correlation=situationalState.correlations.find(x=>x.correlatedSignals.some(s=>s.id===`news-${a.id}`)),appPath=`?news=${encodeURIComponent(a.id)}#news-${encodeURIComponent(a.id)}`,decision=SE.alertDecision({eventScore:a.risk.eventScore,correlationScore:correlation?.correlationScore||0,baselineDeviation:situationalState.baseline?.baselineDeviation||0,sourceConfidence:a.risk.components.sourceConfidence,persistence:0,domains:correlation?.correlatedSignals.map(x=>x.domain)||["NEWS"],deepLink:appPath,newDomain:Boolean(correlation),newConfirmation:/CONFIRMED/.test(a.risk.sourceConfidence)}),dedupKey=a.eventId||a.signalId,previous=seen[dedupKey];if(previous?.signature===decision.signature||!decision.shouldNotify)continue;seen[dedupKey]={time:now,signature:decision.signature,priority:decision.priority};const appUrl=new URL(decision.deepLink,location.href).href,opts={body:`${a.risk.places.map(p=>p.name).join(", ")||"Regional"} · EventScore ${a.risk.score} · ${a.risk.confidence} confidence`,tag:`nw-news-${dedupKey}`,data:{url:appUrl},icon:"icon-192.png",badge:"icon-192.png"};try{if(swReg)await swReg.showNotification(`NordicWatch · ${decision.priority}`,opts);else new Notification(`NordicWatch · ${decision.priority}`,opts)}catch(e){console.warn("news notification",e)}}NordicWatchStorage.setItem(NEWS_SEEN_KEY,JSON.stringify(seen))}
 function expireCurrentState(){currentArticles=currentArticles.filter(a=>Date.now()<+new Date(a.expiresAt));activeEvents=allEvents.filter(e=>EE.statusAt(e)==="ACTIVE");renderNews(currentArticles);renderEvents()}
 setInterval(expireCurrentState,60000);
 async function loadNews(){
@@ -909,7 +910,7 @@ async function loadNews(){
  let verified=[];try{const capture=await fetchJSON("data/verified-posture-reports.json",5000);verified=(capture.articles||[]).filter(a=>{const t=+new Date(a.publishedAt);return t<=Date.now()&&Date.now()-t<=72*3600000})}catch(error){console.warn("Posture source snapshots unavailable",error)}
  const incoming=[...rawFetched,...verified].map(normalizeArticle).filter(Boolean);
  window.nordicWatchGeoDiagnostics=rawFetched.map(raw=>({raw:NR.diagnose(raw),normalized:NR.diagnose(normalizeArticle(raw)||{})}));
- const archive=IC.ingest(readArray('NORDICWATCH_SIGNAL_ARCHIVE'),incoming);try{localStorage.setItem('NORDICWATCH_SIGNAL_ARCHIVE',JSON.stringify(archive));localStorage.setItem('NORDICWATCH_NEWS_EVENTS',JSON.stringify(IC.signalEvents(archive,readArray('NORDICWATCH_NEWS_EVENTS'))))}catch(error){console.warn('News archive persistence failed',error)}
+ const archive=IC.ingest(readArray('NORDICWATCH_SIGNAL_ARCHIVE'),incoming);try{NordicWatchStorage.setItem('NORDICWATCH_SIGNAL_ARCHIVE',JSON.stringify(archive));NordicWatchStorage.setItem('NORDICWATCH_NEWS_EVENTS',JSON.stringify(IC.signalEvents(archive,readArray('NORDICWATCH_NEWS_EVENTS'))))}catch(error){console.warn('News archive persistence failed',error)}
  window.nordicWatchFetchStages={sources:results.length,fetchSucceeded:successful.length,fetched:rawFetched.length,parsed:rawFetched.length,normalized:incoming.length,normalizationRejected:rawFetched.length-rawFetched.map(normalizeArticle).filter(Boolean).length,verifiedSnapshots:verified.length};
  const routed=routeNewsEvidence(),selection=BX.selectNews(routed.articles,{situations:situationClusters,geographic:a=>NR.safeRelevance(a).relevant});currentArticles=selection.articles.filter(a=>Date.now()<+new Date(a.expiresAt)).map(a=>({...a,date:parseNewsDate(a.publishedAt)}));
  saveNewsSnapshot(currentArticles);renderNews(currentArticles);rebuildSituationalState();refreshSituations(true);renderHotspots();
@@ -948,8 +949,8 @@ document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{
 document.getElementById("signals").innerHTML='<div class="signal"><div class="meta">LIVE</div><div class="title">Military air layer</div><div class="desc">Attempts live ADS-B military data and keeps the rest of NordicWatch operational if the feed is blocked or unavailable.</div></div><div class="signal"><div class="meta">FILTERING</div><div class="title">Mission-role categories</div><div class="desc">AWACS, tanker, ISR, transport and fighter categories are inferred from public callsign/type metadata and should be treated as heuristic, not authoritative.</div></div>';
 renderHotspots();
 document.getElementById("changes").replaceChildren();
-const eventStartAlerts=document.getElementById("eventStartAlerts");eventStartAlerts.checked=localStorage.getItem(EVENT_START_ALERT_KEY)==="1";eventStartAlerts.onchange=()=>localStorage.setItem(EVENT_START_ALERT_KEY,eventStartAlerts.checked?"1":"0");
-const trailWindow=document.getElementById("trailWindow"),patternLabels=document.getElementById("patternLabels");trailWindow.value=localStorage.getItem("NORDICWATCH_TRAIL_WINDOW")||"60";trailWindow.onchange=()=>{localStorage.setItem("NORDICWATCH_TRAIL_WINDOW",trailWindow.value);renderAircraftTrails();renderAircraft()};patternLabels.checked=localStorage.getItem("NORDICWATCH_PATTERN_LABELS")==="1";patternLabels.onchange=()=>{localStorage.setItem("NORDICWATCH_PATTERN_LABELS",patternLabels.checked?"1":"0");renderAircraftTrails()};
+const eventStartAlerts=document.getElementById("eventStartAlerts");eventStartAlerts.checked=NordicWatchStorage.getItem(EVENT_START_ALERT_KEY)==="1";eventStartAlerts.onchange=()=>NordicWatchStorage.setItem(EVENT_START_ALERT_KEY,eventStartAlerts.checked?"1":"0");
+const trailWindow=document.getElementById("trailWindow"),patternLabels=document.getElementById("patternLabels");trailWindow.value=NordicWatchStorage.getItem("NORDICWATCH_TRAIL_WINDOW")||"60";trailWindow.onchange=()=>{NordicWatchStorage.setItem("NORDICWATCH_TRAIL_WINDOW",trailWindow.value);renderAircraftTrails();renderAircraft()};patternLabels.checked=NordicWatchStorage.getItem("NORDICWATCH_PATTERN_LABELS")==="1";patternLabels.onchange=()=>{NordicWatchStorage.setItem("NORDICWATCH_PATTERN_LABELS",patternLabels.checked?"1":"0");renderAircraftTrails()};
 initEventEngine();
 setInterval(initEventEngine,EVENT_REFRESH_MS);
 initExternalReports();
@@ -962,7 +963,7 @@ const closeBtn=document.getElementById("close");
 const drawerEl=document.getElementById("drawer");
 
 document.getElementById("intelligenceHistory").onclick=()=>{const box=document.getElementById("changes");box.replaceChildren();for(const e of [...readArray("NORDICWATCH_EVENT_ARCHIVE"),...readArray("NORDICWATCH_NEWS_EVENTS")].sort((a,b)=>+new Date(b.lastObservedAt)-+new Date(a.lastObservedAt))){const row=document.createElement("div");row.className="change";row.textContent=e.title+" · "+IC.status(e)+" · last observation "+e.lastObservedAt;box.append(row)}for(const signal of readArray("NORDICWATCH_SIGNAL_ARCHIVE")){const row=document.createElement("div");row.className="change";row.textContent=signal.title+" · "+IC.signal(signal).freshness+" · "+signal.timeStatus+" · "+signal.eventTime;box.append(row)}drawerEl.classList.add("show")};
-changedBtn.onclick=()=>{const routed=routeNewsEvidence(),current=routed.events,previous=readArray('NORDICWATCH_CHANGES_STATE'),changed=current.filter(e=>e.briefEligible&&(!previous.some(p=>p.eventId===e.eventId)||previous.find(p=>p.eventId===e.eventId)?.routingSignature!==e.routingSignature));document.getElementById('changes').replaceChildren();renderEventChanges(changed.map(event=>({event,kind:previous.some(p=>p.eventId===event.eventId)?'UPDATED':'NEW',text:event.title})));if(!changed.length)document.getElementById('changes').textContent=routed.degraded?'Coverage/relevance processing degraded.':!routed.articles.length?'Insufficient relevant reporting to assess changes.':'No material changes in the evaluated relevant reporting.';localStorage.setItem('NORDICWATCH_CHANGES_STATE',JSON.stringify(current));drawerEl.classList.add('show')};
+changedBtn.onclick=()=>{const routed=routeNewsEvidence(),current=routed.events,previous=readArray('NORDICWATCH_CHANGES_STATE'),changed=current.filter(e=>e.briefEligible&&(!previous.some(p=>p.eventId===e.eventId)||previous.find(p=>p.eventId===e.eventId)?.routingSignature!==e.routingSignature));document.getElementById('changes').replaceChildren();renderEventChanges(changed.map(event=>({event,kind:previous.some(p=>p.eventId===event.eventId)?'UPDATED':'NEW',text:event.title})));if(!changed.length)document.getElementById('changes').textContent=routed.degraded?'Coverage/relevance processing degraded.':!routed.articles.length?'Insufficient relevant reporting to assess changes.':'No material changes in the evaluated relevant reporting.';NordicWatchStorage.setItem('NORDICWATCH_CHANGES_STATE',JSON.stringify(current));drawerEl.classList.add('show')};
 closeBtn.onclick=()=>drawerEl.classList.remove("show");
 drawerEl.onclick=e=>{if(e.target===drawerEl)drawerEl.classList.remove("show")};
  const briefDrawer=document.getElementById("briefDrawer");

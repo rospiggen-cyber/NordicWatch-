@@ -1,7 +1,7 @@
 /* One persistent lifecycle registry shared by news, events and physical UAV records. */
 let eventStateRegistry=null;
-function eventStates(){if(!eventStateRegistry){try{eventStateRegistry=JSON.parse(localStorage.getItem('NORDICWATCH_EVENT_STATES')||'{}')}catch{eventStateRegistry={}}}return eventStateRegistry}
-function saveEventStates(){try{localStorage.setItem('NORDICWATCH_EVENT_STATES',JSON.stringify(eventStates()))}catch(e){console.warn('Event state persistence unavailable',e)}}
+function eventStates(){if(!eventStateRegistry){try{eventStateRegistry=JSON.parse(NordicWatchStorage.getItem('NORDICWATCH_EVENT_STATES')||'{}')}catch{eventStateRegistry={}}}return eventStateRegistry}
+function saveEventStates(){try{NordicWatchStorage.setItem('NORDICWATCH_EVENT_STATES',JSON.stringify(eventStates()))}catch(e){console.warn('Event state persistence unavailable',e)}}
 function stateFor(raw){const states=eventStates(),id=raw.eventId||raw.id||raw.signalId;if(states[id])return states[id];const canonical=window.NordicWatchEventState.canonical(raw.url||raw.sourceUrl);return canonical?Object.values(states).find(s=>s.sources.some(e=>window.NordicWatchEventState.canonical(e.sourceUrl)===canonical)):null}
 function eventStateActive(raw){return stateFor(raw)?.active!==false}
 function registerEventState(raw){

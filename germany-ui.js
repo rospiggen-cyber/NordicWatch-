@@ -3,7 +3,7 @@ let germanyPatternLayer=null,germanyCurrentSignals=null;
 function ingestGermanyRecords(records){
  try{
  const signals=window.NordicWatchGermany.accumulate(germanyCurrentSignals||readArray('NORDICWATCH_GERMANY_INFRASTRUCTURE'),records);germanyCurrentSignals=signals;
- try{localStorage.setItem('NORDICWATCH_GERMANY_INFRASTRUCTURE',JSON.stringify(signals))}catch(e){console.warn('German infrastructure storage unavailable',e)}
+ try{NordicWatchStorage.setItem('NORDICWATCH_GERMANY_INFRASTRUCTURE',JSON.stringify(signals))}catch(e){console.warn('German infrastructure storage unavailable',e)}
  renderGermanyHotspots();
  }catch(e){console.warn('German infrastructure adapter unavailable',e)}
 }
