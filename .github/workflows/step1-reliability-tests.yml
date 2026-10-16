@@ -17,6 +17,9 @@ on:
       - "regional-delta.js"
       - "index.html"
       - "tests/news-reliability.test.mjs"
+      - "tests/event-discovery.test.mjs"
+      - "tests/finland-civil-restrictions.test.mjs"
+      - "cloudflare/event-discovery-core.mjs"
       - "tests/news-routing.test.js"
       - "tests/external-report.test.mjs"
       - "tests/situation-engine.test.js"
@@ -51,5 +54,5 @@ jobs:
           node --check regional-delta.js
       - name: Regression tests
         run: |
-          node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/external-report.test.mjs
+          node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/external-report.test.mjs tests/event-discovery.test.mjs tests/finland-civil-restrictions.test.mjs
           node --test tests/situation-engine.test.js tests/situation-evidence.test.js tests/regional-delta.test.js tests/brief-coverage.test.js
