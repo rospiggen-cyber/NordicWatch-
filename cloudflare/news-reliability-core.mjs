@@ -13,7 +13,7 @@ export const DEFAULT_EXTERNAL_FEEDS = Object.freeze([
   "https://www.lrt.lt/naujienos/lietuvoje?rss="
 ]);
 
-const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|danmark|dansk|gedser|estonia|estonian|latvia|latvian|lithuania|lithuanian|lietuva|lietuvos|lietuvoje|kaunas|kauno|kaisiadorys|kaisiadoriu|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|severomorsk|narva|gulf of finland|suwa[lł]ki)\b/i;
+const CORE = /\b(?:sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|danmark|dansk|gedser|estonia|estonian|latvia|latvian|lithuania|lithuanian|lietuva|lietuvos|lietuvoje|kaunas|kauno|kaisiadorys|kaisiadoriu|baltic(?: sea| states?)?|gotland|bornholm|svalbard|spitsbergen|barentsburg|jan mayen|kaliningrad|k[oö]nigsberg|baltijsk|baltiysk|murmansk|kola|severomorsk|narva|gulf of finland|suwa[lł]ki|kotka|kotkan|hamina|haminan|loviisa|lovisa|suomenlah\w*|kaunissaari)\b/i;
 const ADJACENT = /\b(?:germany|german|poland|polish|united kingdom|britain|british|north sea|north atlantic|ukraine|ukrainian|belarus|belarusian|netherlands|dutch|iceland|arctic)\b/i;
 const IMPACT = Object.freeze({
   WEAPONS_STOCKPILE: /\b(?:stockpile|inventory|munition|missile stock|interceptor|ammunition|weapons? shortage|weapons? depletion|expenditure rate)\b/i,
