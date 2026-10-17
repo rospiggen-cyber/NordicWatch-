@@ -1,0 +1,44 @@
+name: Strategic Early Warning prototype
+
+on:
+  push:
+    branches:
+      - feature/strategic-early-warning-v0
+    paths:
+      - "strategic-early-warning.js"
+      - "tests/strategic-early-warning.test.js"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tests/strategic-source-collector.test.mjs"
+      - "cloudflare/event-feed-worker.js"
+      - "strategic-review.html"
+      - ".github/workflows/strategic-early-warning.yml"
+  pull_request:
+    paths:
+      - "strategic-early-warning.js"
+      - "tests/strategic-early-warning.test.js"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tests/strategic-source-collector.test.mjs"
+      - "cloudflare/event-feed-worker.js"
+      - "strategic-review.html"
+      - ".github/workflows/strategic-early-warning.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  strategic-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check syntax
+        run: |
+          node --check strategic-early-warning.js
+          node --check tests/strategic-early-warning.test.js
+          node --check cloudflare/strategic-source-collector.mjs
+          node --check tests/strategic-source-collector.test.mjs
+          node --check cloudflare/event-feed-worker.js
+      - name: Run strategic tests
+        run: node --test tests/strategic-early-warning.test.js tests/strategic-source-collector.test.mjs

@@ -1,0 +1,26 @@
+name: Strategic live-feed smoke (read-only)
+
+on:
+  push:
+    branches:
+      - feature/strategic-early-warning-v0
+    paths:
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tools/strategic-live-feed-smoke.mjs"
+      - ".github/workflows/strategic-live-feed-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  official-source-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check actual RSS/Atom endpoints and parseability
+        run: node tools/strategic-live-feed-smoke.mjs

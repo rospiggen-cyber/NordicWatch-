@@ -5,6 +5,10 @@ compatibility_date = "2026-09-02"
 [vars]
 APP_ORIGIN = "https://YOUR_GITHUB_USER.github.io"
 EVENT_ALERT_THRESHOLD = "75"
+# Isolated strategic collection; enable only after testing official source feeds.
+STRATEGIC_ENABLED = "true"
+# Additional HTTPS feeds on the White House, State or Congress allowlist (only after verification).
+STRATEGIC_SOURCE_URLS = ""
 # Comma-separated approved official RSS/Atom endpoints; other hosts are rejected.
 SOURCE_URLS = ""
 # Trusted external military-report RSS/Atom endpoints. Only hosts in the
