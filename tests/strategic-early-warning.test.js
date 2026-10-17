@@ -146,3 +146,35 @@ test('fresh report without primary source is WATCH, not REVIEW', () => {
   assert.equal(card(r, 'US_DOMESTIC_POLICY').priority, 'WATCH');
   assert.equal(card(r, 'US_DOMESTIC_POLICY').officialEvidencePresent, false);
 });
+
+
+test('matching event keys across independent publishers retain separate sources', () => {
+  const a = signal({ eventKey: 'same-event' });
+  const b = signal({ eventKey: 'same-event',
+    id: 'independent-report', title: 'Second publisher account',
+    source: { url: 'https://second.example/story', publisher: 'Publisher C', independenceGroup: 'AGENCY_C', type: 'NEWS' }
+  });
+  const r = engine.analyze([a, b, policy()], { now: NOW });
+  assert.equal(r.summary.accepted, 3);
+  assert.equal(card(r, 'US_DOMESTIC_POLICY').sourceGroups.length, 3);
+});
+
+test('old counterevidence from a previous episode cannot veto current developments', () => {
+  const oldCounter = policy({ id: 'old-counter', stance: 'COUNTER', eventTime: '2026-08-01T12:00:00Z',
+    source: { url: 'https://example.gov/old-counter', publisher: 'Government Office', independenceGroup: 'GOV_A', type: 'OFFICIAL' }
+  });
+  const r = engine.analyze([signal(), policy(), oldCounter], { now: NOW });
+  assert.equal(card(r, 'US_DOMESTIC_POLICY').priority, 'REVIEW');
+  assert.equal(card(r, 'US_DOMESTIC_POLICY').counterevidence.length, 0);
+});
+
+test('official domestic data cannot certify an independently unverified foreign-policy report', () => {
+  const domestic = signal({ evidence: 'OFFICIAL_RECORD',
+    source: { url: 'https://example.gov/domestic', publisher: 'Official Domestic', independenceGroup: 'GOV_DOMESTIC', type: 'OFFICIAL' }
+  });
+  const foreignPolicyReport = policy({ evidence: 'REPORTED',
+    source: { url: 'https://news.example/foreign', publisher: 'Agency', independenceGroup: 'AGENCY_NEWS', type: 'NEWS' }
+  });
+  const r = engine.analyze([domestic, foreignPolicyReport], { now: NOW });
+  assert.equal(card(r, 'US_DOMESTIC_POLICY').priority, 'WATCH');
+});
