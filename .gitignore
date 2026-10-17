@@ -1,0 +1,28 @@
+# Credentials, secrets and local Cloudflare configuration
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.key
+*.secrets.json
+secrets.json
+credentials.json
+wrangler.toml
+wrangler.*.toml
+!wrangler.*.toml.example
+
+# Generated deployment/runtime files
+node_modules/
+.wrangler/
+dist/
+coverage/
+*.log
+*.bak
+*.swp
+.DS_Store
