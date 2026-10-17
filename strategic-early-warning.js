@@ -106,7 +106,7 @@
   function relevantCounter(s, model, pairTopics) {
     return s.stance === 'COUNTER' && !s.lead &&
       (s.domain === model.left || model.right.includes(s.domain)) &&
-      (s.actor === model.actor || s.actor === 'NATO') &&
+      (s.actor === model.actor || s.actor === 'NATO' || s.actor === 'EU') &&
       overlap(s, { topics: pairTopics }).length > 0 &&
       (!model.region || !s.region || s.region === model.region);
   }
@@ -115,7 +115,7 @@
     const left = eligible.filter(s => matchesModel(s, model.left, model));
     const right = eligible.filter(s => model.right.includes(s.domain) &&
       (!model.region || s.region === model.region) &&
-      (model.actor !== 'US' || s.actor === 'US' || s.actor === 'NATO'));
+      (model.actor !== 'US' || s.actor === 'US' || s.actor === 'NATO' || s.actor === 'EU'));
     const links = [];
     for (const a of left) for (const b of right) {
       if (a.id === b.id) continue;
