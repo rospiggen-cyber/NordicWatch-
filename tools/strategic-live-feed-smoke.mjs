@@ -2,7 +2,7 @@
  * Explicit CI diagnostic, not an assertion that a URL seen in docs works.
  */
 import {sourceFeeds,parseOfficialFeed} from '../cloudflare/strategic-source-collector.mjs';
-const sources=sourceFeeds();
+const sources=sourceFeeds('https://www.whitehouse.gov/news/feed/ https://www.whitehouse.gov/presidential-actions/feed/ https://www.whitehouse.gov/briefings-statements/feed/ https://www.whitehouse.gov/releases/feed/');
 let passed=0;
 for(const item of sources){
   try {
