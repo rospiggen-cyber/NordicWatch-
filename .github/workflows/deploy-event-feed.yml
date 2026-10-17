@@ -11,6 +11,11 @@ on:
       - "cloudflare/event-discovery-core.mjs"
       - "cloudflare/event-state-followup.mjs"
       - "cloudflare/kv-catalog.mjs"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "strategic-early-warning.js"
+      - "strategic-review.html"
+      - "tests/strategic-early-warning.test.js"
+      - "tests/strategic-source-collector.test.mjs"
       - "external-report-core.mjs"
       - "situation-engine.js"
       - "intelligence-core.js"
@@ -71,6 +76,8 @@ jobs:
         run: |
           node --check cloudflare/news-reliability-core.mjs
           node --check cloudflare/event-feed-worker.js
+          node --check cloudflare/strategic-source-collector.mjs
+          node --check strategic-early-warning.js
           node --check intelligence-core.js
           node --check brief-engine.js
           node --test tests/*.test.js tests/*.test.mjs
@@ -87,6 +94,10 @@ jobs:
           [vars]
           APP_ORIGIN = "https://rospiggen-cyber.github.io"
           EVENT_ALERT_THRESHOLD = "75"
+          # Official strategic feeds only; does not affect military alerts.
+          STRATEGIC_ENABLED = "true"
+          # Further approved US feeds can be added after endpoint verification.
+          STRATEGIC_SOURCE_URLS = ""
 
           [[kv_namespaces]]
           binding = "EVENTS"
