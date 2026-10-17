@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07101c">
+<title>Strategic Review — NordicWatch</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#07101c;color:#edf4ff}
+*{box-sizing:border-box}body{margin:0;max-width:1150px;padding:18px;margin-inline:auto}
+a{color:#7ee7ff;overflow-wrap:anywhere}header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+h1{font-size:clamp(1.45rem,3vw,2rem);margin:.3rem 0}h2{font-size:1.08rem;margin:0 0 8px}h3{font-size:.98rem}
+p{line-height:1.5}.muted,small{color:#a7b6c8}.eyebrow{font-size:.75rem;letter-spacing:1.6px;color:#85bacc;text-transform:uppercase}
+.panel{border:1px solid #35465a;background:#0b1423;border-radius:13px;padding:15px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}
+.card{border:1px solid #33495f;background:#0e1b2d;border-radius:12px;padding:14px;min-width:0}
+.card .label{display:inline-block;font-size:.7rem;border:1px solid #54748b;padding:5px 7px;border-radius:7px;color:#c9dbe8}
+ul{padding-left:21px;line-height:1.5}li{padding:4px 0;overflow-wrap:anywhere}
+button{padding:10px 14px;background:#14334c;border:1px solid #628ba8;color:#fff;border-radius:9px;font-size:1rem;min-height:44px;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid #7ee7ff}button:disabled{opacity:.5}
+.summary{display:flex;gap:10px;flex-wrap:wrap}.summary span{border:1px solid #3c4c5a;padding:8px;border-radius:7px}
+.list{display:grid;gap:9px}.item{border-top:1px solid #273f53;padding:9px 0}
+</style>
+</head>
+<body>
+<header>
+ <div><div class="eyebrow">NORDICWATCH · EXPERIMENTAL</div><h1>Strategic Review</h1>
+ <div class="muted">Official publications → traceable signals → analytical review</div></div>
+ <div><a href="./index.html">← Back to NordicWatch map</a></div>
+</header>
+<section class="panel" aria-live="polite">
+ <p id="status">Waiting for strategic source snapshot…</p>
+ <div class="summary" id="summary"></div>
+ <p><button id="refresh" type="button">Refresh assessment</button> <small id="updated"></small></p>
+</section>
+<section class="panel">
+ <h2>Hypothesis review</h2>
+ <p class="muted">REVIEW means independent material warrants human examination, not proof of causation, crisis or election outcome. Missing coverage is never counted as reassurance.</p>
+ <div class="grid" id="cards"></div>
+</section>
+<section class="panel">
+ <h2>Source coverage</h2>
+ <p class="muted">A source labelled available means its feed responded, not that its claims were independently verified.</p>
+ <div id="sources" class="list"></div>
+</section>
+<section class="panel">
+ <h2>Latest source documents</h2>
+ <p class="muted">Occurrence times may differ from publication times. Source titles are leads for investigation, not intelligence conclusions.</p>
+ <div id="signals" class="list"></div>
+</section>
+<footer class="muted"><p>Experimental, read-only situational-awareness aid. Military Activity and EventScore are not altered. No live monitoring or collection runs in this browser.</p></footer>
+<script>
+'use strict';
+const el=id=>document.getElementById(id);
+function elem(tag,text,parent,className){
+  const n=document.createElement(tag); if(text!=null)n.textContent=String(text);
+  if(className)n.className=className;
+  if(parent)parent.append(n);return n;
+}
+const validLink=url=>{
+  try{const u=new URL(url);return u.protocol==='https:'&& !u.username&&!u.password ? u.href : null}catch{return null}
+};
+function sourceLink(row,parent){
+  const url=validLink(row?.source?.url);if(!url)return;
+  const a=elem('a','Read original publication ↗',parent);
+  a.href=url;a.rel='noopener noreferrer';a.target='_blank';
+}
+const base=()=>{
+  let override='';
+  try{override=localStorage.getItem('NORDICWATCH_EVENT_WORKER')||''}catch{}
+  const b=override||'https://nordicwatch-event-feed.rospiggen.workers.dev';
+  return validLink(b)?.replace(/\/$/,'')||'https://nordicwatch-event-feed.rospiggen.workers.dev';
+};
+function cardView(c,parent){
+  const card=elem('article',null,parent,'card');
+  elem('span',String(c.priority||'INSUFFICIENT_EVIDENCE').replaceAll('_',' '),card,'label');
+  elem('h3',c.title||'Unknown hypothesis',card);
+  elem('p',c.question||'',card,'muted');
+  const related=Array.isArray(c.links)?c.links.length:0;
+  elem('p',related+' thematic and time-based link(s). Causation: NOT ESTABLISHED.',card);
+  if(c.counterevidence?.length)elem('p','Conflicting evidence: '+c.counterevidence.length+' item(s).',card);
+  const ul=elem('ul',null,card);
+  for(const s of (c.support||[]).slice(0,5)){
+    const li=elem('li',s.title+' ('+s.evidence+') ',ul);sourceLink(s,li);
+  }
+  if(!ul.childElementCount)elem('li','No supported cross-domain evidence pair.',ul);
+  if(c.whatWouldChangeAssessment?.length){
+    elem('p','What is still needed:',card,'muted');const missing=elem('ul',null,card);
+    for(const gap of c.whatWouldChangeAssessment.slice(0,3))elem('li',gap,missing);
+  }
+  elem('small',c.limitation||'Not a causal assessment.',card);
+}
+function render(data){
+  el('cards').replaceChildren();el('signals').replaceChildren();el('sources').replaceChildren();el('summary').replaceChildren();
+  el('updated').textContent=data.generatedAt?'Updated '+new Date(data.generatedAt).toLocaleString():'No completed collection yet';
+  const all=Array.isArray(data.signals)?data.signals:[];
+  const cover=Array.isArray(data.sources)?data.sources:[];
+  const cards=Array.isArray(data.analysis)?data.analysis:[];
+  if(!data.enabled){
+    el('status').textContent='Strategic collection is not enabled on the Worker. Existing NordicWatch is unaffected.';
+  }else if(data.degraded){
+    el('status').textContent='Limited / degraded source coverage. Do not draw conclusions from missing records.';
+  }else{
+    el('status').textContent='Strategic source collection available. Evidence still requires human review.';
+  }
+  for(const item of [all.length+' stored signals',cover.filter(x=>x.ok).length+'/'+cover.length+' feeds responding',cards.length+' hypotheses'])
+    elem('span',item,el('summary'));
+  for(const c of cards)cardView(c,el('cards'));
+  if(!cards.length)elem('p','No assessment available until the first collector run.',el('cards'),'muted');
+  for(const s of cover){
+    const p=elem('div',s.id+' — '+(s.ok?'Feed responded':'Unavailable')+' · '+Number(s.accepted||0)+' relevant publications',el('sources'),'item');
+  }
+  if(!cover.length)elem('p','No source telemetry is available.',el('sources'),'muted');
+  const sorted=[...all].sort((a,b)=>Date.parse(b.eventTime)-Date.parse(a.eventTime));
+  for(const row of sorted.slice(0,30)){
+    const div=elem('div',null,el('signals'),'item');
+    elem('strong',row.title,div);
+    elem('div',[row.domain,row.actor,row.evidence,
+      'Published / event proxy: '+new Date(row.eventTime).toLocaleString()].join(' · '),div,'muted');
+    sourceLink(row,div);
+  }
+  if(!sorted.length)elem('p','No verified-source strategic documents were collected for the current coverage window.',el('signals'),'muted');
+}
+async function load(){
+  const btn=el('refresh');btn.disabled=true;el('status').textContent='Checking the last scheduled strategic snapshot…';
+  try {
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+    let response;
+    try{response=await fetch(base()+'/strategic',{signal:controller.signal,cache:'no-store'})}
+    finally{clearTimeout(timeout)}
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const data=await response.json();render(data);
+  }catch{
+    render({enabled:false,degraded:true,analysis:[],sources:[],signals:[]});
+    el('status').textContent='Strategic snapshot unavailable (network, CORS or Worker error). No assessment can be made.';
+  }finally{btn.disabled=false}
+}
+el('refresh').addEventListener('click',load);
+load();
+</script>
+</body>
+</html>
