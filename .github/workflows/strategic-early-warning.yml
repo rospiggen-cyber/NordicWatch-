@@ -7,11 +7,19 @@ on:
     paths:
       - "strategic-early-warning.js"
       - "tests/strategic-early-warning.test.js"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tests/strategic-source-collector.test.mjs"
+      - "cloudflare/event-feed-worker.js"
+      - "strategic-review.html"
       - ".github/workflows/strategic-early-warning.yml"
   pull_request:
     paths:
       - "strategic-early-warning.js"
       - "tests/strategic-early-warning.test.js"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tests/strategic-source-collector.test.mjs"
+      - "cloudflare/event-feed-worker.js"
+      - "strategic-review.html"
       - ".github/workflows/strategic-early-warning.yml"
 
 permissions:
@@ -29,5 +37,8 @@ jobs:
         run: |
           node --check strategic-early-warning.js
           node --check tests/strategic-early-warning.test.js
+          node --check cloudflare/strategic-source-collector.mjs
+          node --check tests/strategic-source-collector.test.mjs
+          node --check cloudflare/event-feed-worker.js
       - name: Run strategic tests
-        run: node --test tests/strategic-early-warning.test.js
+        run: node --test tests/strategic-early-warning.test.js tests/strategic-source-collector.test.mjs
