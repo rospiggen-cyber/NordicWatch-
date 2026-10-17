@@ -1,6 +1,6 @@
 # NordicWatch Strategic Early Warning — v0.2 integration
 
-**Current state:** implementation on feature/strategic-early-warning-v0, PR #17. Staged for deployment; no merge or live deployment from this branch. The separate Strategic Review page is linked from the map on this branch. The existing live map, military EventScore, event alert rules and Daily Brief stay unchanged.
+**Current state (18 October 2026):** PR #17 was merged and the independent Strategic Review page and Worker endpoint are live. Cloudflare deployed successfully and production read-only smoke confirmed HTTP 200, enabled=true for /strategic and HTTP 200 for strategic-review.html. The first scheduled collection had not yet completed at the smoke test (awaitingFirstRun=true). Existing military EventScore, event alert rules and Daily Brief remain unchanged.
 
 ## What is connected in code
 
@@ -19,7 +19,7 @@ The main-branch GitHub Actions Worker deployment config in this PR includes:
     STRATEGIC_ENABLED = "true"
     STRATEGIC_SOURCE_URLS = ""
 
-The existing EVENTS KV namespace is reused under separate prefixed keys. The cron already fires every 15 minutes. Deployment automatically enables EU Council + White House strategic RSS collection after this PR is reviewed and merged into main (assuming existing Cloudflare deployment secrets are configured and those endpoints respond).
+The existing EVENTS KV namespace is reused under separate prefixed keys. The cron already fires every 15 minutes. Deployment enabled EU Council + White House strategic RSS collection with the successful GitHub Actions/Cloudflare production rollout. First data snapshot depends on the next scheduled collection (15-minute cron).
 
 If the selected official source supplies no current qualifying publication, show insufficient coverage; never claim "no developments". The White House streams give documented US policy statements, but do **not** provide independent domestic political pressure measurements, election polling or reporting. The original Trump domestic-pressure hypothesis remains INSUFFICIENT_EVIDENCE until an independently verified domestic source is connected.
 
@@ -46,9 +46,9 @@ The dedicated workflow and the existing full regression workflow run on the PR. 
 
 ### Before lifting prototype status
 
-- GitHub Actions live-feed smoke test on 17 October 2026: EU Council HTTP 200 with 20 parsed entries (5 topic matches); White House news HTTP 200 with 30 parsed entries (2 topic matches); White House presidential actions HTTP 200 with 30 parsed entries (1 topic match). The old NATO feed returned HTTP 404 and was disabled. All 3 current defaults passed live HTTP parsing tests. Confirm CORS and source health after Worker deployment.
+- GitHub Actions live-feed smoke test on 17 October 2026: EU Council HTTP 200 with 20 parsed entries (5 topic matches); White House news HTTP 200 with 30 parsed entries (2 topic matches); White House presidential actions HTTP 200 with 30 parsed entries (1 topic match). The old NATO feed returned HTTP 404 and was disabled. All 3 current defaults passed live HTTP parsing tests. A separate post-deploy production check confirmed live HTTP 200 for both the Worker strategic endpoint and dashboard. The first scheduled collection was still pending when checked; verify fresh source health on subsequent cron.
 - Use the verified White House streams for US policy announcements; add independent domestic / statistical reporting feeds only after testing current original-source availability and avoiding archives.
 - Improve event-occurrence extraction from original primary documents; retain revisions/source hashes.
 - Validate a retrospective case set with a human reviewer before adding briefing integration or alerts.
 
-**Review checkpoint:** Do not merge the PR into main until these safeguards, the latest regression CI and the production rollout mechanism are accepted.
+**Operations checkpoint:** Monitor the next scheduled Worker run. If sources fail, verify actual feed health and return a degraded response; do not elevate empty or stale data to an assessment.
