@@ -89,7 +89,7 @@
     const map = new Map();
     for (const s of signals) {
       // Different developments must have different event keys even on the same URL.
-      const key = s.eventKey ? 'event:' + s.eventKey : 'url:' + s.source.url;
+      const key = s.eventKey ? 'event:' + s.eventKey + ':' + s.source.independenceGroup : 'url:' + s.source.url;
       const old = map.get(key);
       if (!old) { map.set(key, s); continue; }
       const latest = (timestamp(s.publishedAt) || 0) > (timestamp(old.publishedAt) || 0) ? s : old;
@@ -128,9 +128,9 @@
     const ids = new Set(links.flatMap(l => [l.from, l.to]));
     const support = eligible.filter(s => ids.has(s.id));
     const topics = unique(links.flatMap(l => l.sharedTopics));
-    const counter = signals.filter(s => relevantCounter(s, model, topics));
+    const counter = signals.filter(s => !s.synthetic && !s.lead && relevantCounter(s, model, topics) && support.some(p => Math.abs(timestamp(p.eventTime) - timestamp(s.eventTime)) <= model.limitDays * DAY));
     const sourceGroups = unique(support.map(s => s.source.independenceGroup));
-    const official = support.some(s => s.evidence === 'OFFICIAL_RECORD' && s.source.type === 'OFFICIAL');
+    const official = support.some(s => s.domain === 'POLICY' && s.evidence === 'OFFICIAL_RECORD' && s.source.type === 'OFFICIAL');
     const newest = Math.max(0, ...support.map(s => timestamp(s.eventTime)));
     const fresh = support.length > 0 && now - newest <= 3 * DAY;
     let priority = 'INSUFFICIENT_EVIDENCE';
