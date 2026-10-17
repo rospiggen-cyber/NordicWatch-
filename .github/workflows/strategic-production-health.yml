@@ -1,0 +1,25 @@
+name: Strategic production read-only health
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "tools/strategic-production-health.mjs"
+      - ".github/workflows/strategic-production-health.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check deployed Worker and Strategic Review page
+        run: node tools/strategic-production-health.mjs
