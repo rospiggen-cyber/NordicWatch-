@@ -18,10 +18,10 @@ class KV {
 test('approved list includes EU/NATO by default, US feeds opt in, rejects arbitrary and insecure hosts',()=>{
   const d=sourceFeeds();
   assert(d.some(x=>x.source.id==='eu-council'));
-  assert(d.some(x=>x.source.id==='nato'));
-  assert.equal(d.some(x=>x.source.id==='white-house'),false);
+  assert.equal(d.some(x=>x.source.id==='nato'),false,'deprecated NATO RSS is disabled');
+  assert.equal(d.filter(x=>x.source.id==='white-house').length,2);
   const custom=sourceFeeds(usFeed+' http://www.whitehouse.gov/feed/ https://whitehouse.gov.evil.net/feed/ https://random.org/rss');
-  assert.equal(custom.filter(x=>x.source.id==='white-house').length,1);
+  assert.equal(custom.filter(x=>x.source.id==='white-house').length,3);
   assert.equal(REGISTRY.length,5);
 });
 test('RSS parser restricts origin and item links to same official organisation',()=>{
@@ -59,22 +59,22 @@ test('collector fetches live-shaped EU/NATO responses, saves snapshot and degrad
   const kv=new KV(),old=globalThis.fetch,calls=[];
   globalThis.fetch=async url=>{
     url=String(url);calls.push(url);
-    if(url.includes('nato.int'))throw new Error('temporarily unavailable');
-    return {ok:true,status:200,url:euFeed,
+    if(url.includes('/presidential-actions/'))throw new Error('temporarily unavailable');
+    return {ok:true,status:200,url:url.includes('whitehouse.gov')?'https://www.whitehouse.gov/news/feed/':euFeed,
       headers:new Headers({'content-type':'application/rss+xml'}),
       text:async()=>rss(euArticle,'Council adopts Ukraine support')};
   };
   try {
     const summary=await runStrategicCollection({EVENTS:kv},NOW);
     const snap=await kv.get('strategic:snapshot','json');
-    assert.equal(summary.sourcesHealthy,1);
+    assert.equal(summary.sourcesHealthy,2);
     assert.equal(summary.degraded,true);
-    assert.equal(snap.sourcesTotal,2);
+    assert.equal(snap.sourcesTotal,3);
     assert.equal(snap.signals.length,1);
     assert.equal(snap.analysis.every(x=>x.causalConclusion==='NOT_ESTABLISHED'),true);
     assert.equal(snap.analysis[0].priority,'INSUFFICIENT_EVIDENCE');
-    assert.equal(snap.failures[0].id,'nato');
-    assert.equal(calls.length,2);
+    assert.equal(snap.failures[0].id,'white-house');
+    assert.equal(calls.length,3);
   } finally {globalThis.fetch=old}
 });
 test('GET /strategic refuses pre-enable exposure and serves stored source telemetry when enabled',async()=>{
