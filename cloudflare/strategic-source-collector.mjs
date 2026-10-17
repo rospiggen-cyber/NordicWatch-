@@ -9,10 +9,11 @@ export const REGISTRY = Object.freeze([
    defaultUrl:'https://www.consilium.europa.eu/en/rss/pressreleases.ashx',
    actor:'EU',domain:'ALLIANCE'},
   {id:'nato',publisher:'NATO',host:'nato.int',
-   defaultUrl:'https://www.nato.int/cps/en/natohq/news_rss.htm',
+   defaultUrl:null,
    actor:'NATO',domain:'ALLIANCE'},
   {id:'white-house',publisher:'The White House',host:'whitehouse.gov',
-   defaultUrl:null,actor:'US',domain:'POLICY'},
+   defaultUrl:'https://www.whitehouse.gov/news/feed/',
+   supplementalFeeds:['https://www.whitehouse.gov/presidential-actions/feed/'],actor:'US',domain:'POLICY'},
   {id:'state',publisher:'U.S. Department of State',host:'state.gov',
    defaultUrl:null,actor:'US',domain:'POLICY'},
   {id:'congress',publisher:'U.S. Congress',host:'congress.gov',
@@ -27,7 +28,7 @@ function approved(url) {
   } catch { return null; }
 }
 export function sourceFeeds(extra = '') {
-  const base = REGISTRY.filter(s=>s.defaultUrl).map(s=>({source:s,url:s.defaultUrl}));
+  const base = REGISTRY.flatMap(s=>[s.defaultUrl,...(s.supplementalFeeds||[])].filter(Boolean).map(url=>({source:s,url})));
   // Strict hostname allowlist. URL/config alone never counts as verified content.
   const supplied = String(extra).split(/[\s,]+/).filter(Boolean).slice(0,12)
     .map(url=>({url,source:approved(url)})).filter(x=>x.source);
