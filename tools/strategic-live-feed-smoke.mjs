@@ -1,8 +1,8 @@
 /* Live upstream probe: no secrets, no storage, no operational deployment.
  * Explicit CI diagnostic, not an assertion that a URL seen in docs works.
  */
-import {sourceFeeds,parseOfficialFeed} from '../cloudflare/strategic-source-collector.mjs';
-const sources=sourceFeeds('https://www.whitehouse.gov/news/feed/ https://www.whitehouse.gov/presidential-actions/feed/ https://www.whitehouse.gov/briefings-statements/feed/ https://www.whitehouse.gov/releases/feed/');
+import {sourceFeeds,parseOfficialFeed,articleToSignal} from '../cloudflare/strategic-source-collector.mjs';
+const sources=sourceFeeds();
 let passed=0;
 for(const item of sources){
   try {
@@ -11,10 +11,11 @@ for(const item of sources){
                'user-agent':'NordicWatch-Strategic/0.2 (source-health test)'}});
     const text=await response.text();
     const rows=parseOfficialFeed(text,response.url);
+    const accepted=rows.map(x=>articleToSignal(x,Date.now())).filter(Boolean);
     const host=new URL(response.url).hostname;
     console.log(JSON.stringify({
       id:item.source.id, httpStatus:response.status,host,format:response.headers.get('content-type'),
-      bodyBytes:text.length,items:rows.length,
+      bodyBytes:text.length,items:rows.length,topicRelevant:accepted.length,
       firstDate:rows[0]?.publishedAt||null,
       result:response.ok && rows.length > 0 ? 'PASS':'FAIL'
     }));
