@@ -41,7 +41,7 @@ test('official European press statement is alliance context, not a US policy dec
   assert.equal(s.actor,'EU');
   assert.equal(s.region,'NORDIC_BALTIC');
   assert.equal(s.evidence,'REPORTED');
-  assert.equal(s.source.url,euArticle);
+  assert.equal(s.source.url,euArticle.replace(/\/$/,''));
 });
 test('authorized White House decision statement maps to policy with original source',()=>{
   const white=REGISTRY.find(s=>s.id==='white-house');
