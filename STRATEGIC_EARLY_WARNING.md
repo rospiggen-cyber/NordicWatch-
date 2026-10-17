@@ -1,78 +1,54 @@
-# NordicWatch — Strategic Early Warning v0.1
+# NordicWatch Strategic Early Warning — v0.2 integration
 
-**Status:** isolated prototype; not wired into the production map, alerts, Worker or Daily Brief.
+**Current state:** implementation on feature/strategic-early-warning-v0, PR #17. Staged for deployment; no merge or live deployment from this branch. The separate Strategic Review page is linked from the map on this branch. The existing live map, military EventScore, event alert rules and Daily Brief stay unchanged.
 
-## Goal
+## What is connected in code
 
-Analyse **observable, documented strategic signals**, not political personalities or election outcomes. Example analytical questions:
+- Cloudflare Event Worker retains its existing military feeds and endpoints.
+- An isolated strategic collector in cloudflare/strategic-source-collector.mjs uses a separately approved official-source registry and its own KV keys (strategic:signals and strategic:snapshot).
+- Default RSS endpoints: Council of the EU press releases and NATO news. Official RSS feeds are documented at https://www.consilium.europa.eu/en/about-site/rss/ and https://www.nato.int/cps/en/natohq/RSS.htm.
+- The official White House, US Department of State, and Congress domains are allowlisted for *additional configured RSS URLs*. Their current feed URLs and reliability still need live testing before activation. They are **not** collected by default.
+- The ESM collector uses strategic-early-warning.js to make two explicit hypothesis cards with original links, independent-source groups and counterevidence.
+- The Worker exposes GET /strategic (only when STRATEGIC_ENABLED=true). The new strategic-review.html reads this endpoint, shows independent feeds, missing coverage, source document links, and hypothesis review priorities.
+- GET /strategic never exposes the strategic snapshot while disabled.
 
-1. Are developments in US domestic politics temporally and thematically associated with changes in US external policy?
-2. Are documented US policy changes associated with independently reported Nordic–Baltic security developments?
+## Deployment and configuration
 
-The engine produces review priorities (INSUFFICIENT_EVIDENCE, WATCH, REVIEW, HISTORICAL_CONTEXT), **not** threat probabilities, election forecasts, psychological assessments or causal conclusions. An analyst must evaluate competing hypotheses.
+The main-branch GitHub Actions Worker deployment config in this PR includes:
 
-## Current implementation
+    STRATEGIC_ENABLED = "true"
+    STRATEGIC_SOURCE_URLS = ""
 
-- strategic-early-warning.js — pure, browser-compatible UMD / Node module without network access, state persistence, UI modification or side effects.
-- tests/strategic-early-warning.test.js — reproducible checks for independence, HTTPS provenance, synthetic and social input, contradictions, event-time freshness and geographic relevance.
-- .github/workflows/strategic-early-warning.yml — Node test runner for this isolated slice.
+The existing [EVENTS] KV namespace is reused under separate prefixed keys. The cron already fires every 15 minutes. Deployment automatically enables EU Council + NATO strategic RSS collection after this PR is reviewed and merged into main (assuming existing Cloudflare deployment secrets are configured and those endpoints respond).
 
-Run:
+If the selected official source supplies no current qualifying publication, show insufficient coverage; never claim "no developments". The app makes *no live US-domestic signal assessment by default*; a US source adapter (and independent domestic/news evidence) is required before the original Trump hypothesis can be evaluated meaningfully.
 
-    node --test tests/strategic-early-warning.test.js
+To add an audited American RSS feed later, configure STRATEGIC_SOURCE_URLS to one or more space- or comma-separated **HTTPS** feed URLs on the approved original domains. Never copy a historic White House or State Department archive feed and mistake it for current statements. Test redirects, RSS formats, item dates and source attribution in a staging Worker first. No feed credentials belong in public HTML.
 
-The module exports normalizeSignal, deduplicate, analyze and MODELS.
+### Verification
 
-## Input model
+    node --check strategic-early-warning.js
+    node --check cloudflare/strategic-source-collector.mjs
+    node --test tests/strategic-early-warning.test.js tests/strategic-source-collector.test.mjs
+    node --test tests/*.test.js tests/*.test.mjs
 
-A trusted ingestion adapter must supply a JSON array of signals (no untrusted markup). Example structure **only, not a real event**:
+The dedicated workflow and the existing full regression workflow run on the PR. The tests mock official feed responses: CI passing does **not** establish that the upstream EU/NATO/US endpoints are operational on deployment day.
 
-    {
-      "id": "example-1",
-      "eventKey": "an-actual-development-id",
-      "title": "Example policy statement",
-      "description": "What the primary source actually says",
-      "domain": "POLICY",
-      "actor": "US",
-      "eventTime": "2026-10-17T18:00:00Z",
-      "publishedAt": "2026-10-17T18:30:00Z",
-      "topics": ["UKRAINE_SUPPORT"],
-      "region": "",
-      "stance": "SUPPORT",
-      "evidence": "OFFICIAL_RECORD",
-      "source": {
-        "url": "https://example.org/primary-document",
-        "publisher": "Named original publisher",
-        "independenceGroup": "ORIGINAL_PUBLISHER",
-        "type": "OFFICIAL"
-      }
-    }
+### Boundaries and limitations
 
-Domains: DOMESTIC, POLICY, ALLIANCE, SECURITY, ECONOMY.
+1. A primary institutional publication proves the institution *published a statement*, not whether every external factual claim it contains is true. The adapter tags relevant articles by topic; only selected US policy publications with announcement/action terms receive OFFICIAL_RECORD. This is still not confirmation of implementation or real-world outcomes.
+2. If the publication contains no independently verified occurrence timestamp, its publication time is an explicitly documented proxy. Older developments may appear newer than they are; human investigation remains required before escalation.
+3. Temporal proximity and shared topic indicate association, **never causality**. Each card states NOT_ESTABLISHED for causal conclusions. The engine does not generate election forecasts, psychological judgments, military threat probabilities, or operational assessments.
+4. A website hostname and HTTPS URL are necessary routing checks, but insufficient alone to authenticate source claims. The server must fetch from the allowlisted source, enforce trusted redirect hostnames, bound feed payloads and only accept same-organization item URLs. Syndication source groups are separated by original organization, not publisher counts.
+5. Social content, synthetic fixtures, incomplete sources and stale material cannot independently trigger a REVIEW. There are no new push notifications and no change to the military alert thresholds.
+6. Review priorities are human triage aids. Even a REVIEW cannot automatically raise military EventScore or trigger an alert.
+7. There is no automatic interpretation of voting intentions or partisan persuasion; first-party institutional statements may have advocacy content, so downstream reporting should distinguish that content from corroborated facts.
 
-Evidence: OFFICIAL_RECORD, DIRECT_MEASUREMENT, REPORTED, UNVERIFIED.
+### Before lifting prototype status
 
-Sources with type SOCIAL are informational leads only, regardless of claimed evidence. Synthetic signals are excluded from conclusions. COUNTER marks a *manually or independently verified* challenge to a proposed pattern. It must not be inferred from keywords or sentiment alone.
+- Smoke-test the actual live EU/NATO feed responses and CORS on a staging Worker; verify freshness and errors.
+- Add a verified, current US government feed for policy announcements and independent publication groups for domestic events; avoid archive data.
+- Improve event-occurrence extraction from original primary documents; retain revisions/source hashes.
+- Validate a retrospective case set with a human reviewer before adding briefing integration or alerts.
 
-Do **not** infer that two news outlets equal two independent sources. Wire services and syndicated repetitions share an independenceGroup. Publisher identity, source category, original document and dates **must be checked upstream**; fields in untrusted JSON are not authentication. HTTPS validates URL form, not truth.
-
-## Correlation rules
-
-- A review hypothesis requires a pair of relevant domains, an explicit **shared topic**, and event times within 14 days.
-- The regional hypothesis requires evidence in NORDIC_BALTIC from an ALLIANCE or SECURITY signal.
-- REVIEW additionally needs a pair with real-world event time within 72 hours, at least two independent source groups, an official primary-source document and no unresolved counterevidence.
-- WATCH means an interesting, incomplete pair. It is **not** a warning about an imminent threat.
-- Historical evidence remains context; republishing or polling does not make the underlying event new.
-- Every card preserves support, counterevidence, source URLs, evidence labels, links and unmet evidence requirements.
-- Neither the map's military EventScore nor its escalation state is modified.
-
-## Next stage before production
-
-1. Add an **isolated strategic collector** in the Cloudflare Worker or another controlled server-side pipeline, not in the public browser. Start with official White House, State Department, US Congress, NATO, EU/European Council and Nordic defence sources. Approve exact endpoints and licenses per source.
-2. Verify publisher/domain and official claims server-side, distinguish event occurrence from publication and update times, attach immutable source snapshots or source hashes, and rate-limit ingestion.
-3. Retain historical series for baseline deviation, editorial updates and independent reporting provenance. Protect against repeated/social/bot/manipulated material.
-4. Map existing normalized EVENT/NEWS records into strategic signals **without promoting inferred or recycled content**. Existing Event Engine states (OBSERVED, CONFIRMED, INFERRED) must remain separate.
-5. Add a compact **Strategic Review** panel with evidence links, contradictions, provenance and a clear disclaimer, then field-test with real case histories and human review.
-6. Only after passing historical regression tests and source health checks consider Daily Brief context or user alerts, with manual approval of escalation criteria.
-
-**Deployment decision:** This prototype is proposed via a draft PR and is not automatically merged or published to GitHub Pages.
+**Review checkpoint:** Do not merge the PR into main until these safeguards, the latest regression CI and the production rollout mechanism are accepted.
