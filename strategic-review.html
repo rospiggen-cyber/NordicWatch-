@@ -79,7 +79,13 @@ function cardView(c,parent){
   elem('p',c.question||'',card,'muted');
   const related=Array.isArray(c.links)?c.links.length:0;
   elem('p',related+' thematic and time-based link(s). Causation: NOT ESTABLISHED.',card);
-  if(c.counterevidence?.length)elem('p','Conflicting evidence: '+c.counterevidence.length+' item(s).',card);
+  if(c.counterevidence?.length){
+    elem('p','Conflicting evidence ('+c.counterevidence.length+'):',card);
+    const counterList=elem('ul',null,card);
+    for(const s of c.counterevidence.slice(0,4)){
+      const li=elem('li',s.title+' ',counterList);sourceLink(s,li);
+    }
+  }
   const ul=elem('ul',null,card);
   for(const s of (c.support||[]).slice(0,5)){
     const li=elem('li',s.title+' ('+s.evidence+') ',ul);sourceLink(s,li);
