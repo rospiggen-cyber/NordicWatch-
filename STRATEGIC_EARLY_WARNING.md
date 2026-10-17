@@ -6,8 +6,8 @@
 
 - Cloudflare Event Worker retains its existing military feeds and endpoints.
 - An isolated strategic collector in cloudflare/strategic-source-collector.mjs uses a separately approved official-source registry and its own KV keys (strategic:signals and strategic:snapshot).
-- Default RSS endpoints: Council of the EU press releases and NATO news. Official RSS feeds are documented at https://www.consilium.europa.eu/en/about-site/rss/ and https://www.nato.int/cps/en/natohq/RSS.htm.
-- The official White House, US Department of State, and Congress domains are allowlisted for *additional configured RSS URLs*. Their current feed URLs and reliability still need live testing before activation. They are **not** collected by default.
+- Default RSS endpoints: Council of the EU press releases plus the White House news and presidential-actions feeds. The previously configured NATO legacy feed was verified to return HTTP 404 and has been disabled by default. Official EU RSS documentation: https://www.consilium.europa.eu/en/about-site/rss/.
+- White House official domains are included with two current feeds. The State Department and Congress domains remain allowlisted for additional verified feeds, but none are activated by default. NATO can also be re-enabled only with a tested current URL.
 - The ESM collector uses strategic-early-warning.js to make two explicit hypothesis cards with original links, independent-source groups and counterevidence.
 - The Worker exposes GET /strategic (only when STRATEGIC_ENABLED=true). The new strategic-review.html reads this endpoint, shows independent feeds, missing coverage, source document links, and hypothesis review priorities.
 - GET /strategic never exposes the strategic snapshot while disabled.
@@ -19,9 +19,9 @@ The main-branch GitHub Actions Worker deployment config in this PR includes:
     STRATEGIC_ENABLED = "true"
     STRATEGIC_SOURCE_URLS = ""
 
-The existing [EVENTS] KV namespace is reused under separate prefixed keys. The cron already fires every 15 minutes. Deployment automatically enables EU Council + NATO strategic RSS collection after this PR is reviewed and merged into main (assuming existing Cloudflare deployment secrets are configured and those endpoints respond).
+The existing EVENTS KV namespace is reused under separate prefixed keys. The cron already fires every 15 minutes. Deployment automatically enables EU Council + White House strategic RSS collection after this PR is reviewed and merged into main (assuming existing Cloudflare deployment secrets are configured and those endpoints respond).
 
-If the selected official source supplies no current qualifying publication, show insufficient coverage; never claim "no developments". The app makes *no live US-domestic signal assessment by default*; a US source adapter (and independent domestic/news evidence) is required before the original Trump hypothesis can be evaluated meaningfully.
+If the selected official source supplies no current qualifying publication, show insufficient coverage; never claim "no developments". The White House streams give documented US policy statements, but do **not** provide independent domestic political pressure measurements, election polling or reporting. The original Trump domestic-pressure hypothesis remains INSUFFICIENT_EVIDENCE until an independently verified domestic source is connected.
 
 To add an audited American RSS feed later, configure STRATEGIC_SOURCE_URLS to one or more space- or comma-separated **HTTPS** feed URLs on the approved original domains. Never copy a historic White House or State Department archive feed and mistake it for current statements. Test redirects, RSS formats, item dates and source attribution in a staging Worker first. No feed credentials belong in public HTML.
 
@@ -46,8 +46,8 @@ The dedicated workflow and the existing full regression workflow run on the PR. 
 
 ### Before lifting prototype status
 
-- Smoke-test the actual live EU/NATO feed responses and CORS on a staging Worker; verify freshness and errors.
-- Add a verified, current US government feed for policy announcements and independent publication groups for domestic events; avoid archive data.
+- GitHub Actions live-feed smoke test on 17 October 2026: EU Council HTTP 200 with 20 parsed entries (5 topic matches); White House news HTTP 200 with 30 parsed entries (2 topic matches); White House presidential actions HTTP 200 with 30 parsed entries (1 topic match). The old NATO feed returned HTTP 404 and was disabled. All 3 current defaults passed live HTTP parsing tests. Confirm CORS and source health after Worker deployment.
+- Use the verified White House streams for US policy announcements; add independent domestic / statistical reporting feeds only after testing current original-source availability and avoiding archives.
 - Improve event-occurrence extraction from original primary documents; retain revisions/source hashes.
 - Validate a retrospective case set with a human reviewer before adding briefing integration or alerts.
 
