@@ -38,7 +38,7 @@ test('missing centroid Sweden stays national only, never plotted locally',()=>{
 test('only Copernicus original links and catalogue interpretation are used',()=>{
  const r=EO.normalize(base({reportLink:'https://evil.example/forged',name:'<script>Fake</script>'}));
  assert.equal(r.source.url,'https://mapping.emergency.copernicus.eu/activations/api/activations/EMSR888/');
- assert(!r.title.includes('<'));assert.match(r.interpretation,/not the affected footprint/);
+ assert(!r.title.includes('<'));assert.match(r.interpretation,/Do not assume the centroid is the affected footprint/);
  assert.equal(r.evidence,'CONFIRMED_PUBLIC_MAPPING_ACTIVATION');
 });
 test('historical records are not automatically labeled live disasters',()=>{
