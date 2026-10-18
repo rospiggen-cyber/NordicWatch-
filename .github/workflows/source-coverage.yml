@@ -1,0 +1,34 @@
+name: Source Coverage Engine and strategic regression
+
+on:
+  push:
+    branches:
+      - feature/source-coverage-engine-v1
+  pull_request:
+    paths:
+      - "source-coverage-engine.js"
+      - "tests/source-coverage-engine.test.js"
+      - "cloudflare/strategic-source-collector.mjs"
+      - "tests/strategic-source-collector.test.mjs"
+      - "strategic-review.html"
+      - "strategic-early-warning.js"
+      - ".github/workflows/source-coverage.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax
+        run: |
+          node --check source-coverage-engine.js
+          node --check cloudflare/strategic-source-collector.mjs
+          node --check tests/source-coverage-engine.test.js
+      - name: Full regression tests
+        run: node --test tests/*.test.js tests/*.test.mjs
