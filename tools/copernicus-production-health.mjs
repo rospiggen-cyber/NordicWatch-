@@ -11,6 +11,7 @@ try{
  console.log(JSON.stringify({target:'earth-observation-api',status:api.res.status,enabled:data.enabled,
   sourceHealth:data.sourceHealth?.status||'PENDING',count:data.counts||null,
   scannedPages:data.sourceHealth?.pagesScanned??null,advertised:data.sourceHealth?.totalAdvertised??null,
+  sourceErrors:data.sourceHealth?.errors??[],
   lastScan:data.sourceHealth?.lastSuccessfulScan||null,records:data.activations?.length??null,
   degraded:data.degraded??null}));
  if(api.res.status!==200||data.enabled!==true||!Array.isArray(data.activations))throw Error('Earth Observation API unavailable');
