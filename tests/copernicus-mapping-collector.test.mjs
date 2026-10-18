@@ -87,3 +87,23 @@ test('isolated EO endpoint is disabled by default and accepts only allowed app o
   {EVENTS:kv,APP_ORIGIN:origin,EARTH_OBSERVATION_ENABLED:'true'});
  const data=await res.json();assert.equal(data.enabled,true);assert.equal(data.counts.local,1);
 });
+
+
+test('first enabled GET bootstraps a missing catalogue snapshot without affecting military alerts',async()=>{
+ const kv=new KV(),original=globalThis.fetch,origin='https://rospiggen-cyber.github.io';
+ let upstreamCalls=0;
+ globalThis.fetch=async url=>{
+  upstreamCalls++;
+  return mock({count:1,results:[item()],next:null},String(url));
+ };
+ try{
+  const req=new Request('https://worker.example/earth-observation',{headers:{Origin:origin}});
+  const response=await worker.fetch(req,{EVENTS:kv,APP_ORIGIN:origin,EARTH_OBSERVATION_ENABLED:'true'});
+  const payload=await response.json();
+  assert.equal(payload.enabled,true);assert.equal(payload.sourceHealth.status,'AVAILABLE');
+  assert.equal(payload.counts.local,1);assert.equal(upstreamCalls,1);
+  const again=await worker.fetch(req,{EVENTS:kv,APP_ORIGIN:origin,EARTH_OBSERVATION_ENABLED:'true'});
+  assert.equal((await again.json()).counts.local,1);
+  assert.equal(upstreamCalls,1,'subsequent GET is cached');
+ }finally{globalThis.fetch=original}
+});
