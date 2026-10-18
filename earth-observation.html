@@ -132,7 +132,9 @@ function summary(data){
   'Genomsökta API-sidor: '+(health.pagesScanned??'–')
  ])add('span',s,box,'metric');
  const healthy=health.status==='AVAILABLE',partial=health.status==='PARTIAL';
- const msg=healthy?'Källa tillgänglig':partial?'Källa delvis tillgänglig':'Källa otillgänglig';
+ const ageHours=(Date.now()-new Date(health.lastSuccessfulScan||data.generatedAt).getTime())/3600000;
+ const stale=Number.isFinite(ageHours)&&ageHours>12;
+ const msg=stale?'Källan senast kontrollerad för över 12 timmar sedan – använd som historik':healthy?'Källa tillgänglig':partial?'Källa delvis tillgänglig':'Källa otillgänglig';
  $('health').textContent=msg+'. Senaste insamling: '+friendly(health.lastSuccessfulScan||data.generatedAt)+
   (health.coverageIncomplete?'. Delvis genomläst katalog – frånvaro av träffar är osäker.':'')+
   (data.degraded?'. Begränsad datatäckning.':'')+
@@ -150,11 +152,18 @@ async function refresh(){
  $('reload').disabled=true;$('health').textContent='Läser Copernicus-katalogens senast insamlade lägesbild…';
  try{
   const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),12000);
-  let res;try{res=await fetch(safeApiBase()+'/earth-observation',{cache:'no-store',signal:abort.signal})}
-  finally{clearTimeout(timeout)}
-  if(!res.ok)throw Error('HTTP '+res.status);
-  const data=await res.json();
+  let data;
+  try{
+   const staticResponse=await fetch('./data/copernicus-activations.json',{cache:'no-store',signal:abort.signal});
+   if(!staticResponse.ok)throw Error('Static catalogue unavailable');
+   data=await staticResponse.json();
+  }catch(staticError){
+   const fallback=await fetch(safeApiBase()+'/earth-observation',{cache:'no-store',signal:abort.signal});
+   if(!fallback.ok)throw Error('Både GitHub-katalog och Worker saknas: HTTP '+fallback.status);
+   data=await fallback.json();
+  }finally{clearTimeout(timeout)}
   if(!Array.isArray(data.activations))throw Error('Saknad katalogdata');
+  if(data.mode==='OFFICIAL_CEMS_GITHUB_SNAPSHOT')data.sourceHealth.collectionMethod='Officiell Copernicus-katalog, hämtad av GitHub Actions var sjätte timme.';
   state.items=data.activations;state.health=data.sourceHealth;state.areas=data.areas||[];
   summary(data);draw();
  }catch(e){

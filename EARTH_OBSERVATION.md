@@ -57,3 +57,21 @@ Also run the read-only actual-source GitHub Action (Copernicus actual API smoke)
 4. **Resilience impact**: only use independently verified open transport networks and affected area footprints; never infer outages or road closures from centroid location alone.
 
 This first version is a verifiable building block for the planned Resilience Intelligence capability, not a safety-of-life operational warning system.
+
+
+## Operational data path – 18 October 2026
+
+Read-only live tests showed HTTP 200 from Copernicus official APIs in GitHub Actions, but HTTP 403 from Cloudflare edge workers. The first Worker collection consequently reported UNAVAILABLE (correctly; no false data).
+
+To avoid reliance on that blocked upstream route, the supported production path is now:
+
+1. tools/copernicus-sync.mjs fetches official published mapping activation metadata in GitHub Actions.
+2. .github/workflows/copernicus-sync.yml runs on changes and on a 6-hour schedule, commits a bounded public snapshot to data/copernicus-activations.json.
+3. earth-observation.html reads that same-origin published JSON file before trying the legacy Worker endpoint.
+4. If the static snapshot is older than 12 hours the UI explicitly marks it as historical/stale.
+
+The Cloudflare endpoint remains an experimental fallback only; it cannot be relied on until Copernicus permits it. Disabling the blocked Cloudflare collector once the static path is verified avoids repeated 403 requests.
+
+The real 267-entry Rapid Mapping catalogue in October 2026 contained zero activation centroids inside the local Roslagen and Hälsingland rectangles and four other Swedish activations. Missing local matches is not evidence of no flooding or no disaster.
+
+**This v0.1 is a catalogue integration, not image-backed Earth Observation change detection.** The next phase still needs actual georeferenced product polygons and time-series change analysis.
