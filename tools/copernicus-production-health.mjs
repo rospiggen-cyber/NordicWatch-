@@ -10,9 +10,11 @@ try{
  let data;try{data=JSON.parse(api.body)}catch{throw Error('Worker JSON schema invalid')}
  console.log(JSON.stringify({target:'earth-observation-api',status:api.res.status,enabled:data.enabled,
   sourceHealth:data.sourceHealth?.status||'PENDING',count:data.counts||null,
+  scannedPages:data.sourceHealth?.pagesScanned??null,advertised:data.sourceHealth?.totalAdvertised??null,
   lastScan:data.sourceHealth?.lastSuccessfulScan||null,records:data.activations?.length??null,
   degraded:data.degraded??null}));
  if(api.res.status!==200||data.enabled!==true||!Array.isArray(data.activations))throw Error('Earth Observation API unavailable');
+ if(!['AVAILABLE','PARTIAL'].includes(data.sourceHealth?.status))throw Error('Copernicus collection not healthy; check upstream from Worker');
  const ui=await get(page);
  const hasTitle=ui.body.includes('<title>NordicWatch · Earth Observation</title>');
  const hasCaveat=ui.body.includes('kartläggningsuppdrag, inte kontinuerlig satellitövervakning');
