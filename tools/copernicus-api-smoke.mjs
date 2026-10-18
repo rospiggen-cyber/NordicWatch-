@@ -18,3 +18,27 @@ for(const url of urls){
 }
 console.log('CEMS verified JSON endpoints: '+passed+'/'+urls.length);
 if(passed===0)process.exitCode=1;
+
+
+// Independent real-data regional smoke; no publication, no mutations.
+const core=await import('../earth-observation-core.js');
+const EO=globalThis.NordicWatchEarthObservation||core.default;
+try{
+ const rows=[];let advertised=null,seen=0;
+ const endpoint='https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/';
+ for(let offset=0;offset<600;offset+=100){
+  const url=endpoint+'?limit=100&offset='+offset;
+  const r=await fetch(url,{headers:{accept:'application/json'},signal:AbortSignal.timeout(15000)});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const json=await r.json();
+  if(!Array.isArray(json.results))throw Error('Invalid results list');
+  advertised=json.count;seen+=json.results.length;rows.push(...json.results);
+  if(!json.next||json.results.length===0)break;
+ }
+ const snapshot=EO.catalogue(rows,{now:Date.now(),scannedPages:Math.ceil(seen/100),sourceCount:advertised});
+ console.log(JSON.stringify({
+  cemsScan:'regional-actual-catalogue',advertised,seen,
+  localCentroids:snapshot.counts.local,swedenContext:snapshot.counts.nationalContext,
+  records:snapshot.activations.slice(0,12).map(x=>({code:x.code,scope:x.areaScope,title:x.title,areas:x.matchedAreas,when:x.activationAt}))
+ }));
+}catch(e){console.error('Regional catalogue scan failed: '+String(e.message||e));process.exitCode=1}
