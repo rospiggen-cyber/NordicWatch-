@@ -75,3 +75,5 @@ The Cloudflare endpoint remains an experimental fallback only; it cannot be reli
 The real 267-entry Rapid Mapping catalogue in October 2026 contained zero activation centroids inside the local Roslagen and Hälsingland rectangles and four other Swedish activations. Missing local matches is not evidence of no flooding or no disaster.
 
 **This v0.1 is a catalogue integration, not image-backed Earth Observation change detection.** The next phase still needs actual georeferenced product polygons and time-series change analysis.
+
+**Production decision (18 October 2026):** The Cloudflare collector is disabled because the two official endpoints return HTTP 403 from that runtime. GitHub Actions is the active supported collector and its timestamped public JSON file is the source for the regional UI; the Worker endpoint remains disabled until upstream access is reviewed.
