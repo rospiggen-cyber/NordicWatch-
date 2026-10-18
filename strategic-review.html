@@ -21,6 +21,16 @@ button{padding:10px 14px;background:#14334c;border:1px solid #628ba8;color:#fff;
 button:focus-visible,a:focus-visible{outline:3px solid #7ee7ff}button:disabled{opacity:.5}
 .summary{display:flex;gap:10px;flex-wrap:wrap}.summary span{border:1px solid #3c4c5a;padding:8px;border-radius:7px}
 .list{display:grid;gap:9px}.item{border-top:1px solid #273f53;padding:9px 0}
+.coverage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}
+.coverage-item{padding:12px;border:1px solid #33495f;border-radius:11px;background:#0e1b2d}
+.coverage-item h3{margin:0 0 8px;font-size:.95rem}
+.coverage-tag{display:inline-block;padding:4px 7px;border:1px solid #526679;border-radius:6px;color:#b7cedd;font-size:.7rem;letter-spacing:.4px}
+.coverage-tag[data-state="NOT_MONITORED"],.coverage-tag[data-state="UNAVAILABLE"],.coverage-tag[data-state="FEEDS_UNAVAILABLE"]{color:#ffd397;border-color:#aa7f39}
+.coverage-tag[data-state="SIGNALS_PRESENT"],.coverage-tag[data-state="RELEVANT"]{color:#83deb3;border-color:#347857}
+.coverage-caption{color:#a7b6c8;font-size:.85rem;line-height:1.5;margin-top:8px}
+.coverage-providers{margin:8px 0 0;padding-left:20px}
+.coverage-providers li{font-size:.85rem}
+@media(max-width:560px){.panel{padding:12px}.coverage-grid{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -33,6 +43,13 @@ button:focus-visible,a:focus-visible{outline:3px solid #7ee7ff}button:disabled{o
  <p id="status">Waiting for strategic source snapshot…</p>
  <div class="summary" id="summary"></div>
  <p><button id="refresh" type="button">Refresh assessment</button> <small id="updated"></small></p>
+</section>
+<section class="panel">
+ <h2>Source Coverage Engine <span class="coverage-tag">v1</span></h2>
+ <p class="muted">Feed availability and analytical evidence are different. A missing report is not evidence that nothing happened.</p>
+ <div class="summary" id="coverageTotal"></div>
+ <div class="coverage-grid" id="coverageHypotheses"></div>
+ <p class="muted" id="coverageCaveat"></p>
 </section>
 <section class="panel">
  <h2>Hypothesis review</h2>
@@ -97,8 +114,43 @@ function cardView(c,parent){
   }
   elem('small',c.limitation||'Not a causal assessment.',card);
 }
+function coverageView(data){
+  const totals=el('coverageTotal'),hyp=el('coverageHypotheses');
+  totals.replaceChildren();hyp.replaceChildren();
+  const cov=data.sourceCoverage;
+  if(!cov){
+    elem('p','Coverage assessment not available yet. Wait for the next scheduled collection or check Worker source health.',hyp,'muted');
+    el('coverageCaveat').textContent='';
+    return;
+  }
+  const t=cov.technical||{};
+  for(const label of [
+    (t.respondingFeeds||0)+'/'+(t.configuredFeeds||0)+' responding feeds',
+    (t.connectedOrganizations||0)+' connected organizations',
+    (t.missingOrganizations||[]).length+' known organizations without a configured feed'
+  ])elem('span',label,totals);
+  for(const h of cov.hypotheses||[]){
+    const card=elem('article',null,hyp,'coverage-item');
+    elem('h3',h.title,card);
+    const state=elem('span',(h.status||'COVERAGE_GAPS').replaceAll('_',' '),card,'coverage-tag');
+    state.dataset.state=h.status||'COVERAGE_GAPS';
+    for(const d of h.dimensions||[]){
+      const div=elem('div',null,card,'item');
+      elem('strong',d.label,div);
+      const b=elem('div',(d.status||'UNKNOWN').replaceAll('_',' '),div,'coverage-tag');
+      b.dataset.state=d.status||'UNKNOWN';
+      elem('div',(d.signals||0)+' recent relevant signal(s) · '+(d.respondingProviders||0)+'/'+(d.configuredProviders||0)+' connected providers responded',div,'coverage-caption');
+      if(d.status!=='SIGNALS_PRESENT')elem('div',d.requirement||'',div,'coverage-caption');
+    }
+    elem('p',(h.validCrossDomainLinks||0)+' thematic links detected; analytical corroboration must be evaluated separately.',card,'coverage-caption');
+    elem('p',h.conclusion||'',card,'coverage-caption');
+  }
+  if(!cov.hypotheses?.length)elem('p','No hypothesis coverage can be assessed.',hyp,'muted');
+  el('coverageCaveat').textContent=cov.caveat||'Feed response does not prove event completeness.';
+}
 function render(data){
   el('cards').replaceChildren();el('signals').replaceChildren();el('sources').replaceChildren();el('summary').replaceChildren();
+  coverageView(data);
   el('updated').textContent=data.generatedAt?'Updated '+new Date(data.generatedAt).toLocaleString():'No completed collection yet';
   const all=Array.isArray(data.signals)?data.signals:[];
   const cover=Array.isArray(data.sources)?data.sources:[];
@@ -114,10 +166,18 @@ function render(data){
     elem('span',item,el('summary'));
   for(const c of cards)cardView(c,el('cards'));
   if(!cards.length)elem('p','No assessment available until the first collector run.',el('cards'),'muted');
-  for(const s of cover){
-    const p=elem('div',s.id+' — '+(s.ok?'Feed responded':'Unavailable')+' · '+Number(s.accepted||0)+' relevant publications',el('sources'),'item');
+  if(data.sourceCoverage?.providers?.length){
+    for(const s of data.sourceCoverage.providers){
+      const row=elem('div',null,el('sources'),'item');
+      elem('strong',s.name||s.id,row);
+      const status=elem('span',(s.status||'UNKNOWN').replaceAll('_',' '),row,'coverage-tag');
+      status.dataset.state=s.status||'UNKNOWN';
+      elem('div',(s.responseCount||0)+'/'+(s.feedCount||0)+' feeds responding · '+(s.recentSignals||0)+' relevant signal(s) in last 14 days',row,'coverage-caption');
+    }
+  }else{
+    for(const s of cover)elem('div',s.id+' — '+(s.ok?'Feed responded':'Unavailable')+' · '+Number(s.accepted||0)+' relevant publications',el('sources'),'item');
   }
-  if(!cover.length)elem('p','No source telemetry is available.',el('sources'),'muted');
+  if(!el('sources').childElementCount)elem('p','No source telemetry is available.',el('sources'),'muted');
   const sorted=[...all].sort((a,b)=>Date.parse(b.eventTime)-Date.parse(a.eventTime));
   for(const row of sorted.slice(0,30)){
     const div=elem('div',null,el('signals'),'item');
