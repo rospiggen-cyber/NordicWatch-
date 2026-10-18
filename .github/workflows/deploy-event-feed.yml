@@ -107,8 +107,8 @@ jobs:
           EVENT_ALERT_THRESHOLD = "75"
           # Official strategic feeds only; does not affect military alerts.
           STRATEGIC_ENABLED = "true"
-          # Copernicus EO catalogue is separate from military alerts and activity scoring.
-          EARTH_OBSERVATION_ENABLED = "true"
+          # Direct Copernicus access returns 403 from Cloudflare; the public GitHub Actions snapshot is active instead.
+          EARTH_OBSERVATION_ENABLED = "false"
           # Further approved US feeds can be added after endpoint verification.
           STRATEGIC_SOURCE_URLS = ""
 
