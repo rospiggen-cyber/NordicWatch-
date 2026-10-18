@@ -1,0 +1,39 @@
+name: Earth Observation regression
+
+on:
+  push:
+    branches:
+      - feature/earth-observation-cems-v01
+  pull_request:
+    paths:
+      - "earth-observation-core.js"
+      - "cloudflare/copernicus-mapping-collector.mjs"
+      - "cloudflare/event-feed-worker.js"
+      - "earth-observation.html"
+      - "index.html"
+      - "sw.js"
+      - "tests/earth-observation-core.test.js"
+      - "tests/copernicus-mapping-collector.test.mjs"
+      - ".github/workflows/earth-observation-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  earth-observation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check syntax
+        run: |
+          node --check earth-observation-core.js
+          node --check cloudflare/copernicus-mapping-collector.mjs
+          node --check cloudflare/event-feed-worker.js
+          node --check sw.js
+          node --check tests/earth-observation-core.test.js
+          node --check tests/copernicus-mapping-collector.test.mjs
+      - name: Run full NordicWatch regressions
+        run: node --test tests/*.test.js tests/*.test.mjs

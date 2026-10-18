@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081322">
+<meta name="referrer" content="no-referrer">
+<title>NordicWatch · Earth Observation</title>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<style>
+:root{color-scheme:dark;--bg:#07101d;--panel:#101c2e;--edge:#33465c;--text:#eaf4ff;--dim:#adc0d3;--blue:#6dd7fb}
+*{box-sizing:border-box}html,body{padding:0;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px max(16px,calc((100% - 1220px)/2));border-bottom:1px solid var(--edge)}
+h1{margin:3px 0;font-size:clamp(1.35rem,3vw,2.1rem)}h2{font-size:1.1rem;margin:0 0 10px}.eyebrow{color:#81cbe4;font-size:.72rem;letter-spacing:1.4px;text-transform:uppercase}
+p{line-height:1.5}.dim,small{color:var(--dim)}a{color:#9be4ff}a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid #8bdcff}
+main{max-width:1220px;margin:auto;padding:15px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);gap:15px}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:13px;padding:14px}
+.top{grid-column:1/-1}.status{font-size:.88rem;line-height:1.45}.metrics{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.metric{border:1px solid #43556b;border-radius:8px;padding:8px 12px;font-size:.84rem}
+#map{height:min(72vh,640px);min-height:410px;border-radius:10px;background:#0a1623}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+button,select{min-height:44px;border-radius:8px;border:1px solid #648fa3;background:#193247;color:#f1f7fc;padding:8px 12px}
+button{cursor:pointer}button:disabled{opacity:.5}.item{padding:13px 0;border-top:1px solid #34485e}.item:first-of-type{border-top:0}
+.title{font-weight:700;margin-bottom:3px}.pill{display:inline-block;font-size:.7rem;border:1px solid #5d8295;border-radius:6px;padding:3px 6px;margin:2px 5px 2px 0;color:#b9e4ef}
+.caption{font-size:.82rem;line-height:1.5;color:var(--dim)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--dim);margin-top:9px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:100%;margin-right:4px;background:#68d9ad}.national{background:#d7ad72}
+.notice{border-left:3px solid #b6b0df;padding-left:12px}
+@media(max-width:880px){main{grid-template-columns:1fr}#map{height:52vh;min-height:350px}}
+</style>
+</head>
+<body>
+<header>
+ <div><div class="eyebrow">NordicWatch · Resilience · Experimental</div>
+ <h1>Earth Observation</h1><div class="dim">Roslagen och Hälsingland · offentliga Copernicus-katastrofkartor</div></div>
+ <a href="./index.html">← Till NordicWatch</a>
+</header>
+<main>
+ <section class="panel top" aria-live="polite">
+  <h2>Källtäckning och observationsstatus</h2>
+  <div class="status" id="health">Inväntar källa…</div>
+  <div class="metrics" id="metrics"></div>
+  <p class="caption">Det här är en katalog över publicerade kartläggningsuppdrag, inte kontinuerlig satellitövervakning. Tom karta betyder inte att det saknas bränder, skador eller översvämningar.</p>
+ </section>
+ <section class="panel">
+  <div class="actions">
+    <label for="area">Område</label>
+    <select id="area"><option value="ALL">Roslagen + Hälsingland</option><option value="ROSLAGEN">Uppsala / Roslagen / Vätö</option><option value="HALSINGLAND">Hälsingland / Söderhamn</option></select>
+    <button type="button" id="reload">Uppdatera lägesbild</button>
+  </div>
+  <div id="map" role="img" aria-label="Karta med offentliga Copernicus-aktiveringars katalogcentrum i Roslagen och Hälsingland"></div>
+  <div class="legend"><span><i class="dot"></i>Lokal kartläggning – centrum inom bevakat område</span><span><i class="dot national"></i>Sverigekontext visas i listan, inte som lokalt larm</span></div>
+ </section>
+ <section class="panel">
+  <h2>Rapporterade satellitkartläggningar</h2>
+  <div class="actions"><label><input id="national" type="checkbox"> Visa även andra svenska aktiveringar</label></div>
+  <div id="activations" class="status">Laddar…</div>
+ </section>
+ <section class="panel top">
+  <h2>Vad vi kan och inte kan säga</h2>
+  <p class="notice">En Copernicus-aktivering bekräftar att en offentlig kartläggning publicerats – inte att en specifik väg är avstängd, en fastighet skadad eller att händelsen pågår just nu. Markörerna visar <strong>katalogens centrumkoordinat</strong>, inte översvämningens eller brandens faktiska utbredning.</p>
+  <p class="caption">Nästa utvecklingssteg är att hämta georefererade produktlager (översvämningspolygoner, brandytor och skadebedömningar) och jämföra dem med öppna trafikdata. Detta är ännu inte implementerat.</p>
+  <p class="caption">Datakälla: <a href="https://mapping.emergency.copernicus.eu/activations/" target="_blank" rel="noopener noreferrer">Copernicus Emergency Management Service – On-Demand Mapping</a>. Kontrollera alltid originalprodukten före beslut.</p>
+ </section>
+</main>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),add=(tag,value,parent,className)=>{
+  const node=document.createElement(tag);if(value!=null)node.textContent=String(value);
+  if(className)node.className=className;if(parent)parent.append(node);return node;
+};
+const region={
+ ROSLAGEN:{south:59.35,north:60.55,west:16.9,east:19.65},
+ HALSINGLAND:{south:60.55,north:62.5,west:14.9,east:18.8}
+};
+const map=L.map('map').setView([60.6,17.4],7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:13,attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+const boundsLayer=L.layerGroup().addTo(map),pointsLayer=L.layerGroup().addTo(map);
+const state={items:[],health:null,areas:[]};
+function friendly(v){try{return new Date(v).toLocaleString('sv-SE',{dateStyle:'medium',timeStyle:'short'})}catch{return 'Okänd'}}
+function sourceLink(parent,event){
+ try{
+  const u=new URL(event.source?.url);
+  if(u.protocol!=='https:'||u.hostname!=='mapping.emergency.copernicus.eu')return;
+  const a=add('a','Officiella detaljer ↗',parent);a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';
+ }catch{}
+}
+function regionMatches(item){const id=$('area').value;return id==='ALL'||(item.matchedAreas||[]).includes(id)}
+function draw(){
+ boundsLayer.clearLayers();pointsLayer.clearLayers();
+ const which=$('area').value;
+ const selected=Object.entries(region).filter(([id])=>which==='ALL'||which===id);
+ for(const [id,b] of selected)L.rectangle([[b.south,b.west],[b.north,b.east]],{
+  color:'#4a9dc0',weight:1.6,fillOpacity:.045,dashArray:'5 5'
+ }).bindTooltip(id==='ROSLAGEN'?'Roslagen och Uppsala':'Hälsingland och Söderhamn').addTo(boundsLayer);
+ const shown=state.items.filter(e=>e.areaScope==='LOCAL_CENTROID'&&regionMatches(e));
+ for(const e of shown){
+  if(!e.centroid||!Number.isFinite(+e.centroid.lat)||!Number.isFinite(+e.centroid.lon))continue;
+  const popup=document.createElement('div');
+  add('strong',e.title,popup);add('p',e.category+' · '+e.code,popup);
+  add('p','Kartläggning aktiverad: '+friendly(e.activationAt),popup);
+  add('p','Obs: markerar endast katalogens centrum, inte skadeutbredning.',popup);
+  sourceLink(popup,e);
+  L.circleMarker([e.centroid.lat,e.centroid.lon],{
+   radius:7,color:'#83f2d0',weight:2,fillColor:'#4bcfae',fillOpacity:.72
+  }).bindPopup(popup).addTo(pointsLayer);
+ }
+ if(which==='ROSLAGEN')map.fitBounds([[region.ROSLAGEN.south,region.ROSLAGEN.west],[region.ROSLAGEN.north,region.ROSLAGEN.east]]);
+ else if(which==='HALSINGLAND')map.fitBounds([[region.HALSINGLAND.south,region.HALSINGLAND.west],[region.HALSINGLAND.north,region.HALSINGLAND.east]]);
+ else map.fitBounds([[59.35,14.9],[62.5,19.65]]);
+ const rows=state.items.filter(e=>e.areaScope==='LOCAL_CENTROID'&&regionMatches(e)||
+  $('national').checked&&e.areaScope==='SWEDEN_CONTEXT').slice(0,70);
+ const list=$('activations');list.replaceChildren();
+ if(!rows.length)add('p','Inga matchande offentliga kartläggningsaktiveringar i den genomlästa katalogdelen. Det är inte en bedömning av om det inträffat händelser.',list,'caption');
+ for(const e of rows){
+  const item=add('article',null,list,'item');
+  add('div',e.title,item,'title');
+  add('span',e.category,item,'pill');
+  add('span',e.areaScope==='LOCAL_CENTROID'?'Lokal katalogcentrum':'Övrig Sverigekontext',item,'pill');
+  add('p','Aktiverad '+friendly(e.activationAt)+(e.closed?' · Kartläggningen avslutad':' · Kartläggningen inte markerad som avslutad'),item,'caption');
+  if(e.areaScope==='LOCAL_CENTROID')add('p','Områdesmatch: '+(e.matchedAreas||[]).join(', '),item,'caption');
+  sourceLink(item,e);
+ }
+}
+function summary(data){
+ const health=data.sourceHealth||{},counts=data.counts||{},box=$('metrics');box.replaceChildren();
+ for(const s of [
+  'Lokala katalogträffar: '+(counts.local||0),
+  'Övriga Sverige: '+(counts.nationalContext||0),
+  'Genomsökta API-sidor: '+(health.pagesScanned??'–')
+ ])add('span',s,box,'metric');
+ const healthy=health.status==='AVAILABLE',partial=health.status==='PARTIAL';
+ const msg=healthy?'Källa tillgänglig':partial?'Källa delvis tillgänglig':'Källa otillgänglig';
+ $('health').textContent=msg+'. Senaste insamling: '+friendly(health.lastSuccessfulScan||data.generatedAt)+
+  (health.coverageIncomplete?'. Delvis genomläst katalog – frånvaro av träffar är osäker.':'')+
+  (data.degraded?'. Begränsad datatäckning.':'')+
+  (health.errors?.length?' Fel: '+health.errors.join('; '):'');
+}
+function safeApiBase(){
+ const fallback='https://nordicwatch-event-feed.rospiggen.workers.dev';
+ try{
+  const override=localStorage.getItem('NORDICWATCH_EVENT_WORKER');
+  if(!override)return fallback;
+  const u=new URL(override);return u.protocol==='https:'?u.origin:fallback;
+ }catch{return fallback}
+}
+async function refresh(){
+ $('reload').disabled=true;$('health').textContent='Läser Copernicus-katalogens senast insamlade lägesbild…';
+ try{
+  const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),12000);
+  let res;try{res=await fetch(safeApiBase()+'/earth-observation',{cache:'no-store',signal:abort.signal})}
+  finally{clearTimeout(timeout)}
+  if(!res.ok)throw Error('HTTP '+res.status);
+  const data=await res.json();
+  if(!Array.isArray(data.activations))throw Error('Saknad katalogdata');
+  state.items=data.activations;state.health=data.sourceHealth;state.areas=data.areas||[];
+  summary(data);draw();
+ }catch(e){
+  state.items=[];$('health').textContent='Källan kunde inte läsas. Inga påståenden om aktuellt läge kan göras ('+String(e.message).slice(0,100)+').';
+  $('activations').textContent='Inga verifierade katalogresultat finns tillgängliga.';draw();
+ }finally{$('reload').disabled=false}
+}
+$('area').addEventListener('change',draw);
+$('national').addEventListener('change',draw);
+$('reload').addEventListener('click',refresh);
+refresh();
+</script>
+</body></html>
