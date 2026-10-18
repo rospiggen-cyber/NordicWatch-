@@ -13,6 +13,8 @@ on:
       - "cloudflare/kv-catalog.mjs"
       - "cloudflare/strategic-source-collector.mjs"
       - "strategic-early-warning.js"
+      - "source-coverage-engine.js"
+      - "tests/source-coverage-engine.test.js"
       - "strategic-review.html"
       - "tests/strategic-early-warning.test.js"
       - "tests/strategic-source-collector.test.mjs"
@@ -78,6 +80,7 @@ jobs:
           node --check cloudflare/event-feed-worker.js
           node --check cloudflare/strategic-source-collector.mjs
           node --check strategic-early-warning.js
+          node --check source-coverage-engine.js
           node --check intelligence-core.js
           node --check brief-engine.js
           node --test tests/*.test.js tests/*.test.mjs
