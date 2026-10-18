@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "0.1",
+  "generatedAt": "2026-10-18T20:29:26.690Z",
+  "sourceHealth": {
+    "id": "CEMS_MAPPING_CATALOGUE",
+    "status": "AVAILABLE",
+    "lastSuccessfulScan": "2026-10-18T20:29:26.690Z",
+    "pagesScanned": 3,
+    "totalAdvertised": 267,
+    "scope": "Copernicus published mapping activations only",
+    "coverageIncomplete": false,
+    "errors": [],
+    "collectionMethod": "Read-only official API fetched by GitHub Actions; six-hour cadence"
+  },
+  "counts": {
+    "local": 0,
+    "nationalContext": 4,
+    "visible": 4
+  },
+  "areas": [
+    {
+      "id": "ROSLAGEN",
+      "name": "Uppsala / Roslagen / Vätö",
+      "bounds": {
+        "south": 59.35,
+        "north": 60.55,
+        "west": 16.9,
+        "east": 19.65
+      }
+    },
+    {
+      "id": "HALSINGLAND",
+      "name": "Hälsingland / Söderhamn",
+      "bounds": {
+        "south": 60.55,
+        "north": 62.5,
+        "west": 14.9,
+        "east": 18.8
+      }
+    }
+  ],
+  "activations": [
+    {
+      "id": "EMSR841",
+      "code": "EMSR841",
+      "title": "Flood in Vasternorrland County, Sweden",
+      "category": "Flood",
+      "categoryTag": "flood",
+      "activationAt": "2025-09-11T13:16:00.000Z",
+      "eventAt": "2025-09-06T18:00:00.000Z",
+      "updatedAt": "2025-09-16T07:48:50.936Z",
+      "closed": true,
+      "countryNames": [
+        "Sweden"
+      ],
+      "centroid": {
+        "lat": 63.47,
+        "lon": 17.93
+      },
+      "matchedAreas": [],
+      "areaScope": "SWEDEN_CONTEXT",
+      "nAois": 2,
+      "nProducts": 5,
+      "source": {
+        "name": "Copernicus Emergency Management Service / On-Demand Mapping",
+        "url": "https://mapping.emergency.copernicus.eu/activations/api/activations/EMSR841/",
+        "catalogue": "https://mapping.emergency.copernicus.eu/activations/"
+      },
+      "evidence": "CONFIRMED_PUBLIC_MAPPING_ACTIVATION",
+      "interpretation": "Mapping activation metadata; location is only a catalogue centroid. Do not assume the centroid is the affected footprint, a live emergency or a verified road closure."
+    },
+    {
+      "id": "EMSR725",
+      "code": "EMSR725",
+      "title": "Flood in Sweden",
+      "category": "Flood",
+      "categoryTag": "flood",
+      "activationAt": "2024-05-20T15:08:00.000Z",
+      "eventAt": "2024-05-20T18:00:00.000Z",
+      "updatedAt": "2024-09-03T14:50:01.528Z",
+      "closed": true,
+      "countryNames": [
+        "Sweden"
+      ],
+      "centroid": {
+        "lat": 65.844548,
+        "lon": 24.123043
+      },
+      "matchedAreas": [],
+      "areaScope": "SWEDEN_CONTEXT",
+      "nAois": 4,
+      "nProducts": 9,
+      "source": {
+        "name": "Copernicus Emergency Management Service / On-Demand Mapping",
+        "url": "https://mapping.emergency.copernicus.eu/activations/api/activations/EMSR725/",
+        "catalogue": "https://mapping.emergency.copernicus.eu/activations/"
+      },
+      "evidence": "CONFIRMED_PUBLIC_MAPPING_ACTIVATION",
+      "interpretation": "Mapping activation metadata; location is only a catalogue centroid. Do not assume the centroid is the affected footprint, a live emergency or a verified road closure."
+    },
+    {
+      "id": "EMSR684",
+      "code": "EMSR684",
+      "title": "Flood in Sweden",
+      "category": "Flood",
+      "categoryTag": "flood",
+      "activationAt": "2023-08-15T17:45:00.000Z",
+      "eventAt": "2023-08-15T00:00:00.000Z",
+      "updatedAt": "2023-11-28T09:29:17.041Z",
+      "closed": true,
+      "countryNames": [
+        "Sweden"
+      ],
+      "centroid": {
+        "lat": 60.456315,
+        "lon": 16.419067
+      },
+      "matchedAreas": [],
+      "areaScope": "SWEDEN_CONTEXT",
+      "nAois": 9,
+      "nProducts": 10,
+      "source": {
+        "name": "Copernicus Emergency Management Service / On-Demand Mapping",
+        "url": "https://mapping.emergency.copernicus.eu/activations/api/activations/EMSR684/",
+        "catalogue": "https://mapping.emergency.copernicus.eu/activations/"
+      },
+      "evidence": "CONFIRMED_PUBLIC_MAPPING_ACTIVATION",
+      "interpretation": "Mapping activation metadata; location is only a catalogue centroid. Do not assume the centroid is the affected footprint, a live emergency or a verified road closure."
+    },
+    {
+      "id": "EMSR660",
+      "code": "EMSR660",
+      "title": "Forest fire in Ulricehamn region, Sweden",
+      "category": "Wildfire",
+      "categoryTag": "wildfire",
+      "activationAt": "2023-05-10T21:35:00.000Z",
+      "eventAt": "2023-05-10T16:30:00.000Z",
+      "updatedAt": "2023-11-28T09:43:29.267Z",
+      "closed": true,
+      "countryNames": [
+        "Sweden"
+      ],
+      "centroid": {
+        "lat": 57.828461,
+        "lon": 13.273636
+      },
+      "matchedAreas": [],
+      "areaScope": "SWEDEN_CONTEXT",
+      "nAois": 1,
+      "nProducts": 1,
+      "source": {
+        "name": "Copernicus Emergency Management Service / On-Demand Mapping",
+        "url": "https://mapping.emergency.copernicus.eu/activations/api/activations/EMSR660/",
+        "catalogue": "https://mapping.emergency.copernicus.eu/activations/"
+      },
+      "evidence": "CONFIRMED_PUBLIC_MAPPING_ACTIVATION",
+      "interpretation": "Mapping activation metadata; location is only a catalogue centroid. Do not assume the centroid is the affected footprint, a live emergency or a verified road closure."
+    }
+  ],
+  "limitations": [
+    "Copernicus Mapping activations are not a continuous satellite survey; areas without activations may still be affected.",
+    "The point is an activation catalogue centroid, not the mapped event boundary; overlap can be missed.",
+    "Catalogue publication time differs from real-world event and satellite acquisition times.",
+    "No live hazard severity, road closure, infrastructure damage or forecast is inferred from activation metadata."
+  ],
+  "provider": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/",
+  "mode": "OFFICIAL_CEMS_GITHUB_SNAPSHOT",
+  "degraded": false,
+  "lastAttemptAt": "2026-10-18T20:29:26.690Z"
+}
