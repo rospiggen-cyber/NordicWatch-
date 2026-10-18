@@ -1,5 +1,6 @@
 /* Server-side strategic RSS adapter, independently isolated from military Event Engine. */
 import "../strategic-early-warning.js";
+import "../source-coverage-engine.js";
 const engine = globalThis.NordicWatchStrategic;
 const MAX_FEED = 1000000;
 const DAY = 86400000;
@@ -135,11 +136,12 @@ export async function runStrategicCollection(env,now=Date.now()) {
     return Number.isFinite(t)&&t<=now&&now-t<=30*DAY;
   });
   const snapshot=engine.analyze([...retain,...incoming],{now:new Date(now).toISOString()});
+  const sourceCoverage=globalThis.NordicWatchSourceCoverage.build({registry:REGISTRY,feeds,health:coverage,signals:snapshot.signals,analysis:snapshot.cards,now});
   const result={
     schemaVersion:'0.1',generatedAt:new Date(now).toISOString(),sources:coverage,
     sourcesHealthy:coverage.filter(s=>s.ok).length,sourcesTotal:coverage.length,
     degraded:coverage.length===0||coverage.some(s=>!s.ok),
-    failures,signals:snapshot.signals.slice(-200),analysis:snapshot.cards,
+    failures,signals:snapshot.signals.slice(-200),analysis:snapshot.cards,sourceCoverage,
     limitations:['Source titles and descriptions do not establish real-world event occurrence dates.',
       'Partial official-source coverage; no independent news or polling collector connected.',
       'Official publications are not independent verification of their factual claims.']
@@ -147,6 +149,6 @@ export async function runStrategicCollection(env,now=Date.now()) {
   // Only accepted bounded signals, not source failure, renew retained observations.
   await env.EVENTS.put('strategic:signals',JSON.stringify(snapshot.signals.slice(-200)));
   await env.EVENTS.put('strategic:snapshot',JSON.stringify(result));
-  return {generatedAt:result.generatedAt,sourcesHealthy:result.sourcesHealthy,
+  return {generatedAt:result.generatedAt,sourceCoverage:sourceCoverage.technical,sourcesHealthy:result.sourcesHealthy,
     sourcesTotal:result.sourcesTotal,signals:result.signals.length,degraded:result.degraded,failures};
 }
