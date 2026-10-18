@@ -72,6 +72,11 @@ test('collector fetches live-shaped EU/NATO responses, saves snapshot and degrad
     assert.equal(snap.sourcesTotal,3);
     assert.equal(snap.signals.length,1);
     assert.equal(snap.analysis.every(x=>x.causalConclusion==='NOT_ESTABLISHED'),true);
+    assert.equal(snap.sourceCoverage.technical.configuredFeeds,3);
+    assert.equal(snap.sourceCoverage.technical.respondingFeeds,2);
+    assert.equal(snap.sourceCoverage.technical.connectedOrganizations,2);
+    assert.equal(snap.sourceCoverage.providers.find(x=>x.id==='congress').status,'NOT_CONFIGURED');
+    assert.equal(snap.sourceCoverage.hypotheses.find(x=>x.id==='US_DOMESTIC_POLICY').status,'COVERAGE_GAPS');
     assert.equal(snap.analysis[0].priority,'INSUFFICIENT_EVIDENCE');
     assert.equal(snap.failures[0].id,'white-house');
     assert.equal(calls.length,3);
