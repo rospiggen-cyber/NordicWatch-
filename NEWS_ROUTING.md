@@ -29,6 +29,16 @@ This is a relevance/source-discovery improvement, not AIS tracking, verified att
 
 **Known remaining gap:** no verified fresh RSS/official source adapter for Försvarsmakten press releases yet. Scraped DN and search result matches cannot be assumed to appear in GDELT. Monitor deployed per-query diagnostics to confirm real fetches. Improving first-party original-source monitoring requires a separately tested original-source collector.
 
+## First-party Försvarsmakten newsroom source (19 October 2026)
+
+NordicWatch now collects the **actual original-publisher RSS feed** for Swedish Armed Forces announcements: `https://www.mynewsdesk.com/se/rss/current_news/441`. The URL was independently discovered from the official `https://www.mynewsdesk.com/se/forsvarsmakten` newsroom's HTML `application/rss+xml` link and verified via live HTTP 200 / XML on GitHub Actions. At verification it returned 20 items, including Försvarsmakten's 8 October USS Paul Ignatius / HMS Karlstad / FNS Hämeenmaa exercise press release and a 19 October naval-drone press invitation. No Mynewsdesk API key or browser scraping is required.
+
+A **tenant-specific URL allowlist** associates only that exact RSS feed and articles under `/se/forsvarsmakten/(pressreleases|news)/…` with Swedish Armed Forces. Other Mynewsdesk tenants and feeds must never be treated as confirmed official reports. The collector preserves original RSS `pubDate` (including timezone) and runs on the existing 15-minute Worker cycle. Original-publisher statements confirm the publication/source, not the operational truth of every assertion. Any article must still pass AOI/topic and timestamp routing; older announcements cannot reenter the 72-hour news window as new reports.
+
+Swedish exercise and naval vocabulary uses Unicode-aware boundaries, allowing original Swedish headlines to become mappable official events (including Bottenhavet/Sundsvall) without inferring live ship positions. Source health reports the first-party feed independently as `se`. `tools/verify-fm-source.mjs` performs a live-source smoke test in GitHub Actions, alongside fixture regression cases for spoofed tenants, original dates and a failed peer source.
+
+**Operational limits:** The RSS feed returns a bounded set of recent articles and cannot prove complete history. Source downtime, feed truncation and publication delays must be shown as coverage gaps. AIS/visual tracking is not implied. For real-time operations, consult official navigational warnings and current operational publications rather than interpreting exercise announcements as current positions.
+
 ## Developer diagnostics
 
 Open the app with `?debugNews=1` to display routing counts. In DevTools inspect `window.nordicWatchNewsDiagnostics` for per-item source, publication time, normalized location, region/topic matches, score/reasons, event ID/status, inclusion flags and exclusion reasons. `dailyBriefEvaluated` counts deduplicated events; `aoiRelevant` counts records before event grouping. `whatChanged` indicates candidate material changes relative to the previous routing snapshot; the actual changed view compares against its own last-view snapshot.

@@ -47,7 +47,8 @@
   const canonical=url=>{try{const u=new URL(url);u.hash='';for(const k of [...u.searchParams.keys()])if(/^(utm_|fbclid|gclid)/.test(k))u.searchParams.delete(k);return u.href}catch{return ''}};
   function normalize(item,now=Date.now()){
     const dates=F.dates(item),url=item.url||item.sourceUrl,source=host(url),namejs=text(item.title+' '+(item.description||'' )).match(/\bnamejs\s*(20\d\d)\b/);
-    const evidence=/^(CONFIRMED|CONFIRMED_EXTERNAL)$/.test(item.confidence)||/CONFIRMED/.test(item.risk?.sourceConfidence)||/(^|\.)(nato\.int|dvidshub\.net|mil|forsvarsmakten\.se|mil\.lv|forsvaret\.dk|kam\.lt|kariuomene\.lt)$/.test(source)?'CONFIRMED_EXTERNAL':'INFERRED';
+    const fmOriginal=/^https:\/\/(?:www\.)?mynewsdesk\.com\/se\/forsvarsmakten\/(?:pressreleases|news)\/[a-z0-9_-]+\/?(?:\?.*)?$/i.test(url||'');
+    const evidence=/^(CONFIRMED|CONFIRMED_EXTERNAL)$/.test(item.confidence)||/CONFIRMED/.test(item.risk?.sourceConfidence)||fmOriginal||/(^|\.)(nato\.int|dvidshub\.net|mil|forsvarsmakten\.se|mil\.lv|forsvaret\.dk|kam\.lt|kariuomene\.lt)$/.test(source)?'CONFIRMED_EXTERNAL':'INFERRED';
     return {...item,url,domain:source||item.domain||'External report',eventId:namejs?'exercise-namejs-'+namejs[1]:item.eventId||item.id||item.signalId||canonical(url)||text(item.title),publishedAt:dates.publishedAt||dates.updatedAt||F.parse(item.temporal?.articlePublishedAt)||F.parse(item.startTime),lastUpdatedAt:dates.updatedAt||F.parse(item.lastObservedAt)||(!item.routingSignature?F.parse(item.lastUpdated):null),lastChecked:item.lastChecked||item.lastCheckedAt||item.discovery?.lastPolledAt,evidenceType:evidence,eventType:namejs?'MILITARY_EXERCISE':item.eventType,ongoing:item.ongoing===true||(/exercise/i.test(item.eventType||'')&&time(item.endTime)>now)};
   }
   function windowFor(a,now){
