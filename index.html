@@ -80,7 +80,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <div class="legend">Orange AWACS · Purple tanker · Red ISR · Cyan ASW · Blue transport · Yellow fighter</div>
 <div class="alertctl"><button id="alertsBtn">Enable alerts</button><span class="alertstate" id="alertState">off</span></div><label class="event-pref"><input id="eventStartAlerts" type="checkbox"> Planned event start notices</label>
 </div></div></section>
-<aside class="side" id="mobileIntelPanel"><div class="mobile-sheet-head"><b>NordicWatch intelligence</b><button id="mobileIntelClose" type="button">Close</button></div><div class="card"><div class="eye">COLLECTOR SWARM</div><h2>Scan Cards</h2><div id="scanStatus" class="meta">Starting specialist collectors…</div><div id="scanCards" class="scan-grid"></div></div><div class="card"><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2><div class="meta">Observed activity change · 24 h / 7-day reference / since last check</div><div id="regionalDeltaPreview"></div><button id="regionalDeltaOpen">Open Regional Delta</button></div><div class="card"><div class="eye">EARLY WARNING</div><h2>Developing situations</h2><div id="situations"></div><button id="importSituation">Import observations</button><input type="file" id="situationFile" accept=".json,application/json" hidden><div id="situationImportStatus" class="meta"></div></div><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="newsDebug" class="meta"></div><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div><div id="germanyHotspots"></div><div id="germanyCoverage" class="meta"></div><h2>Event status &amp; history</h2><div id="eventStateHistory"></div></div></aside>
+<aside class="side" id="mobileIntelPanel"><div class="mobile-sheet-head"><b>NordicWatch intelligence</b><button id="mobileIntelClose" type="button">Close</button></div><div class="card"><div class="eye">COLLECTOR SWARM</div><h2>Scan Cards</h2><div id="scanStatus" class="meta">Starting specialist collectors…</div><div id="scanCards" class="scan-grid"></div></div><div class="card"><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2><div class="meta">Observed activity change · 24 h / 7-day reference / since last check</div><div id="regionalDeltaPreview"></div><button id="regionalDeltaOpen">Open Regional Delta</button></div><div class="card"><div class="eye">EARLY WARNING</div><h2>Developing situations</h2><div id="situations"></div><button id="importSituation">Import observations</button><input type="file" id="situationFile" accept=".json,application/json" hidden><div id="situationImportStatus" class="meta"></div></div><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="newsDebug" class="meta"></div><details id="newsSourceDetails" class="meta"><summary>Source diagnostics</summary><div id="newsSourceDiagnostics"></div></details><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div><div id="germanyHotspots"></div><div id="germanyCoverage" class="meta"></div><h2>Event status &amp; history</h2><div id="eventStateHistory"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
 <div class="drawer" id="regionalDeltaDrawer"><div class="sheet"><div class="sheethead"><div><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2></div><button id="regionalDeltaClose">Close</button></div><div id="regionalDeltaContent"></div></div></div>
@@ -104,6 +104,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <script src="germany-infrastructure.js"></script>
 <script src="germany-ui.js"></script>
 <script src="news-routing.js"></script>
+<script src="news-source-health.js"></script>
 <script src="event-engine.js"></script>
 <script src="situational-engine.js"></script>
 <script src="route-pattern.js"></script>
@@ -981,7 +982,14 @@ async function loadNews(){
  // The shared relevance evaluator rejects unrelated Romanian/Bulgarian news.
  const blackSeaEndpoint=new URL(endpoint.href);
  blackSeaEndpoint.search=new URLSearchParams({query:'(("Black Sea" OR "Svarta havet" OR "Romania" OR "Bulgaria" OR "Sulina" OR "Constanta" OR "Varna") ("merchant ship" OR "cargo ship" OR "commercial shipping" OR "maritime security" OR "tanker" OR "vessel" OR "ship" OR "drone" OR "NATO"))',mode:'ArtList',maxrecords:'75',format:'json',sort:'DateDesc',timespan:'3d'});
- const results=await Promise.allSettled([fetchJSON(endpoint.href,20000),fetchJSON(blackSeaEndpoint.href,20000),fetchJSON(eventWorkerBase()+'/news',12000)]),successful=results.filter(r=>r.status==='fulfilled'&&Array.isArray(r.value?.articles)),rawFetched=successful.flatMap(r=>r.value.articles);
+ // The Cloudflare feed can load concurrently, but free GDELT queries must be
+ // spaced apart to avoid both being throttled at once.
+ const workerRequest=fetchJSON(eventWorkerBase()+'/news',12000).then(value=>({status:'fulfilled',value}),reason=>({status:'rejected',reason}));
+ const gdeltResults=await window.NordicWatchNewsSources.sequence([
+   ()=>fetchJSON(endpoint.href,20000),
+   ()=>fetchJSON(blackSeaEndpoint.href,20000)
+ ]);
+ const results=[...gdeltResults,await workerRequest],successful=results.filter(r=>r.status==='fulfilled'&&Array.isArray(r.value?.articles)),rawFetched=successful.flatMap(r=>r.value.articles);
  ingestGermanyRecords(rawFetched);
  window.nordicWatchFreshnessDiagnostics=window.NordicWatchFreshness.inspect(rawFetched,Date.now());
  let verified=[];try{const capture=await fetchJSON("data/verified-posture-reports.json",5000);verified=(capture.articles||[]).filter(a=>{const t=+new Date(a.publishedAt);return t<=Date.now()&&Date.now()-t<=72*3600000})}catch(error){console.warn("Posture source snapshots unavailable",error)}
@@ -991,6 +999,24 @@ async function loadNews(){
  window.nordicWatchFetchStages={sources:results.length,fetchSucceeded:successful.length,fetched:rawFetched.length,parsed:rawFetched.length,normalized:incoming.length,normalizationRejected:rawFetched.length-rawFetched.map(normalizeArticle).filter(Boolean).length,verifiedSnapshots:verified.length};
  const routed=routeNewsEvidence(),selection=BX.selectNews(routed.articles,{situations:situationClusters,geographic:a=>NR.safeRelevance(a).relevant});currentArticles=selection.articles.filter(a=>Date.now()<+new Date(a.expiresAt)).map(a=>({...a,date:parseNewsDate(a.publishedAt)}));
  saveNewsSnapshot(currentArticles);renderNews(currentArticles);rebuildSituationalState();refreshSituations(true);renderHotspots();
+ const sourceInfo=window.NordicWatchNewsSources.summarize(results);
+ const diagnostics=document.getElementById('newsSourceDiagnostics');
+ if(diagnostics){
+   diagnostics.replaceChildren();
+   for(const source of sourceInfo){
+     const row=document.createElement('div');
+     row.className='meta';
+     const statusText=source.ok?(source.available<source.total?'DEGRADED':'OK'):'FAILED';
+     row.textContent=source.name+' · '+statusText+' · '+source.available+'/'+source.total+' sources · '+source.fetched+' records'+(source.coverageStatus?' · '+source.coverageStatus:'')+(source.reason?' · '+source.reason:'');
+     diagnostics.append(row);
+     for(const failure of source.sourceFailures.slice(0,12)){
+       const detail=document.createElement('div');
+       detail.className='meta';
+       detail.textContent=' ↳ '+String(failure.source||'upstream')+': '+String(failure.error||'unavailable').slice(0,160);
+       diagnostics.append(detail);
+     }
+   }
+ }
  const sourceTotal=results.reduce((n,r)=>n+(r.status==='fulfilled'?Math.max(1,Number(r.value.total)||1):1),0),sourceAvailable=successful.reduce((n,r)=>n+(typeof r.value.available==='number'?Math.max(0,r.value.available):1),0);status.textContent=sourceAvailable<sourceTotal?'NEWS FEED DEGRADED – '+sourceAvailable+'/'+sourceTotal+' sources available':sourceAvailable+'/'+sourceTotal+' sources available · '+currentArticles.length+' current articles';
  briefNewsCoverage={healthy:!routed.degraded&&sourceAvailable>0&&sourceAvailable===sourceTotal,available:sourceAvailable,total:sourceTotal};
  const c=selection.counters;document.getElementById('newsDebug').textContent='fetched '+rawFetched.length+' → freshness '+window.nordicWatchFreshnessDiagnostics.counters.fresh+' → geographic filter '+c.geographic+' → dedup '+c.dedup+' → selected '+c.selected+' (evaluated '+archive.length+' stored records)';await notifyHighRiskNews(currentArticles);
