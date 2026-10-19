@@ -982,12 +982,16 @@ async function loadNews(){
  // The shared relevance evaluator rejects unrelated Romanian/Bulgarian news.
  const blackSeaEndpoint=new URL(endpoint.href);
  blackSeaEndpoint.search=new URLSearchParams({query:'(("Black Sea" OR "Svarta havet" OR "Romania" OR "Bulgaria" OR "Sulina" OR "Constanta" OR "Varna") ("merchant ship" OR "cargo ship" OR "commercial shipping" OR "maritime security" OR "tanker" OR "vessel" OR "ship" OR "drone" OR "NATO"))',mode:'ArtList',maxrecords:'75',format:'json',sort:'DateDesc',timespan:'3d'});
+ // Bounded focused Swedish naval query (distinct from generic global reporting).
+ const swedishNavalEndpoint=new URL(endpoint.href);
+ swedishNavalEndpoint.search=new URLSearchParams({query:'(("Sundsvall" OR "Bottenhavet" OR "Bothnian Sea" OR "Härnösand" OR "Paul Ignatius" OR "Bottenviken") ("krigsfartyg" OR "robotjagare" OR "fartyg" OR "marinen" OR "övning" OR "örlogsfartyg" OR "destroyer" OR "naval" OR "NATO"))',mode:'ArtList',maxrecords:'75',format:'json',sort:'DateDesc',timespan:'3d'});
  // The Cloudflare feed can load concurrently, but free GDELT queries must be
  // spaced apart to avoid both being throttled at once.
  const workerRequest=fetchJSON(eventWorkerBase()+'/news',12000).then(value=>({status:'fulfilled',value}),reason=>({status:'rejected',reason}));
  const gdeltResults=await window.NordicWatchNewsSources.sequence([
    ()=>fetchJSON(endpoint.href,20000),
-   ()=>fetchJSON(blackSeaEndpoint.href,20000)
+   ()=>fetchJSON(blackSeaEndpoint.href,20000),
+   ()=>fetchJSON(swedishNavalEndpoint.href,20000)
  ]);
  const results=[...gdeltResults,await workerRequest],successful=results.filter(r=>r.status==='fulfilled'&&Array.isArray(r.value?.articles)),rawFetched=successful.flatMap(r=>r.value.articles);
  ingestGermanyRecords(rawFetched);
