@@ -8,6 +8,8 @@ on:
       - "strategic-early-warning.js"
       - "tests/strategic-early-warning.test.js"
       - "cloudflare/strategic-source-collector.mjs"
+      - "cloudflare/evidence-ledger.mjs"
+      - "tests/evidence-ledger.test.mjs"
       - "tests/strategic-source-collector.test.mjs"
       - "cloudflare/event-feed-worker.js"
       - "strategic-review.html"
@@ -17,6 +19,8 @@ on:
       - "strategic-early-warning.js"
       - "tests/strategic-early-warning.test.js"
       - "cloudflare/strategic-source-collector.mjs"
+      - "cloudflare/evidence-ledger.mjs"
+      - "tests/evidence-ledger.test.mjs"
       - "tests/strategic-source-collector.test.mjs"
       - "cloudflare/event-feed-worker.js"
       - "strategic-review.html"
@@ -38,7 +42,9 @@ jobs:
           node --check strategic-early-warning.js
           node --check tests/strategic-early-warning.test.js
           node --check cloudflare/strategic-source-collector.mjs
+          node --check cloudflare/evidence-ledger.mjs
+          node --check tests/evidence-ledger.test.mjs
           node --check tests/strategic-source-collector.test.mjs
           node --check cloudflare/event-feed-worker.js
       - name: Run strategic tests
-        run: node --test tests/strategic-early-warning.test.js tests/strategic-source-collector.test.mjs
+        run: node --test tests/strategic-early-warning.test.js tests/strategic-source-collector.test.mjs tests/evidence-ledger.test.mjs
