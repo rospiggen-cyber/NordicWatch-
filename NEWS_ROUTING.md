@@ -19,6 +19,16 @@ A generic NATO reference, shipbuilding press release, routine naval exercise, Uk
 
 This is a relevance/source-discovery improvement, not AIS tracking, verified attribution, a maritime alert feed, or proof of complete coverage. Existing military push thresholds and EventScore are unchanged. Query and filter tests use fixtures; production freshness and GDELT accessibility must still be checked after deployment.
 
+## Swedish naval reporting gap — Sundsvall / Bothnian Sea (19 October 2026)
+
+**Evidence:** On 8 October Försvarsmakten published the joint US–Swedish–Finnish naval exercise in the Bothnian Sea. DN published a fresh article on 18 October describing that earlier exercise. These are different publication dates for the *same earlier event*; an 18 October article is not evidence of new 18 October ship activity.
+
+**Root causes in the tested code:** default GDELT news query lacked named Northern Swedish sea/locality terms, Swedish naval terms and a focused maritime query; routing lacked `Sundsvall`, `Bottenhavet`, `krigsfartyg`, `robotjagare` and Swedish exercise inflections. The official Swedish Armed Forces source was allowlisted but did not have a configured working feed; therefore the 8 October official press release was not systematically monitored.
+
+**Fix:** allow relevant Swedish/English naval reporting for northern Bothnian locations and names; supplement broad GDELT with a *separate* focused Swedish-naval query so a large general news volume is less likely to bury a relevant item. Keep all existing verification, AOI, 72h publication freshness, deduplication and historical-event rules. The new source is displayed independently in Source diagnostics; one failed GDELT request does not skip the next. Do not fabricate a live vessel track or backdate the 18 October article's publication.
+
+**Known remaining gap:** no verified fresh RSS/official source adapter for Försvarsmakten press releases yet. Scraped DN and search result matches cannot be assumed to appear in GDELT. Monitor deployed per-query diagnostics to confirm real fetches. Improving first-party original-source monitoring requires a separately tested original-source collector.
+
 ## Developer diagnostics
 
 Open the app with `?debugNews=1` to display routing counts. In DevTools inspect `window.nordicWatchNewsDiagnostics` for per-item source, publication time, normalized location, region/topic matches, score/reasons, event ID/status, inclusion flags and exclusion reasons. `dailyBriefEvaluated` counts deduplicated events; `aoiRelevant` counts records before event grouping. `whatChanged` indicates candidate material changes relative to the previous routing snapshot; the actual changed view compares against its own last-view snapshot.

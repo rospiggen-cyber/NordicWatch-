@@ -20,7 +20,7 @@
   }
   function summarize(results){
     return results.map((result,i)=>{
-      const names=['GDELT · Nordic/Baltic','GDELT · Black Sea','Cloudflare event feed'];
+      const names=['GDELT · Nordic/Baltic','GDELT · Black Sea','GDELT · Swedish naval','Cloudflare event feed'];
       const ok=result?.status==='fulfilled'&&Array.isArray(result.value?.articles);
       const value=result?.value||{};
       const fetched=ok?value.articles.length:0;
