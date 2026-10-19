@@ -62,3 +62,32 @@ test('strategic spillover does not open generic world news or ordinary Black Sea
   assert.equal(relevance.correlatedStrategicRelevance,false,title);
  }
 });
+
+test('DN Sundsvall destroyer headline and Swedish synopsis route to both briefs',()=>{
+ const now=Date.parse('2026-10-19T18:30:00Z');
+ const article={title:'USA:s ovanliga drag: Krigsfartyg utanför Sundsvall',description:'Den amerikanska robotjagaren USS Paul Ignatius har övat utanför Sundsvall. Att USA går in med krigsfartyg i Bottenhavet är ovanligt.',publishedAt:'2026-10-18T16:27:00Z',url:'https://www.dn.se/sverige/usas-ovanliga-drag-krigsfartyg-utanfor-sundsvall/'};
+ const routed=R.route([article],{now});
+ assert.equal(routed.articles.length,1,'new DN coverage must appear as current reporting');
+ assert.equal(routed.counters.whatChanged,1);
+ assert.equal(routed.counters.dailyBriefEvaluated,1);
+ assert.equal(routed.events[0].relevance.directGeographicRelevance,true);
+ assert(routed.events[0].relevance.matchedRegions.includes('Baltic Sea'));
+ assert(routed.events[0].relevance.matchedTopics.includes('MILITARY_ACTIVITY'));
+ assert(routed.events[0].relevance.matchedEntities.includes('uss paul ignatius'));
+ assert.equal(B.build({articles:routed.articles,now}).relevantStoredNewsEvaluated,1);
+ assert(R.evaluateNordicRelevance({title:article.title}).relevant,'short DN-only headlines must still route');
+});
+test('official Swedish/Finnish naval exercise qualifies when fresh, but old source does not resurrect as news',()=>{
+ const original={title:'Sverige övar med USA och Finland i Bottenhavet',description:'HMS Karlstad och FNS Hämeenmaa övar med USS Paul Ignatius.',url:'https://www.mynewsdesk.com/se/forsvarsmakten/pressreleases/sverige-oevar-med-usa-och-finland-i-bottenhavet-3471549',publishedAt:'2026-10-08T13:09:00Z'};
+ assert.equal(R.route([original],{now:Date.parse('2026-10-08T18:00:00Z')}).articles.length,1);
+ const late=R.route([original],{now:Date.parse('2026-10-19T18:30:00Z')});
+ assert.equal(late.articles.length,0,'publication timestamp is never reset to ingestion time');
+ assert.match(late.diagnostics[0].exclusionReason,/Outside evidence window/);
+});
+test('Bothnian locality alone does not admit unrelated Swedish news',()=>{
+ for(const title of ['Sundsvall hosts autumn food festival','Hotels in Härnösand open for the season','Färjor i Bottenhavet: sommarens tidtabell','Swedish boat show in Sundsvall']){
+   const r=R.evaluateNordicRelevance({title});
+   assert.equal(r.relevant,false,title);
+ }
+ assert.equal(R.evaluateNordicRelevance({title:'US Navy destroyer drills off Sundsvall in Bothnian Sea'}).relevant,true);
+});
