@@ -1,4 +1,6 @@
 // Discovery/verification only. No production collection or persistent writes.
+import {parseFeed,discoverTimed} from '../cloudflare/event-discovery-core.mjs';
+
 const source='https://www.mynewsdesk.com/se/forsvarsmakten';
 const guard=u=>{const p=new URL(u);if(p.protocol!=='https:'||!['www.mynewsdesk.com','mynewsdesk.com'].includes(p.hostname))throw Error('untrusted-source-url');return p};
 const download=async u=>{
@@ -30,7 +32,20 @@ for(const c of candidates.slice(0,8)){
     const titles=[...response.body.matchAll(/<item\b[\s\S]*?<title[^>]*>([\s\S]*?)<\/title>/gi)].map(m=>m[1].replace(/<[^>]+>/g,'').slice(0,140)).slice(0,5);
     const dates=[...response.body.matchAll(/<pubDate[^>]*>([^<]+)<\/pubDate>/gi)].map(x=>x[1]).slice(0,5);
     console.log(JSON.stringify({candidate:url,final:response.url,type:response.contentType,length:response.body.length,items:count,ownedArticleLinks:articleLinks.length,titles,dates}));
-    if(count>0&&articleLinks.length>0){verified++;console.log('VERIFIED_FM_FEED='+url)}
+    if(count>0&&articleLinks.length>0){
+      const parsed=parseFeed(response.body,url);
+      const dated=parsed.filter(a=>Number.isFinite(Date.parse(a.publishedAt)));
+      const recent=dated.filter(a=>Date.now()-Date.parse(a.publishedAt)<30*86400000);
+      console.log('NordicWatch parse:',JSON.stringify({parsed:parsed.length,dated:dated.length,recent:recent.length,sample:parsed[0]?.title}));
+      if(parsed.length===0||dated.length===0)throw Error('RSS fetch worked but application parser rejected articles');
+      const historic=parsed.find(a=>/Sverige övar med USA och Finland i Bottenhavet/i.test(a.title));
+      if(historic){
+        const event=discoverTimed(historic,Date.parse('2026-10-08T15:00:00Z'));
+        if(!event||event.eventType!=='naval_exercise'||event.areaName!=='Bothnian Sea')throw Error('Real historic naval report not discovered correctly');
+        console.log('Historical exercise parsed:',JSON.stringify({eventType:event.eventType,area:event.areaName,publishedAt:historic.publishedAt,source:event.sourceName}));
+      }
+      verified++;console.log('VERIFIED_FM_FEED='+url)
+    }
   }catch(error){console.log('Candidate failed:',c,String(error))}
 }
 if(!verified)throw Error('No valid first-party newsroom RSS feed discovered');
