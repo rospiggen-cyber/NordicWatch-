@@ -44,7 +44,10 @@
     }
    }
    previousUrl=sourceUrl;
-   lastMatch=match?{url:sourceUrl,title:el('teachTitle').value,description:el('teachDescription').value,published:el('teachPublished').value}:null;
+   const feedDate=match?.articlePublishedAt||match?.publishedAt||match?.timestamp||'';
+   const dateOnly=feedDate&&!Number.isNaN(+new Date(feedDate))?new Date(feedDate).toISOString().slice(0,10):'';
+   const originalFields=Boolean(match&&el('teachTitle').value===(match.title||'')&&el('teachDescription').value===(match.description||match.summary||'')&&el('teachPublished').value===dateOnly);
+   lastMatch=originalFields?{url:sourceUrl,title:el('teachTitle').value,description:el('teachDescription').value,published:el('teachPublished').value}:null;
    const r=T.suggestion({title:el('teachTitle').value,description:el('teachDescription').value},x=>NR.safeRelevance(x));
    suggestionText(r);
    el('teachLabel').value=r.label;
