@@ -22,3 +22,10 @@ test('external upstream trigger creates watch directives, never AOI incidents',(
 test('security perimeter gates inland incidents',()=>{assert.equal(I.perimeter({title:'German local crime'}).visible,false);assert.equal(I.perimeter({title:'Rostock port sabotage'}).tier,'BALTIC FLANK');assert.equal(I.perimeter({title:'German rail sabotage affecting Baltic logistics'}).visible,true)});
 test('hybrid cluster needs distinct incidents and multiple categories',()=>{const rows=['port sabotage','rail logistics incident','energy infrastructure drone'].map((title,i)=>({...I.signal(article(i*24,{title,url:'https://example.org/'+i}),now),eventId:'e'+i,lat:54+i*.1,lon:12,domain:i===0?'official':'media'}));assert.equal(I.hybridClusters(rows,now)[0].count,3);assert.equal(I.hybridClusters([rows[0],rows[0],rows[0]],now).length,0)});
 test('recurring ISR is recurrence, ISR AWACS tanker forms air package',()=>{const rows=['ISR','AWACS','TANKER'].map((capability,i)=>({id:'a'+i,domain:'AIRCRAFT',evidence:'OBSERVATION',timestamp:new Date(now).toISOString(),lat:55,lon:20,capability,quality:85}));assert.equal(S.correlate(rows,{now}).length,1);assert.match(S.correlate(rows,{now})[0].correlationReason,/Air package/);const recurrence=S.recurrence([0,1,2].map(d=>({identity:'ARTEMIS II',region:'Baltic',timestamp:new Date(now-d*24*H).toISOString()})),{now});assert.equal(recurrence[0].daysObserved,3)});
+
+test('strategic Black Sea maritime spillover is visible without reclassifying the AOI',()=>{
+ const spillover={title:'Black Sea merchant ships attacked by drones near Romania; NATO response sought',relevance:{correlatedStrategicRelevance:true,directGeographicRelevance:false}};
+ assert.equal(I.perimeter(spillover).tier,'STRATEGIC SPILLOVER');
+ assert.equal(I.perimeter(spillover).visible,true);
+ assert.equal(I.perimeter({title:'Bulgaria commercial tourism promotes Black Sea cruises'}).visible,false);
+});

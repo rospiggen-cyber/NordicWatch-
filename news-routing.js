@@ -9,6 +9,16 @@
   const outsideAoi=/\b(?:bangladesh|south asia|southeast asia|indo-pacific|ramstein|kaiserslautern|landstuhl|egypt|tunisia|indonesia|australia)\b/;
   const nordicDemonym=/\b(?:swedish|finnish|norwegian|danish|dansk|icelandic|estonian|latvian|lithuanian|lietuvisk\w*)\b/;
   const incidentalContext=/\b(?:company|firm|manufacturer|supplier|selected to (?:design|build)|commercial success|ruck march|medical center|ceremonial|charity)\b/;
+  // A bounded strategic exception, not a second general news geography:
+  // shipping attacks on NATO's Black Sea maritime flank can affect Baltic security.
+  // A country mention or generic NATO membership on its own must not pass.
+  const blackSeaPlace=/\b(?:black sea|svarta havet|sulina|constanta|constanța|varna|danube delta|snake island|romanian (?:territorial )?waters|bulgarian (?:territorial )?waters|romanian coast|bulgarian coast)\b/;
+  const blackSeaNatoLink=/\b(?:romania|romanian|bulgaria|bulgarian|sulina|constanta|varna|nato|article 4|article 5)\b/;
+  const blackSeaShipping=/\b(?:merchant ships?|commercial (?:ships?|shipping|vessels?)|civilian (?:ships?|shipping|vessels?)|cargo ships?|grain ships?|tankers?|vessels?|shipping|sea lanes?|sailors?|maritime traffic|maritime security|handelsfartyg|lastfartyg|tankfartyg|fartyg|sjofart)\b/;
+  const blackSeaThreat=/\b(?:drone\w*|uav|missile\w*|attack\w*|strike\w*|struck|sunk|sank|sink\w*|intercept\w*|explosion\w*|anti.drone|air defen[cs]e|dronare|angrepp\w*|beskjut\w*|dodsa?ttack\w*)\b/;
+  function isBlackSeaStrategicSpillover(content){
+    return blackSeaPlace.test(content)&&blackSeaNatoLink.test(content)&&blackSeaShipping.test(content)&&blackSeaThreat.test(content);
+  }
   function evaluateNordicRelevance(item){
     if(!item||typeof item!=='object')throw new TypeError('Invalid relevance input');
     // Publisher location and a generic NATO affiliation alone are not operational linkage.
@@ -23,11 +33,14 @@
     // A Nordic adjective can identify a company, participant or ceremonial unit
     // without locating the reported event in the Nordic/Baltic AOI.
     const incidentalForeignMention=outsideAoi.test(content)&&nordicDemonym.test(content)&&incidentalContext.test(content);
-    const relevant=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman&&!incidentalForeignMention;
+    const directAoi=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman&&!incidentalForeignMention;
+    const strategicSpillover=!directAoi&&isBlackSeaStrategicSpillover(content);
+    if(strategicSpillover){matchedRegions.push('Black Sea / NATO southeastern flank');matchedTopics.push('MARITIME_SECURITY')}
+    const relevant=directAoi||strategicSpillover;
     const matchedAliases=regions.flatMap(([,r])=>content.match(new RegExp('\\b(?:'+r+')\\b','g'))||[]);
     const extractedCountries=[...new Set(content.match(/\b(?:poland|polish|sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|danmark|dansk|iceland|estonia|latvia|lithuania|lietuva|lietuvos|lietuvoje)\b/g)||[])];
     const extractedPlaces=[...new Set([...matchedAliases,...(content.match(/\b(?:masuria|masurian|bemowo piskie)\b/g)||[])])];
-    return {directGeographicRelevance:relevant,correlatedStrategicRelevance:false,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[incidentalForeignMention?'Nordic entity or participant mentioned in an event explicitly located outside the AOI':matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
+    return {directGeographicRelevance:directAoi,correlatedStrategicRelevance:strategicSpillover,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:strategicSpillover?['Strategic spillover: threat to merchant shipping on NATO Black Sea flank','Security topic: MARITIME_SECURITY']:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[incidentalForeignMention?'Nordic entity or participant mentioned in an event explicitly located outside the AOI':matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
   }
   function safeRelevance(item,evaluate=evaluateNordicRelevance){try{const result=evaluate(item);if(!result||typeof result.relevant!=='boolean')throw Error('Invalid relevance result');return result}catch{return {relevant:false,relevanceScore:0,matchedRegions:[],matchedEntities:[],matchedTopics:[],reason:['Relevance processing degraded'],degraded:true}}}
   const host=url=>{try{return new URL(url).hostname}catch{return ''}};
