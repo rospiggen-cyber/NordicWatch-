@@ -30,3 +30,35 @@ test('Danish and Lithuanian local-language incidents reach What changed and Dail
  const brief=B.build({articles:routed.articles,now:incidentNow});
  assert.equal(brief.relevantStoredNewsEvaluated,2);
 });
+
+test('NATO Black Sea shipping strikes are strategic spillover, not Nordic geographic incidents',()=>{
+ const date=Date.parse('2026-10-19T13:00:00Z');
+ const rows=[
+  {title:'Drone strikes hit merchant vessels near Romanian coast in Black Sea',description:'Bulgaria requests NATO anti-drone systems after attacks on cargo ships.',url:'https://www.reuters.com/world/sample',publishedAt:'2026-10-19T09:00:00Z'},
+  {title:'Ukraina: Dödsattacker i Svarta havet – ber om Nato-hjälp',description:'Fartyg har angripits av drönare i Svarta havet.',url:'https://www.aftonbladet.se/nyheter/a/example',publishedAt:'2026-10-19T10:00:00Z'}
+ ];
+ const routed=R.route(rows,{now:date});
+ assert.equal(routed.articles.length,2);
+ assert.equal(routed.counters.aoiRelevant,2);
+ for(const e of routed.events){
+  assert.equal(e.relevance.directGeographicRelevance,false);
+  assert.equal(e.relevance.correlatedStrategicRelevance,true);
+  assert(e.relevance.matchedRegions.includes('Black Sea / NATO southeastern flank'));
+  assert(e.relevance.matchedTopics.includes('MARITIME_SECURITY'));
+ }
+ assert.equal(B.build({articles:routed.articles,now:date}).relevantStoredNewsEvaluated,2);
+});
+test('strategic spillover does not open generic world news or ordinary Black Sea news',()=>{
+ const samples=[
+  'Merchant ship attacked by drones near Strait of Hormuz; Iran warns shipping',
+  'NATO fleet completes routine Black Sea maritime exercise near Bulgaria',
+  'Romanian drone company wins new NATO commercial contract',
+  'Drone strikes hit cargo vessels near Odesa in Black Sea',
+  'Romania hosts NATO summit on technology and innovation'
+ ];
+ for(const title of samples){
+  const relevance=R.evaluateNordicRelevance({title});
+  assert.equal(relevance.relevant,false,title);
+  assert.equal(relevance.correlatedStrategicRelevance,false,title);
+ }
+});
