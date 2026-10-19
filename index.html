@@ -55,6 +55,19 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 .scan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}.scan-card{display:flex;min-width:0;flex-direction:column;align-items:stretch;text-align:left;padding:10px;border-left:3px solid var(--muted)}.scan-card-top{display:flex;justify-content:space-between;gap:6px;font-size:10px}.scan-card-top span{color:var(--muted);font-size:8px}.scan-card-metric{margin-top:7px}.scan-card-metric strong{font-size:20px}.scan-card-metric small,.scan-card-meta{color:var(--muted);font-size:9px}.scan-card-meta{margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.scan-high{border-left-color:var(--danger)}.scan-elevated{border-left-color:var(--warn)}.scan-watch{border-left-color:var(--accent)}@media(max-width:400px){.scan-grid{grid-template-columns:1fr}}
 .delta-preview{display:flex;width:100%;flex-direction:column;align-items:flex-start;text-align:left;margin-top:6px;padding:9px 10px;border-left:3px solid var(--muted)}.delta-preview span{margin-top:4px;color:var(--muted);font-size:9px}.delta-up{border-left-color:var(--danger)!important}.delta-down{border-left-color:var(--accent)!important}.delta-stable{border-left-color:var(--muted)!important}.regional-delta-row{padding:12px 0 12px 12px;border-top:1px solid var(--border);border-left:3px solid var(--muted)}.regional-delta-row:first-of-type{border-top:0}.regional-delta-row h3{margin:0 0 5px}.regional-delta-row p{white-space:pre-wrap}.regional-delta-row small{display:block;color:var(--muted);margin:7px 0}.regional-delta-row button{margin-top:6px}.delta-metric{font-weight:700}
 </style>
+<style>
+.teach-sheet{max-width:640px;max-height:min(94dvh,900px);overflow-y:auto}
+.teach-fields{display:grid;gap:10px;margin:12px 0}
+.teach-fields label{display:grid;gap:5px;color:#b9d6e9;font-size:12px}
+.teach-fields input,.teach-fields textarea,.teach-fields select{width:100%;min-width:0;background:#101e30;border:1px solid #55728a;border-radius:8px;padding:10px;color:#edf7ff;font:inherit;font-size:14px}
+.teach-fields input:focus-visible,.teach-fields select:focus-visible,.teach-fields textarea:focus-visible{outline:2px solid #6bdcff}
+.teach-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.teach-preview{padding:10px;border:1px solid #405772;border-radius:9px;background:#101c2c;color:#d2e7f4;font-size:12px}
+.teach-preview p{margin:5px 0}
+.teach-explain{font-size:12px;line-height:1.5;color:#bdd0df}
+#teachStatus[data-error="1"]{color:#ffb2ac}
+@media(max-width:440px){.teach-two{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header><img class="brand-icon" src="icon-192.png" alt="NordicWatch radar"><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v1.2</div><h1>NordicWatch</h1></div><button class="score score-button" id="activityDetails" type="button" title="Explain the live activity index and data coverage">Activity index <b id="score">—</b><small id="scoreUpdated">Waiting for feeds</small></button></header>
@@ -80,12 +93,38 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <div class="legend">Orange AWACS · Purple tanker · Red ISR · Cyan ASW · Blue transport · Yellow fighter</div>
 <div class="alertctl"><button id="alertsBtn">Enable alerts</button><span class="alertstate" id="alertState">off</span></div><label class="event-pref"><input id="eventStartAlerts" type="checkbox"> Planned event start notices</label>
 </div></div></section>
-<aside class="side" id="mobileIntelPanel"><div class="mobile-sheet-head"><b>NordicWatch intelligence</b><button id="mobileIntelClose" type="button">Close</button></div><div class="card"><div class="eye">COLLECTOR SWARM</div><h2>Scan Cards</h2><div id="scanStatus" class="meta">Starting specialist collectors…</div><div id="scanCards" class="scan-grid"></div></div><div class="card"><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2><div class="meta">Observed activity change · 24 h / 7-day reference / since last check</div><div id="regionalDeltaPreview"></div><button id="regionalDeltaOpen">Open Regional Delta</button></div><div class="card"><div class="eye">EARLY WARNING</div><h2>Developing situations</h2><div id="situations"></div><button id="importSituation">Import observations</button><input type="file" id="situationFile" accept=".json,application/json" hidden><div id="situationImportStatus" class="meta"></div></div><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="newsDebug" class="meta"></div><details id="newsSourceDetails" class="meta"><summary>Source diagnostics</summary><div id="newsSourceDiagnostics"></div></details><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div><div id="germanyHotspots"></div><div id="germanyCoverage" class="meta"></div><h2>Event status &amp; history</h2><div id="eventStateHistory"></div></div></aside>
+<aside class="side" id="mobileIntelPanel"><div class="mobile-sheet-head"><b>NordicWatch intelligence</b><button id="mobileIntelClose" type="button">Close</button></div><div class="card"><div class="eye">COLLECTOR SWARM</div><h2>Scan Cards</h2><div id="scanStatus" class="meta">Starting specialist collectors…</div><div id="scanCards" class="scan-grid"></div></div><div class="card"><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2><div class="meta">Observed activity change · 24 h / 7-day reference / since last check</div><div id="regionalDeltaPreview"></div><button id="regionalDeltaOpen">Open Regional Delta</button></div><div class="card"><div class="eye">EARLY WARNING</div><h2>Developing situations</h2><div id="situations"></div><button id="importSituation">Import observations</button><button id="teachOpen" type="button" aria-controls="teachDrawer" aria-expanded="false">Teach NordicWatch · News URL</button><input type="file" id="situationFile" accept=".json,application/json" hidden><div id="situationImportStatus" class="meta"></div></div><div class="card"><div class="head"><div><div class="eye">SECURITY &amp; DEFENCE</div><h2>Nordic–Baltic news</h2><div class="news-status" id="newsStatus">Loading current news…</div></div><span class="live">●</span></div><div id="newsDebug" class="meta"></div><details id="newsSourceDetails" class="meta"><summary>Source diagnostics</summary><div id="newsSourceDiagnostics"></div></details><div id="news"></div></div><div class="card"><div class="head"><div><div class="eye">LIVE SIGNALS</div><h2>Latest signals</h2></div><span class="live">●</span></div><div id="signals"></div></div><div class="card"><div class="eye">REGIONAL WATCH</div><h2>Hotspots</h2><div id="hots"></div><div id="germanyHotspots"></div><div id="germanyCoverage" class="meta"></div><h2>Event status &amp; history</h2><div id="eventStateHistory"></div></div></aside>
 </main>
 <div class="drawer" id="drawer"><div class="sheet"><div class="sheethead"><div><div class="eye">DELTA VIEW</div><h2>What changed?</h2></div><button id="close">Close</button></div><div id="changes"></div></div></div>
 <div class="drawer" id="regionalDeltaDrawer"><div class="sheet"><div class="sheethead"><div><div class="eye">CHANGE DETECTION</div><h2>Regional Delta</h2></div><button id="regionalDeltaClose">Close</button></div><div id="regionalDeltaContent"></div></div></div>
 <div class="drawer" id="briefDrawer"><div class="sheet brief-sheet"><div class="sheethead"><div><div class="eye">NORDICWATCH DAILY BRIEF · v1.2</div><h2 id="briefTitle">Morning Brief</h2></div><button id="briefClose">Close</button></div><div id="briefContent"></div></div></div>
 <div class="drawer" id="explanationDrawer"><div class="sheet"><div class="sheethead"><h2 id="explanationTitle">Evidence</h2><button id="explanationClose">Close</button></div><div id="explanationContent"></div></div></div>
+<div class="drawer" id="teachDrawer" role="dialog" aria-modal="true" aria-label="Teach NordicWatch news review">
+ <div class="sheet teach-sheet">
+  <div class="sheethead"><div><div class="eye">FEEDBACK · REVIEWED EXAMPLES</div><h2>Teach NordicWatch</h2></div><button type="button" id="teachClose">× Close</button></div>
+  <p class="teach-explain">Teach the relevance rules using a real news URL. This <b>does not fetch unknown articles automatically</b> or change alerts. Add the headline yourself when the article is not in the local news archive.</p>
+  <div class="teach-fields">
+   <label>News article link (HTTPS)<input id="teachUrl" type="url" placeholder="https://publisher.example/news/..." maxlength="2048" autocomplete="off"></label>
+   <label>Headline<input id="teachTitle" type="text" maxlength="300" placeholder="Article headline"></label>
+   <label>Short source summary (optional)<textarea id="teachDescription" rows="2" maxlength="800" placeholder="Only use facts supported by the article; no confidential material"></textarea></label>
+   <div class="teach-two"><label>Article published (date)<input type="date" id="teachPublished"></label><label>Event occurred (if known)<input type="date" id="teachEventDate"></label></div>
+   <button type="button" id="teachAnalyze">Analyze relevance</button>
+   <div id="teachPreview" class="teach-preview" aria-live="polite">Paste a link and press Analyze. NordicWatch uses its current relevance rules to make a suggestion.</div>
+   <div class="teach-two"><label>Your relevance label
+    <select id="teachLabel"><option value="NEEDS_REVIEW">Needs review</option><option value="DIRECT_AOI">Nordic / Baltic</option><option value="STRATEGIC_SPILLOVER">Strategic spillover</option><option value="NOT_RELEVANT">Not relevant</option></select>
+   </label><label>Article context
+    <select id="teachFreshness"><option value="UNKNOWN">Unknown</option><option value="NEW_DEVELOPMENT">New development</option><option value="HISTORICAL_REPORT">Reporting about an older event</option></select>
+   </label></div>
+   <label>Review decision<select id="teachDecision"><option value="NEEDS_REVIEW">Save for later review</option><option value="APPROVED_FOR_TESTING">Approve as test example</option><option value="REJECTED">Reject example</option></select></label>
+   <label>Your reasoning (required)<textarea id="teachReason" rows="2" maxlength="600" placeholder="Why is this relevant or irrelevant? What should NordicWatch do differently?"></textarea></label>
+   <button type="button" id="teachSave" class="primary">Save teaching example</button>
+  </div>
+  <p class="meta" id="teachHistory"></p>
+  <button type="button" id="teachExport">Export approved examples (JSON)</button>
+  <p class="meta" id="teachStatus" role="status" aria-live="polite"></p>
+  <p class="teach-explain">Saved <b>only on this device</b> until you export. Each correction creates a new revision. Approval means suitable as a testing label, <b>not</b> that the news is independently confirmed. No production rules are changed automatically.</p>
+ </div>
+</div>
 <script src="storage-safe.js"></script>
 <script src="mobile-intel.js"></script>
 <script src="layers-panel.js"></script>
@@ -114,6 +153,8 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <script src="defence-posture.js"></script>
 <script src="brief-engine.js"></script>
 <script src="situation-ui.js"></script>
+<script src="teach-nordicwatch.js"></script>
+<script src="teach-ui.js"></script>
 <script src="collector-swarm.js"></script>
 <script src="scan-cards.js"></script>
 <script>
