@@ -66,7 +66,7 @@
   const entry=index<0?{schemaVersion:VERSION,exampleId:'NW-TCH-'+checksum(canonical),canonicalUrl:canonical,publisher:new URL(canonical).hostname,createdAt:when,history:[]}:JSON.parse(JSON.stringify(rows[index]));
   if(!Array.isArray(entry.history)||entry.history.length>=100)throw Error('Example has too many revisions; export the history');
   const revision=entry.history.length+1;
-  const revisionData={revision,reviewedAt:when,title:t,description:desc,articlePublishedAt:published,eventOccurredAt:occurred,publicationDateStatus:published?'PROVIDED':'UNKNOWN',eventDateStatus:occurred?'PROVIDED':'UNKNOWN',metadataOrigin,label,freshness,decision,reason:note,sourceConfidence:'UNVERIFIED_BY_TEACH',ruleImpact:'NONE',ruleVersion:'manual-review-v0.1'};
+  const revisionData={revision,reviewedAt:when,title:t,description:desc,articlePublishedAt:published,eventOccurredAt:occurred,publicationDateStatus:published?(/^\d{4}-\d{2}-\d{2}$/.test(String(publishedAt))?'DAY_ONLY':'PROVIDED_TIMESTAMP'):'UNKNOWN',eventDateStatus:occurred?(/^\d{4}-\d{2}-\d{2}$/.test(String(eventOccurredAt))?'DAY_ONLY':'PROVIDED_TIMESTAMP'):'UNKNOWN',metadataOrigin,label,freshness,decision,reason:note,sourceConfidence:'UNVERIFIED_BY_TEACH',ruleImpact:'NONE',ruleVersion:'manual-review-v0.1'};
   entry.history.push(revisionData);
   entry.currentRevision=revision;
   const next=rows.slice();if(index>=0)next[index]=entry;else next.push(entry);
