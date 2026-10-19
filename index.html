@@ -57,7 +57,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 </style>
 </head>
 <body>
-<header><img class="brand-icon" src="icon-192.png" alt="NordicWatch radar"><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v1.2</div><h1>NordicWatch</h1></div><button class="score score-button" id="activityDetails" type="button" title="Explain the live activity index and data coverage">Live activity <b id="score">—</b><small id="scoreUpdated">Waiting for feeds</small></button></header>
+<header><img class="brand-icon" src="icon-192.png" alt="NordicWatch radar"><div><div class="eye">NORDIC OSINT SITUATIONAL AWARENESS · v1.2</div><h1>NordicWatch</h1></div><button class="score score-button" id="activityDetails" type="button" title="Explain the live activity index and data coverage">Activity index <b id="score">—</b><small id="scoreUpdated">Waiting for feeds</small></button></header>
 <div class="toolbar"><div class="live-indicator">LIVE SNAPSHOT · Historical changes: Regional Delta</div><div class="brief-actions"><button id="morningBrief">Morning Brief</button><button id="eveningBrief">Evening Brief</button><button id="intelligenceHistory">Signal / event history</button><button id="regionalDeltaButton">Regional Delta</button><a href="./earth-observation.html" class="primary" style="padding:8px 10px;border:1px solid rgba(97,218,251,.4);border-radius:9px;text-decoration:none;white-space:nowrap">Earth Observation ↗</a><a href="./strategic-review.html" class="primary" style="padding:8px 10px;border:1px solid rgba(97,218,251,.4);border-radius:9px;text-decoration:none;white-space:nowrap">Strategic Review ↗</a><button class="primary" id="changed">What changed?</button></div></div>
 <button id="mobileIntel" type="button" aria-controls="mobileIntelPanel" aria-expanded="false" class="primary mobile-intel">Situations · news · hotspots</button>
 <main>
@@ -471,7 +471,7 @@ initAlerts();
 
 const COAST_GUARD_TRACK_KEY="NORDICWATCH_COAST_GUARD_TRACKS";
 const COAST_GUARD_PLACES=[{name:"East of Hammarö, Vänern",lat:59.27,lon:13.66},{name:"Gotland",lat:57.47,lon:18.49},{name:"Gulf of Finland",lat:59.75,lon:25.5},{name:"Bornholm",lat:55.13,lon:14.92}];
-let rawAircraft=[],activeFilter="all",coastGuardObservations=[];
+let rawAircraft=[],airFeedStatus="PENDING",activeFilter="all",coastGuardObservations=[];
 function coastGuardStore(){try{const value=JSON.parse(NordicWatchStorage.getItem(COAST_GUARD_TRACK_KEY)||"{}");return value&&typeof value==="object"?value:{}}catch{return {}}}
 function coastGuardLocation(point){let best=null;for(const place of COAST_GUARD_PLACES){const distance=CG.km(point,place);if(distance<=80&&(!best||distance<best.distance))best={...place,distance}}return best?.name||`${(+point.lat).toFixed(3)}, ${(+point.lon).toFixed(3)}`}
 function coastGuardContext(){
@@ -866,10 +866,10 @@ function scanSnapshot(){
  events=activeEvents.map(x=>collectorRecord('event-'+x.id,x.startTime,x.title,{kind:x.eventType,domain:'OFFICIAL',region:x.areaName,source:x.sourceName||'Official event feed',sourceUrl:x.sourceUrl,score:x.escalation?.escalationScore||0,confidence:x.confidence})),
  escalation=events.filter((_,i)=>activeEvents[i]?.escalation?.qualifies),upstreamTriggers=upstreamTriggerSnapshot(),all=[...air,...maritime,...news,...drone,...events],adsb=document.getElementById('adsbStatus')?.textContent||'',feed=document.getElementById('newsStatus')?.textContent||'';
  const posture=readArray("NORDICWATCH_SIGNAL_ARCHIVE").map(a=>window.NordicWatchPosture?.classify(a)).filter(Boolean).map(a=>collectorRecord(a.id,a.timestamp,a.title,{kind:a.kind,domain:"POSTURE",region:a.regions.join(" / "),source:a.source,sourceUrl:a.url,confidence:a.sourceConfidence,score:55}));
- return {posture,air,maritime,infrastructure,drone,gnss,escalation,upstreamTriggers,all,coverage:{'air-activity':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},'asw-maritime':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},maritime:{checked:true,available:true,message:maritime.length?'Local maritime evidence loaded':'Local datasets checked'},infrastructure:{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'isr-ew':{checked:adsb!=='loading…',available:!/^feed unavailable/.test(adsb),message:adsb},'drone-gnss':{checked:uavIncidents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'high-north':{checked:!/^Loading|^Evaluating/.test(feed)&&adsb!=='loading…',available:(briefNewsCoverage?.available||0)>0||air.length>0},escalation:{checked:activeEvents.length>0||!/^Loading|^Evaluating/.test(feed),available:true},'defence-posture':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'upstream-triggers':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed}}}
+ return {posture,air,maritime,infrastructure,drone,gnss,escalation,upstreamTriggers,all,coverage:{'air-activity':{checked:airFeedStatus!=='PENDING',available:airFeedStatus==='AVAILABLE',message:adsb},'asw-maritime':{checked:airFeedStatus!=='PENDING',available:airFeedStatus==='AVAILABLE',message:adsb},maritime:{checked:maritime.length>0,available:maritime.length>0,message:maritime.length?'Imported maritime evidence loaded':'No live AIS provider or imported maritime observations'},infrastructure:{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'isr-ew':{checked:airFeedStatus!=='PENDING',available:airFeedStatus==='AVAILABLE',message:adsb},'drone-gnss':{checked:uavIncidents.length>0||!/^Loading|^Evaluating/.test(feed),available:uavIncidents.length>0||(briefNewsCoverage?.available||0)>0},'high-north':{checked:!/^Loading|^Evaluating/.test(feed)&&airFeedStatus!=='PENDING',available:(briefNewsCoverage?.available||0)>0||airFeedStatus==='AVAILABLE'},escalation:{checked:activeEvents.length>0||!/^Loading|^Evaluating/.test(feed),available:activeEvents.length>0||(briefNewsCoverage?.available||0)>0},'defence-posture':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed},'upstream-triggers':{checked:!/^Loading|^Evaluating/.test(feed),available:(briefNewsCoverage?.available||0)>0,message:feed}}}
 }
 function openScanCard(card){const content=document.getElementById('explanationContent');content.replaceChildren();const intro=document.createElement('p');intro.textContent=card.description+' Status '+card.status+' · score '+card.score+'/100 · '+card.observationCount+' observations from '+card.sourceCount+' source labels.';content.append(intro);if(!card.evidence.length){const p=document.createElement('p');p.textContent=card.health.message||'No current evidence in this collector window.';content.append(p)}for(const e of card.evidence){const row=document.createElement('div');row.className='evidence-record';const title=document.createElement('b');title.textContent=e.title;const meta=document.createElement('div');meta.className='meta';meta.textContent=new Date(e.timestamp).toLocaleString()+' · '+(e.region||'Location unavailable')+' · '+e.source+' · '+(e.confidence||'confidence unavailable');row.append(title,meta);if(e.sourceUrl){const a=document.createElement('a');a.href=e.sourceUrl;a.target='_blank';a.rel='noopener noreferrer nofollow';a.textContent='Open source';row.append(a)}content.append(row)}document.getElementById('explanationTitle').textContent=card.title+' Scan Card';document.getElementById('explanationDrawer').classList.add('show')}
-function refreshScanCards(){try{const cards=collectorSwarm.run(scanSnapshot()),active=cards.filter(x=>x.status==='ACTIVE').length,degraded=cards.filter(x=>x.status==='DEGRADED'||x.status==='NO DATA').length;SC.render(document.getElementById('scanCards'),cards,{onOpen:openScanCard});document.getElementById('scanStatus').textContent=active+' active · '+degraded+' without confirmed coverage · '+cards.length+' collectors isolated'}catch(error){document.getElementById('scanStatus').textContent='Collector swarm degraded';console.warn('collector swarm',error)}}
+function refreshScanCards(){try{const cards=collectorSwarm.run(scanSnapshot()),active=cards.filter(x=>x.status==='ACTIVE').length,degraded=cards.filter(x=>x.status==='DEGRADED').length,missing=cards.filter(x=>x.status==='NO DATA').length;SC.render(document.getElementById('scanCards'),cards,{onOpen:openScanCard});document.getElementById('scanStatus').textContent=active+' active · '+degraded+' degraded · '+missing+' no data · '+cards.length+' specialist checks'}catch(error){document.getElementById('scanStatus').textContent='Collector swarm degraded';console.warn('collector swarm',error)}}
 function rebuildSituationalState(){try{
  const now=Date.now(),signals=[];
  for(const a of rawAircraft.filter(trackableAircraft)){const result=aircraftClass(a),zone=nearestZone(a),hex=aircraftHex(a),pattern=patternAnalyses.get(hex)||RP.detect(trailWindowPoints(hex));signals.push({id:`aircraft-${hex||a.flight||a.r}`,domain:"AIRCRAFT",evidence:"OBSERVATION",timestamp:new Date(now-Math.max(0,+a.seen||0)*1000).toISOString(),lat:+a.lat,lon:+a.lon,region:zone?.name||"Nordic–Baltic area",actor:a.cou||a.country||a.operator||"",capability:result.role||result.governmentRole||"UNKNOWN",kind:pattern.confidence>=55?pattern.pattern:"AIRCRAFT_PRESENCE",confidence:result.confidence==="CONFIRMED"?92:result.confidence==="PROBABLE"?70:45,sourceConfidence:"SINGLE_RELIABLE_SOURCE",source:"Public ADS-B",quality:result.confidence==="CONFIRMED"?85:60,persistence:Math.min(100,(pattern.metrics?.durationMs||0)/3600000*35),details:`${(a.flight||"").trim()||a.r||hex} · ${result.role||result.base}`})}
@@ -1026,7 +1026,7 @@ async function loadNews(){
  const c=selection.counters;document.getElementById('newsDebug').textContent='fetched '+rawFetched.length+' → freshness '+window.nordicWatchFreshnessDiagnostics.counters.fresh+' → geographic filter '+c.geographic+' → dedup '+c.dedup+' → selected '+c.selected+' (evaluated '+archive.length+' stored records)';await notifyHighRiskNews(currentArticles);
 }
 async function loadMilitary(){
- const st=document.getElementById("adsbStatus"),up=document.getElementById("adsbUpdated"); st.textContent="loading…";
+ const st=document.getElementById("adsbStatus"),up=document.getElementById("adsbUpdated"); airFeedStatus="PENDING";st.textContent="loading…";
  // Optional future proxy: set localStorage.NORDICWATCH_ADSB_PROXY to e.g. https://your-worker.example/mil
  const proxy="https://nordicwatch-proxy.rospiggen.workers.dev";
  const urls=[proxy,"https://api.adsb.lol/v2/mil"].filter(Boolean);
@@ -1035,7 +1035,9 @@ async function loadMilitary(){
  for(const url of urls){
    try{
      const j=await fetchJSON(url);
-     rawAircraft=(j.ac||j.aircraft||[]).filter(nordic);
+     const aircraft=Array.isArray(j.ac)?j.ac:Array.isArray(j.aircraft)?j.aircraft:null;
+     if(!aircraft)throw new Error("Malformed ADS-B response");
+     rawAircraft=aircraft.filter(nordic);airFeedStatus="AVAILABLE";
     saveHistorySnapshot(rawAircraft);
      captureAircraftTrails(rawAircraft);
      updateCoastGuardTracks(rawAircraft);
@@ -1045,7 +1047,7 @@ async function loadMilitary(){
      return;
    }catch(e){lastErr=e}
  }
- rawAircraft=[];G.military.clearLayers();scheduleTrailRender();st.textContent="feed unavailable";up.textContent="Map remains operational";updateActivityScore();console.error(lastErr);
+ rawAircraft=[];airFeedStatus="UNAVAILABLE";G.military.clearLayers();scheduleTrailRender();st.textContent="feed unavailable";up.textContent="Map remains operational";updateActivityScore();console.error(lastErr);
 }
 initMaritimeSignals();
 loadNews();setInterval(loadNews,NEWS_REFRESH_MS);

@@ -11,3 +11,18 @@ test('ASW Scan Card selects ASW without treating other aircraft as patrol assets
 test('ISR and High North collectors select only their own evidence',()=>{const cards=C.defaults().run({air:[row('awacs',{kind:'AWACS'}),row('transport',{kind:'TRANSPORT'})],all:[row('kola',{region:'Kola / Murmansk'}),row('south',{region:'Germany'})]},{now});assert.equal(cards.find(x=>x.collectorId==='isr-ew').observationCount,1);assert.equal(cards.find(x=>x.collectorId==='high-north').observationCount,1)});
 test('external trigger raises a bounded watch card without becoming an AOI event',()=>{const trigger=row('ukraine-wave',{directAoiEvent:false,watchAreas:['Kaliningrad','Kola'],watchTargets:['EW','AEW','FIGHTER_CAP'],evidenceType:'CONFIRMED_EXTERNAL',score:55}),card=C.defaults().run({upstreamTriggers:[trigger]},{now}).find(x=>x.collectorId==='upstream-triggers');assert.equal(card.status,'ACTIVE');assert.equal(card.priority,'ELEVATED');assert.equal(card.evidence[0].directAoiEvent,false);assert.deepEqual(card.evidence[0].watchTargets,['EW','AEW','FIGHTER_CAP'])});
 test('Scan Card assets are loaded by the page and retained by the offline shell',()=>{const fs=require('node:fs'),html=fs.readFileSync(require.resolve('../index.html'),'utf8'),sw=fs.readFileSync(require.resolve('../sw.js'),'utf8');for(const file of ['collector-swarm.js','scan-cards.js']){assert.match(html,new RegExp('<script src="'+file.replace('.','\\.')+'"></script>'));assert.match(sw,new RegExp('"\\./'+file.replace('.','\\.')+'"'))}assert.match(html,/id="scanCards"/)});
+
+test('outage after polling is DEGRADED, never falsely QUIET',()=>{
+ const swarm=C.createSwarm([{id:'outage',select:s=>s.rows||[]}]);
+ const card=swarm.run({rows:[],coverage:{outage:{checked:true,available:false,message:'ADS-B feed unavailable'}}},{now})[0];
+ assert.equal(card.status,'DEGRADED');assert.equal(card.observationCount,0);assert.equal(card.health.checked,true);assert.equal(card.health.available,false);
+ assert.match(card.health.message,/unavailable/);
+});
+test('no AIS adapter means NO DATA even if local collector exists',()=>{
+ const card=C.defaults().run({maritime:[],coverage:{maritime:{checked:false,available:false,message:'No external AIS'}}},{now}).find(x=>x.collectorId==='maritime');
+ assert.equal(card.status,'NO DATA');assert.equal(card.observationCount,0);
+});
+test('genuinely checked healthy zero observations may be QUIET',()=>{
+ const card=C.defaults().run({air:[],coverage:{'air-activity':{checked:true,available:true,message:'ADS-B feed available'}}},{now}).find(x=>x.collectorId==='air-activity');
+ assert.equal(card.status,'QUIET');
+});
