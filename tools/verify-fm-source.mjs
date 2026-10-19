@@ -12,7 +12,10 @@ const download=async u=>{
 };
 const page=await download(source);
 const links=[...page.body.matchAll(/<link\b[^>]*>/gi)].map(x=>x[0]).filter(x=>/rss|atom|alternate/i.test(x));
-const candidates=[...new Set([...page.body.matchAll(/(?:https?:)?\/\/(?:www\.)?mynewsdesk\.com\/se\/rss\/(?:current_news|pressreleases|news)\/\d+/gi)].map(x=>x[0].replace(/^\/\//,'https://')), ...links.flatMap(x=>[...x.matchAll(/href=["']([^"']+)["']/gi)].map(k=>k[1])).filter(u=>/rss|atom/i.test(u))])].filter(u=>{try{return !!guard(new URL(u,source).href)}catch{return false}});
+const scanned=[...page.body.matchAll(/(?:https?:)?\/\/(?:www\.)?mynewsdesk\.com\/se\/rss\/(?:current_news|pressreleases|news)\/\d+/gi)].map(x=>x[0].replace(/^\/\//,'https://'));
+const advertised=links.flatMap(x=>[...x.matchAll(/href=["']([^"']+)["']/gi)].map(k=>k[1])).filter(u=>/rss|atom/i.test(u));
+const candidates=[...new Set([...scanned,...advertised])].filter(u=>{try{return !!guard(new URL(u,source).href)}catch{return false}});
+
 console.log('Newsroom:',page.url,'length:',page.body.length,'content-type:',page.contentType);
 console.log('RSS link tags:',links.slice(0,20));
 console.log('Candidate feeds:',candidates.slice(0,12));
