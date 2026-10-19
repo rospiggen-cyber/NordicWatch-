@@ -16,6 +16,7 @@ import {OFFICIAL_SOURCES,configuredSources,parseFeed,discoverTimed as discover,e
 import {configuredExternalSources,parseExternalFeed,importReports,correlate as correlateExternal,toEvent as externalToEvent,sourceTrust} from "../external-report-core.mjs";
 import {configuredExternalFeedValue,normalizeArticle,retainRollingSignals,coverageFromRun,verificationFor,addRevision,findFollowUps,summarizeSourceHealth} from "./news-reliability-core.mjs";
 import {runStrategicCollection} from "./strategic-source-collector.mjs";
+import {readEvidence,validEvidenceId} from "./evidence-ledger.mjs";
 import {collectCopernicus,getCopernicusSnapshot} from "./copernicus-mapping-collector.mjs";
 const cors=origin=>({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=60","x-content-type-options":"nosniff"});
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","x-content-type-options":"nosniff",...headers}});
@@ -83,6 +84,13 @@ export default {
   if(!snapshot){try{await collectCopernicus(env,Date.now());snapshot=await getCopernicusSnapshot(env)}catch{}}
   if(!snapshot)return json({enabled:true,degraded:true,reason:"Awaiting first Copernicus catalogue scan",activations:[],sourceHealth:{status:"NOT_YET_CHECKED",coverageIncomplete:true},counts:{local:0,nationalContext:0}},200,cors(allowed));
   return json({enabled:true,...snapshot},200,{...cors(allowed),"cache-control":"public, max-age=120"});
+ }if(url.pathname==="/strategic/evidence"){
+  if(env.STRATEGIC_ENABLED!=="true")return json({enabled:false,error:"strategic_collection_disabled"},403,cors(allowed));
+  const id=url.searchParams.get("id");
+  if(!validEvidenceId(id))return json({error:"invalid_evidence_id"},400,cors(allowed));
+  const entry=await readEvidence(env.EVENTS,id);
+  if(!entry)return json({error:"evidence_not_found"},404,cors(allowed));
+  return json({enabled:true,...entry},entry.integrity==="MATCH"?200:409,{...cors(allowed),"cache-control":"no-store"});
  }if(url.pathname==="/strategic"){
   if(env.STRATEGIC_ENABLED!=="true")return json({enabled:false,degraded:true,reason:"Strategic collection not enabled"},200,cors(allowed));
   const snapshot=await env.EVENTS.get("strategic:snapshot","json");
