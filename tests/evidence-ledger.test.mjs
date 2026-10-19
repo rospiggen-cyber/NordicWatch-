@@ -46,6 +46,11 @@ test('material change creates a new linked historical record without replacing t
   assert.equal(next.payload.analysis[0].priority,'WATCH');
   assert.equal(next.previousId,first.id);
   assert.equal(next.previousHash,first.sha256);
+  // History links and timestamps are included in the signed fingerprint.
+  const key='strategic:evidence:'+second.id;
+  const edited=JSON.parse(kv.map.get(key));edited.previousId='nw-20261019T102030012Z-aaaaaaaaaaaaaaaa';
+  kv.map.set(key,JSON.stringify(edited));
+  assert.equal((await readEvidence(kv,second.id)).integrity,'MISMATCH');
 });
 test('tampering is detectable and invalid identifiers cannot reach KV',async()=>{
   const kv=new KV(), recorded=await appendEvidence(kv,sample(),NOW);
