@@ -61,3 +61,15 @@ test('cannot save before async persistence has loaded',async()=>{
  const p=P.create(T,{getItem:()=>null,setItem:()=>true},{async read(){return []},async write(){return true}});
  await assert.rejects(p.save([]),/still loading/i);
 });
+
+test('do not overwrite unreadable prior IndexedDB history after migration failure',async()=>{
+ let writes=0;
+ const brokenRead={async read(){throw Error('db read fails')},async write(){writes++;return true}};
+ const p=P.create(T,{getItem:()=>null,setItem:()=>false},brokenRead);
+ await p.load();
+ const item=T.submit(p.rows(),sample('https://thetimes.com/article/retain'),'2026-10-20T08:45:00Z');
+ const result=await p.save(item.rows);
+ assert.equal(result.saved,false);
+ assert.equal(writes,0,'unknown IndexedDB state must not be overwritten');
+ assert.equal(p.rows().length,1,'new data remain exportable as JSON');
+});
