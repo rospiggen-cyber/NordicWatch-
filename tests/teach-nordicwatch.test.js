@@ -89,3 +89,22 @@ test('all controls are installed in the PWA app and offline cache',()=>{
  for(const name of ['teach-nordicwatch.js','teach-ui.js']){assert(html.includes('<script src="'+name+'"></script>'));assert(sw.includes('"./'+name+'"'));}
  assert.match(html,/This.*does not fetch unknown articles automatically/);
 });
+
+test('Kaliningrad OTH radar Times case is not rejected when URL-only or headline lacks a place',()=>{
+ const url='https://www.thetimes.com/world/europe/article/russia-builds-radar-kaliningrad-exclave-nato-eastern-europe-w933w3blq?utm_source=chatgpt.com';
+ const title='Russia builds giant radar on Nato’s eastern flank';
+ const empty=T.suggestion({sourceUrl:url,title:''},x=>NR.safeRelevance(x));
+ assert.equal(empty.label,'NEEDS_REVIEW');
+ assert(empty.urlHints.regions.includes('Kaliningrad / Baltijsk'));
+ assert.match(empty.reason,/not fetched/i);
+ const headline=T.suggestion({sourceUrl:url,title},x=>NR.safeRelevance(x));
+ assert.equal(headline.label,'NEEDS_REVIEW','a URL slug is only a hint, not verified article evidence');
+ assert.equal(headline.directGeographicRelevance,false);
+ const supported=T.suggestion({sourceUrl:url,title,description:'ICEYE satellite images show a new over-the-horizon radar and antenna array in Gvardeysk, Kaliningrad.'},x=>NR.safeRelevance(x));
+ assert.equal(supported.label,'DIRECT_AOI');
+ assert(supported.matchedRegions.includes('Kaliningrad / Baltijsk'));
+ assert(supported.matchedTopics.includes('MILITARY_SENSOR_INFRASTRUCTURE'));
+ assert.equal(T.url(url),'https://www.thetimes.com/world/europe/article/russia-builds-radar-kaliningrad-exclave-nato-eastern-europe-w933w3blq');
+ const unrelated=T.suggestion({sourceUrl:'https://example.org/other',title:'Kiel opens another food festival'},x=>NR.safeRelevance(x));
+ assert.equal(unrelated.label,'NOT_RELEVANT');
+});

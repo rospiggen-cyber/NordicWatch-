@@ -91,3 +91,20 @@ test('Bothnian locality alone does not admit unrelated Swedish news',()=>{
  }
  assert.equal(R.evaluateNordicRelevance({title:'US Navy destroyer drills off Sundsvall in Bothnian Sea'}).relevant,true);
 });
+
+
+test('new OTH radar near Gvardeysk is a NordicWatch regional sensor-infrastructure signal',()=>{
+ const article={title:'Russia builds giant radar on Nato’s eastern flank',description:'Satellite images by ICEYE show an over-the-horizon radar at Gvardeysk in Kaliningrad, with three 500m antenna arrays.',publishedAt:'2026-10-19T14:30:00Z',url:'https://www.thetimes.com/world/europe/article/russia-builds-radar-kaliningrad-exclave-nato-eastern-europe-w933w3blq?utm_source=chatgpt.com'};
+ const result=R.evaluateNordicRelevance(article);
+ assert.equal(result.relevant,true);
+ assert(result.matchedRegions.includes('Kaliningrad / Baltijsk'));
+ assert(result.matchedTopics.includes('MILITARY_SENSOR_INFRASTRUCTURE'));
+ const routed=R.route([article],{now:Date.parse('2026-10-20T06:30:00Z')});
+ assert.equal(routed.articles.length,1);
+ assert.equal(routed.counters.whatChanged,1);
+});
+test('military sensor relevance does not introduce general radar and local food false positives',()=>{
+ for(const title of ['Weather radar added at a US airport','Technology fair unveils new radar in South Korea','Gvardeysk hosts annual harvest festival']){
+  assert.equal(R.evaluateNordicRelevance({title}).relevant,false,title);
+ }
+});

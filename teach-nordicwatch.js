@@ -32,13 +32,23 @@
    try{return url(x.url||x.sourceUrl)===canonical}catch{return false}
   })||null;
  }
+ // URL slugs are user-controlled hints only. Never treat them as fetched article evidence.
+ function urlHints(link){
+  if(!link)return {regions:[],topics:[]};
+  let pathname;try{pathname=decodeURIComponent(new URL(url(link)).pathname).toLowerCase().replace(/[_-]+/g,' ')}catch{return {regions:[],topics:[]}}
+  const regions=[],topics=[];
+  if(/\b(?:kaliningrad|konigsberg|koenigsberg|gvardeysk|gvardeisk|baltijsk|baltiysk)\b/.test(pathname))regions.push('Kaliningrad / Baltijsk');
+  if(/\b(?:radar|radars|sensor|sensors|surveillance|electronic warfare|oth)\b/.test(pathname))topics.push('Military sensors / radar (URL hint)');
+  return {regions,topics};
+ }
  function suggestion(article,evaluate){
   if(typeof evaluate!=='function')throw Error('Routing evaluator unavailable');
-  const title=clean(article.title,300),description=clean(article.description,800);
-  if(!title)return {label:'NEEDS_REVIEW',reason:'Headline missing; cannot assess relevance',matchedRegions:[],matchedTopics:[],directGeographicRelevance:false,correlatedStrategicRelevance:false};
+  const title=clean(article.title,300),description=clean(article.description,800),hints=urlHints(article.sourceUrl||article.url);
+  if(!title)return {label:'NEEDS_REVIEW',reason:hints.regions.length?'Article not fetched. URL suggests '+hints.regions.join(', ')+', but this is NOT verified article content. Enter the actual headline and a sourced summary.':'Headline missing; the URL was not fetched. Enter the actual headline and a sourced summary.',matchedRegions:[],matchedTopics:[],urlHints:hints,directGeographicRelevance:false,correlatedStrategicRelevance:false};
   let r;try{r=evaluate({title,description})}catch{r=null}
   if(!r||typeof r.relevant!=='boolean')return {label:'NEEDS_REVIEW',reason:'Relevance engine unavailable',matchedRegions:[],matchedTopics:[],directGeographicRelevance:false,correlatedStrategicRelevance:false};
-  return {label:r.correlatedStrategicRelevance?'STRATEGIC_SPILLOVER':r.directGeographicRelevance?'DIRECT_AOI':r.relevant?'NEEDS_REVIEW':'NOT_RELEVANT',reason:Array.isArray(r.reason)?r.reason.join(' · '):'Review suggested classification',matchedRegions:(r.matchedRegions||[]).map(x=>clean(x,100)),matchedTopics:(r.matchedTopics||[]).map(x=>clean(x,90)),directGeographicRelevance:Boolean(r.directGeographicRelevance),correlatedStrategicRelevance:Boolean(r.correlatedStrategicRelevance)};
+  const incomplete=!(r.relevant)&&hints.regions.length>0;
+  return {label:r.correlatedStrategicRelevance?'STRATEGIC_SPILLOVER':r.directGeographicRelevance?'DIRECT_AOI':r.relevant?'NEEDS_REVIEW':incomplete?'NEEDS_REVIEW':'NOT_RELEVANT',reason:incomplete?'URL suggests '+hints.regions.join(', ')+' (unverified location hint). Add the article-supported location and security details to assess relevance.':Array.isArray(r.reason)?r.reason.join(' · '):'Review suggested classification',matchedRegions:(r.matchedRegions||[]).map(x=>clean(x,100)),matchedTopics:(r.matchedTopics||[]).map(x=>clean(x,90)),urlHints:hints,directGeographicRelevance:Boolean(r.directGeographicRelevance),correlatedStrategicRelevance:Boolean(r.correlatedStrategicRelevance)};
  }
  function read(store){
   try{const data=JSON.parse(store?.getItem(KEY)||'[]');return Array.isArray(data)?data.filter(x=>x?.schemaVersion===VERSION&&typeof x.canonicalUrl==='string'&&Array.isArray(x.history)).slice(-250):[]}catch{return []}
