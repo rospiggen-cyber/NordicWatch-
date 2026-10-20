@@ -121,8 +121,9 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
   </div>
   <p class="meta" id="teachHistory"></p>
   <button type="button" id="teachExport">Export approved examples (JSON)</button>
+  <button type="button" id="teachBackup" disabled>Download all teaching examples (JSON backup)</button>
   <p class="meta" id="teachStatus" role="status" aria-live="polite"></p>
-  <p class="teach-explain">Saved <b>only on this device</b> until you export. Each correction creates a new revision. Approval means suitable as a testing label, <b>not</b> that the news is independently confirmed. No production rules are changed automatically.</p>
+  <p class="teach-explain">Saved <b>on this device</b> when storage is available. Download a JSON backup regularly. Each correction creates a new revision. Approval means suitable as a testing label, <b>not</b> that the news is independently confirmed. No production rules are changed automatically.</p>
  </div>
 </div>
 <script src="storage-safe.js"></script>
@@ -154,6 +155,7 @@ details{margin-top:10px;overflow-wrap:anywhere}summary{cursor:pointer;font-weigh
 <script src="brief-engine.js"></script>
 <script src="situation-ui.js"></script>
 <script src="teach-nordicwatch.js"></script>
+<script src="teach-persistence.js"></script>
 <script src="teach-ui.js"></script>
 <script src="collector-swarm.js"></script>
 <script src="scan-cards.js"></script>
