@@ -26,10 +26,11 @@
     'Reason: '+r.reason,
     r.matchedRegions?.length?'Areas: '+r.matchedRegions.join(', '):'Area: not established',
     r.matchedTopics?.length?'Topics: '+r.matchedTopics.join(', '):'Security topic: not established',
+    r.urlHints?.regions?.length?'URL hint (unverified, not article evidence): '+r.urlHints.regions.join(', '):null,
     'This is an automated relevance suggestion, NOT verified news evidence.'
    ];
    preview.replaceChildren();
-   for(const line of rows){const p=document.createElement('p');p.textContent=line;preview.append(p)}
+   for(const line of rows.filter(Boolean)){const p=document.createElement('p');p.textContent=line;preview.append(p)}
   };
   function evaluate(){
    let sourceUrl;try{sourceUrl=T.url(el('teachUrl').value)}catch(e){setStatus(e.message,true);return null}
@@ -48,7 +49,7 @@
    const dateOnly=feedDate&&!Number.isNaN(+new Date(feedDate))?new Date(feedDate).toISOString().slice(0,10):'';
    const originalFields=Boolean(match&&el('teachTitle').value===(match.title||'')&&el('teachDescription').value===(match.description||match.summary||'')&&el('teachPublished').value===dateOnly);
    lastMatch=originalFields?{url:sourceUrl,title:el('teachTitle').value,description:el('teachDescription').value,published:el('teachPublished').value}:null;
-   const r=T.suggestion({title:el('teachTitle').value,description:el('teachDescription').value},x=>NR.safeRelevance(x));
+   const r=T.suggestion({sourceUrl,title:el('teachTitle').value,description:el('teachDescription').value},x=>NR.safeRelevance(x));
    suggestionText(r);
    el('teachLabel').value=r.label;
    setStatus(match?'Matched a news record already stored in NordicWatch. Check original dates and correct any fields.':'URL not found in current NordicWatch archive. Add a headline/date manually; full article text has NOT been fetched.');
