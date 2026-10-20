@@ -17,8 +17,9 @@ Give the operator a way to preserve approved or rejected real-world news example
    - URL path words (for example `kaliningrad` in a news URL) can now appear as **unverified review hints**. They are not fetched article data and cannot establish relevance on their own. A URL-only/high-level headline case is `NEEDS_REVIEW` until the operator supplies sourced geographic and security details. `Gvardeysk` and OTH/radar/sensor infrastructure are recognized in the regular relevance rules when explicitly present in a headline or description.
 5. Select whether the news documents a **new development**, **an older event** or **unknown**. Separate article publication date and event date. Both are operator-provided, date-only fields unless already matched from the local feed.
 6. Add a meaningful reasoning note, and choose **Approve as test example**, **Reject example** or **Save for later review**.
-7. Select **Save teaching example**. The entry lives **only in this browser/device** in its local storage. A correction to the same canonical URL appends a new numbered revision with timestamp, rationale and previous versions retained.
+7. Select **Save teaching example**. The entry is stored **only on this device**. Teach attempts browser localStorage and independently IndexedDB; it reports the successful backend. A correction to the same canonical URL appends a numbered revision with timestamp, rationale and earlier revisions retained. If both storage backends fail, the status clearly says **NOT SAVED permanently** and the records remain available within the open page for backup; download the JSON backup before refreshing or closing.
 8. **Export approved examples (JSON)** exports only entries whose current decision is APPROVED_FOR_TESTING, with the full local review history. Review the export before copying it to the **private** GitHub repository. No automatic GitHub upload or rule change occurs.
+9. **Download all teaching examples (JSON backup)** exports every currently held example, including pending/rejected examples. Use it when saving fails or before clearing app/browser storage. The backup remains on your device and is not uploaded automatically. Restoration/import of this backup is not implemented yet; retain the file and avoid clearing app data unnecessarily.
 
 ## Distinguishing learning from truth
 
@@ -39,11 +40,11 @@ Module `teach-nordicwatch.js` exports:
 - `read()` / `write()` store at most 250 unique URL examples in `NORDICWATCH_TEACH_EXAMPLES_V1` (100 revisions/URL), with explicit error if storage is unavailable.
 - `exportReviewed()` creates a JSON document of current approved examples. The app uses browser download and makes no server-side write request.
 
-UI wiring is in `teach-ui.js`. Both modules are included in the PWA's `sw.js` offline shell. No Cloudflare Worker write endpoint exists.
+UI wiring is in `teach-ui.js`, with IndexedDB fallback in `teach-persistence.js`. All modules are included in the PWA's `sw.js` offline shell. No Cloudflare Worker write endpoint exists.
 
 ## Acceptance test outline
 
-`node --test tests/teach-nordicwatch.test.js`
+`node --test tests/teach-nordicwatch.test.js tests/teach-persistence.test.js`
 
 Positive cases: known DN article, historical event date preserved, official relevance suggestions, corrected revisions retained. Negative cases: food festival in Sundsvall, invalid/local URLs, rejected/pending examples excluded from approved export, false confidence elevation prohibited, corrupted browser storage, invalid date/decision, no silent rule modification.
 
