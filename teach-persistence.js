@@ -47,9 +47,9 @@
   return [...records.values()];
  }
  function create(teach,store,driver=indexedDBDriver()){
-  let rows=teach.read(store),initialized=false,needsBackup=false;
+  let rows=teach.read(store),initialized=false,needsBackup=false,idbReadable=false;
   async function load(){
-   try{rows=mergeRows(rows,await driver.read())}catch{/* Local storage remains available without IndexedDB. */}
+   try{rows=mergeRows(rows,await driver.read());idbReadable=true}catch{/* Do not overwrite an unreadable IndexedDB containing unknown previous history. */}
    initialized=true;
    return rows;
   }
@@ -57,7 +57,7 @@
    if(!initialized)throw Error("Teach storage is still loading");
    rows=next;let local=false,idb=false;
    try{teach.write(store,next);local=true}catch{/* memory fallback does not count as durable */}
-   try{idb=await driver.write(next)!==false}catch{/* unavailable or quota */}
+   if(idbReadable)try{idb=await driver.write(next)!==false}catch{/* unavailable or quota */}
    needsBackup=!(local||idb);
    return {saved:!needsBackup,backend:local?"localStorage":idb?"IndexedDB":null,needsBackup,rows};
   }
