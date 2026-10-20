@@ -5,16 +5,20 @@
  'use strict';
  function init(){
   const T=root.NordicWatchTeach,NR=root.NordicWatchNewsRouting,store=root.NordicWatchStorage;
-  if(!T||!NR||!store)return;
+  if(!T||!NR||!store||!root.NordicWatchTeachPersistence)return;
+  const persistence=root.NordicWatchTeachPersistence.create(T,store);
   const el=id=>document.getElementById(id);
   const drawer=el('teachDrawer'),status=el('teachStatus'),preview=el('teachPreview');
   if(!drawer||!status||!preview)return;
   let lastMatch=null,previousUrl=null;
+  el('teachSave').disabled=true;
+  const currentRows=()=>persistence.rows();
   const setStatus=(value,isError=false)=>{status.textContent=value;status.dataset.error=isError?'1':'0'};
   const history=()=>{
-    const rows=T.read(store),approved=rows.filter(r=>r.history.at(-1)?.decision==='APPROVED_FOR_TESTING').length;
+    const rows=currentRows(),approved=rows.filter(r=>r.history.at(-1)?.decision==='APPROVED_FOR_TESTING').length;
     el('teachHistory').textContent=rows.length+' reviewed links · '+approved+' approved for tests (local on this device)';
     el('teachExport').disabled=approved===0;
+    el('teachBackup').disabled=rows.length===0;
   };
   const clean=v=>String(v||'').trim();
   const loadCandidates=()=>{
@@ -63,7 +67,7 @@
   drawer.addEventListener('click',e=>{if(e.target===drawer)close()});
   el('teachAnalyze').onclick=evaluate;
   el('teachUrl').addEventListener('change',()=>{lastMatch=null;previousUrl=null});
-  el('teachSave').onclick=()=>{
+  el('teachSave').onclick=async()=>{
    try{
     const sourceUrl=T.url(el('teachUrl').value);
     const matchProvenance=lastMatch&&lastMatch.url===sourceUrl&&lastMatch.title===el('teachTitle').value&&lastMatch.description===el('teachDescription').value&&lastMatch.published===el('teachPublished').value;
@@ -74,23 +78,46 @@
       label:el('teachLabel').value,freshness:el('teachFreshness').value,
       decision:el('teachDecision').value,reason:el('teachReason').value
     };
-    const result=T.submit(T.read(store),data);
-    T.write(store,result.rows);
+    const result=T.submit(currentRows(),data);
+    const saved=await persistence.save(result.rows);
     history();
-    setStatus('Saved local revision '+result.entry.currentRevision+' for '+result.entry.exampleId+'. No live rules, map observations or alerts were changed.');
+    if(saved.saved){
+      setStatus('Saved revision '+result.entry.currentRevision+' in '+saved.backend+'. Local teaching example only; no live rules or alerts changed.');
+    }else{
+      setStatus('NOT SAVED permanently. Data remain in this open page only. Tap Download backup JSON before closing or refreshing the app.',true);
+    }
    }catch(e){setStatus(e.message,true)}
+  };
+  const downloadJson=(data,prefix)=>{
+    const json=JSON.stringify(data,null,2),blob=new Blob([json],{type:'application/json'});
+    const href=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=href;a.download=prefix+new Date().toISOString().slice(0,10)+'.json';
+    document.body.append(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),1000);
   };
   el('teachExport').onclick=()=>{
    try{
-    const data=T.exportReviewed(T.read(store)),json=JSON.stringify(data,null,2);
+    const data=T.exportReviewed(currentRows());
     if(!data.approvedCount)throw Error('No approved examples to export yet');
-    const blob=new Blob([json],{type:'application/json'}),href=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=href;a.download='nordicwatch-teach-approved-'+new Date().toISOString().slice(0,10)+'.json';
-    document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(href),1000);
+    downloadJson(data,'nordicwatch-teach-approved-');
     setStatus('Exported '+data.approvedCount+' approved examples for private GitHub review. No automatic rule changes.');
    }catch(e){setStatus(e.message,true)}
   };
-  history();
+  el('teachBackup').onclick=()=>{
+    try{
+      const rows=currentRows();
+      if(!rows.length)throw Error('No teaching examples to back up');
+      const content={schemaVersion:'nordicwatch-teach-backup/1',exportedAt:new Date().toISOString(),isLiveEvidence:false,automaticRuleChange:false,entries:rows};
+      downloadJson(content,'nordicwatch-teach-backup-');
+      setStatus('Backup downloaded. Keep this JSON file until durable saving has been verified.');
+    }catch(e){setStatus(e.message,true)}
+  };
+  setStatus('Loading saved teaching examples...');
+  persistence.load().then(()=>{
+    history();el('teachSave').disabled=false;
+    if(store.degraded)setStatus('Browser local storage is degraded; IndexedDB backup will be attempted for new saves.');
+    else setStatus('Teaching examples loaded. Saving uses persistent storage when available.');
+  }).catch(e=>{setStatus('Teaching storage unavailable: '+e.message,true);});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
  else init();

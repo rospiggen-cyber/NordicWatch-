@@ -85,8 +85,8 @@ test('local browser store degrades explicitly, does not claim successful persist
 test('all controls are installed in the PWA app and offline cache',()=>{
  const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
  const sw=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
- for(const name of ['teachOpen','teachDrawer','teachAnalyze','teachPreview','teachLabel','teachFreshness','teachDecision','teachSave','teachExport','teachReason','teachStatus'])assert(html.includes('id="'+name+'"'),name);
- for(const name of ['teach-nordicwatch.js','teach-ui.js']){assert(html.includes('<script src="'+name+'"></script>'));assert(sw.includes('"./'+name+'"'));}
+ for(const name of ['teachOpen','teachDrawer','teachAnalyze','teachPreview','teachLabel','teachFreshness','teachDecision','teachSave','teachExport','teachBackup','teachReason','teachStatus'])assert(html.includes('id="'+name+'"'),name);
+ for(const name of ['teach-nordicwatch.js','teach-persistence.js','teach-ui.js']){assert(html.includes('<script src="'+name+'"></script>'));assert(sw.includes('"./'+name+'"'));}
  assert.match(html,/This.*does not fetch unknown articles automatically/);
 });
 
