@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07101c">
+<title>NordicWatch · Cascade Lab (demo)</title>
+<style>
+:root{color-scheme:dark;--bg:#07101c;--panel:#0d1c2e;--line:#29435e;--text:#eff6ff;--muted:#aabdd1;--blue:#63d9f9;--amber:#ffcb77;--green:#7be0b0}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(155deg,#08182c 0%,#07101c 70%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1130px;margin:0 auto;padding:16px 16px 70px}
+header{border-bottom:1px solid var(--line);padding:16px 0 18px;display:flex;gap:14px;align-items:center;justify-content:space-between}
+a{color:var(--blue)}.back{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:9px 12px;text-decoration:none;color:#eaf6fc;border:1px solid var(--line);border-radius:10px}
+h1{font-size:clamp(1.65rem,5vw,2.55rem);margin:10px 0 2px;line-height:1.17}h2{font-size:1.1rem;margin:0 0 8px}h3{font-size:1rem;margin:0 0 5px}p{margin:8px 0}
+.kicker{font-size:11px;letter-spacing:.16em;color:var(--blue);text-transform:uppercase;font-weight:700}
+.muted,.note{color:var(--muted)}.note{font-size:13px}
+.panel{background:rgba(16,33,52,.88);border:1px solid var(--line);border-radius:15px;padding:17px}
+.hero{padding:17px 0 20px}.hero p{max-width:860px}.tag{background:#1e364b;color:#cbecfa;border:1px solid #38617b;border-radius:40px;padding:4px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.controls label{display:block;margin:8px 0 5px;font-weight:650}
+select,input[type=range]{width:100%}select{font:inherit;padding:12px 11px;border-radius:10px;border:1px solid #597089;background:#0a192a;color:var(--text);min-height:44px}
+fieldset{border:0;padding:0;margin:0}legend{font-weight:700;margin-bottom:8px}.toggle{display:flex!important;align-items:flex-start;gap:10px;border:1px solid #36506d;border-radius:10px;padding:10px;margin:8px 0!important;font-weight:500!important;cursor:pointer}.toggle input{margin:4px 0 0;width:20px;height:20px;accent-color:#58d3ff;flex:none}.toggle strong{display:block}.toggle small{display:block;color:var(--muted)}
+#horizonValue{color:var(--blue);font-weight:800}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.metric strong{font-size:1.65rem;color:var(--blue);display:block}.metric span{font-size:12px;color:var(--muted)}
+.methods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.method{border-top:3px solid #55c5e4}.method:nth-child(2){border-color:#7be0b0}.method:nth-child(3){border-color:var(--amber)}.method:nth-child(4){border-color:#b6a2f5}.method p{font-size:13px;color:#cedbeb}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.step{min-height:148px;border:1px solid #3b607b;border-radius:12px;padding:12px;background:#0a2136}.step.mutedstep{opacity:.56;border-style:dashed}.step .clock{display:inline-block;font-size:12px;font-weight:700;color:#6ee7ff;border-bottom:1px solid #477c9a;margin-bottom:7px}.step h3{font-size:.95rem}.step p{font-size:12px;color:#bacfdd}
+.flowhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.legend{font-size:12px;color:#bfd8e6}
+#blocked{font-size:13px;color:var(--muted);padding-top:7px}
+footer{margin-top:20px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:13px}
+@media(max-width:830px){.controls{grid-template-columns:1fr}.methods,.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.methods,.steps{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.metric strong{font-size:1.35rem}header{align-items:flex-start}}
+</style>
+<script src="./cascade-engine.js" defer></script>
+<script src="./cascade-lab.js" defer></script>
+</head>
+<body>
+<main>
+<header>
+ <div><div class="kicker">NordicWatch · Experimental</div><strong>Cascade Lab</strong></div>
+ <a class="back" href="./index.html">← Till lägesbilden</a>
+</header>
+<section class="hero">
+ <h1>Från observation till möjlig kaskad</h1>
+ <p>Principdemonstration: kombinera HAZOP, FMEA och LOPA-inspirerade skydd med en tidsbaserad beroendegraf. <strong>Alla exempel är syntetiska.</strong> Inga verkliga larm, systeminventeringar eller externa datakällor används.</p>
+ <span class="tag">OFFLINE · READ-ONLY · NOT FOR OPERATIONS</span>
+</section>
+<section class="controls" aria-label="Simuleringens inställningar">
+ <div class="panel">
+  <label for="case">Välj exempel</label>
+  <select id="case"><option value="cyber">Cyber · Gemensam IT-tjänst</option><option value="industry">Industri · Pump och process</option></select>
+  <p id="scenarioDetail" class="note"></p>
+  <label for="horizon">Tid efter T0: <span id="horizonValue">24 h</span></label>
+  <input type="range" id="horizon" min="0" max="24" step="1" value="24" aria-label="Tid efter ursprungshändelsen">
+  <p class="note">Tidsfördröjningarna är antaganden för demonstrationen, inte observerade tider.</p>
+ </div>
+ <div class="panel">
+  <fieldset><legend>Simulera skyddsåtgärder</legend><div id="safeguards"></div></fieldset>
+  <p class="note">Ett ikryssat skydd antas fungera och bryta en specifik modellkoppling. Det betyder inte att skyddet är verifierat eller oberoende i verkligheten.</p>
+ </div>
+</section>
+<div class="metrics" aria-live="polite">
+ <div class="panel metric"><strong id="baselineCount">–</strong><span>Möjliga följdeffekter utan skydd</span></div>
+ <div class="panel metric"><strong id="currentCount">–</strong><span>Efter valda skydd, vid vald tid</span></div>
+ <div class="panel metric"><strong id="avoidedCount">–</strong><span>Undvikna steg i modellen</span></div>
+</div>
+<section aria-labelledby="methodTitle">
+ <h2 id="methodTitle">Fyra kompletterande analysfrågor</h2>
+ <div class="methods">
+  <article class="panel method"><h3>HAZOP</h3><div class="note">Vad kan avvika?</div><p id="hazop"></p></article>
+  <article class="panel method"><h3>FMEA</h3><div class="note">Vad kan fallera?</div><p id="fmea"></p></article>
+  <article class="panel method"><h3>LOPA</h3><div class="note">Är skydden tillräckliga?</div><p id="lopa"></p></article>
+  <article class="panel method"><h3>CASCADE</h3><div class="note">Vad kan hända härnäst?</div><p>Tidssteg och explicita tekniska beroenden visar möjliga spridningsvägar. Inte en sannolikhetsprognos.</p></article>
+ </div>
+</section>
+<section class="panel" aria-labelledby="timelineTitle">
+ <div class="flowhead"><h2 id="timelineTitle">Simulerad konsekvenskedja</h2><span class="legend">T0 = utlösande händelse · T+n = antagna timmar</span></div>
+ <div id="timeline" class="steps" aria-live="polite"></div>
+ <div id="blocked"></div>
+</section>
+<footer><strong>Avgränsning:</strong> Detta är inte en formell HAZOP, FMEA eller LOPA och inte en verklig cybersäkerhetsbedömning. Oprövade beroenden, feldata och bristande barriäroberoende kan ändra utfallet. Inga operativa larm undertrycks och inga system styrs. För verklig användning krävs anläggningsspecifik modell, källor, validering och behörighetsstyrning.</footer>
+</main>
+</body>
+</html>

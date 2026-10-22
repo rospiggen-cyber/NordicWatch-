@@ -15,6 +15,10 @@ on:
       - "teach-persistence.js"
       - "tests/teach-persistence.test.js"
       - "sw.js"
+      - "cascade-engine.js"
+      - "cascade-lab.js"
+      - "cascade-lab.html"
+      - "tests/cascade-lab.test.js"
       - "tests/teach-nordicwatch.test.js"
       - "intelligence-core.js"
       - "brief-engine.js"
@@ -55,6 +59,8 @@ jobs:
           node --check teach-nordicwatch.js
           node --check teach-ui.js
           node --check teach-persistence.js
+          node --check cascade-engine.js
+          node --check cascade-lab.js
           node --check cloudflare/event-feed-worker.js
           node --check intelligence-core.js
           node --check brief-engine.js
@@ -63,5 +69,5 @@ jobs:
           node --check regional-delta.js
       - name: Regression tests
         run: |
-          node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/teach-nordicwatch.test.js tests/teach-persistence.test.js tests/external-report.test.mjs tests/event-discovery.test.mjs tests/finland-civil-restrictions.test.mjs
+          node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/teach-nordicwatch.test.js tests/teach-persistence.test.js tests/cascade-lab.test.js tests/external-report.test.mjs tests/event-discovery.test.mjs tests/finland-civil-restrictions.test.mjs
           node --test tests/situation-engine.test.js tests/situation-evidence.test.js tests/regional-delta.test.js tests/brief-coverage.test.js
