@@ -1,6 +1,7 @@
 /* Server-side strategic RSS adapter, independently isolated from military Event Engine. */
 import "../strategic-early-warning.js";
 import "../source-coverage-engine.js";
+import {appendEvidence} from "./evidence-ledger.mjs";
 const engine = globalThis.NordicWatchStrategic;
 const MAX_FEED = 1000000;
 const DAY = 86400000;
@@ -146,9 +147,14 @@ export async function runStrategicCollection(env,now=Date.now()) {
       'Partial official-source coverage; no independent news or polling collector connected.',
       'Official publications are not independent verification of their factual claims.']
   };
+  // Archive each materially new evidence assessment before exposing it as current.
+  // Historical write failure intentionally aborts the strategic collection.
+  const evidenceLedger = await appendEvidence(env.EVENTS, result, now);
+  result.evidenceLedger = evidenceLedger;
   // Only accepted bounded signals, not source failure, renew retained observations.
   await env.EVENTS.put('strategic:signals',JSON.stringify(snapshot.signals.slice(-200)));
   await env.EVENTS.put('strategic:snapshot',JSON.stringify(result));
   return {generatedAt:result.generatedAt,sourceCoverage:sourceCoverage.technical,sourcesHealthy:result.sourcesHealthy,
-    sourcesTotal:result.sourcesTotal,signals:result.signals.length,degraded:result.degraded,failures};
+    sourcesTotal:result.sourcesTotal,signals:result.signals.length,degraded:result.degraded,failures,
+    evidenceLedger:{id:evidenceLedger.id,appended:evidenceLedger.appended}};
 }

@@ -78,6 +78,10 @@ test('collector fetches live-shaped EU/NATO responses, saves snapshot and degrad
     assert.equal(snap.sourceCoverage.providers.find(x=>x.id==='congress').status,'NOT_CONFIGURED');
     assert.equal(snap.sourceCoverage.hypotheses.find(x=>x.id==='US_DOMESTIC_POLICY').status,'COVERAGE_GAPS');
     assert.equal(snap.analysis[0].priority,'INSUFFICIENT_EVIDENCE');
+    assert.ok(snap.evidenceLedger.id.startsWith('nw-'));
+    const entry=await kv.get('strategic:evidence:'+snap.evidenceLedger.id,'json');
+    assert.equal(entry.payload.signals[0].source.url,euArticle.replace(/\/$/,''));
+    assert.equal(entry.sha256,snap.evidenceLedger.sha256);
     assert.equal(snap.failures[0].id,'white-house');
     assert.equal(calls.length,3);
   } finally {globalThis.fetch=old}
@@ -96,6 +100,14 @@ test('GET /strategic refuses pre-enable exposure and serves stored source teleme
   const liveBody=await live.json();
   assert.equal(liveBody.enabled,true);
   assert.equal(liveBody.signals[0].id,'sample');
+  const invalid=await worker.fetch(new Request('https://worker.example/strategic/evidence?id=../secret',
+    {headers:{Origin:'https://rospiggen-cyber.github.io'}}),
+    {EVENTS:kv,APP_ORIGIN:'https://rospiggen-cyber.github.io',STRATEGIC_ENABLED:'true'});
+  assert.equal(invalid.status,400);
+  const disabledEvidence=await worker.fetch(new Request('https://worker.example/strategic/evidence?id=nw-20261019T102030012Z-aaaaaaaaaaaaaaaa',
+    {headers:{Origin:'https://rospiggen-cyber.github.io'}}),
+    {EVENTS:kv,APP_ORIGIN:'https://rospiggen-cyber.github.io'});
+  assert.equal(disabledEvidence.status,403);
   const blocked=await worker.fetch(new Request('https://worker.example/strategic',
     {headers:{Origin:'https://attacker.example'}}),{EVENTS:kv,APP_ORIGIN:'https://rospiggen-cyber.github.io',STRATEGIC_ENABLED:'true'});
   assert.equal(blocked.status,403);

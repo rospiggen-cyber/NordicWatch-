@@ -52,6 +52,11 @@ button:focus-visible,a:focus-visible{outline:3px solid #7ee7ff}button:disabled{o
  <p class="muted" id="coverageCaveat"></p>
 </section>
 <section class="panel">
+ <h2>Evidence Ledger <span class="coverage-tag">Pilot v1</span></h2>
+ <p class="muted">GMP-inspired provenance: source links, model version and linked revisions. The archive stores normalized evidence, not original documents; Cloudflare KV is not WORM storage.</p>
+ <div id="ledgerSummary" class="list" aria-live="polite"></div>
+</section>
+<section class="panel">
  <h2>Hypothesis review</h2>
  <p class="muted">REVIEW means independent material warrants human examination, not proof of causation, crisis or election outcome. Missing coverage is never counted as reassurance.</p>
  <div class="grid" id="cards"></div>
@@ -148,9 +153,26 @@ function coverageView(data){
   if(!cov.hypotheses?.length)elem('p','No hypothesis coverage can be assessed.',hyp,'muted');
   el('coverageCaveat').textContent=cov.caveat||'Feed response does not prove event completeness.';
 }
+function renderEvidenceLedger(data){
+  const target=el('ledgerSummary');target.replaceChildren();
+  const r=data.evidenceLedger;
+  if(!r?.id){
+    elem('p','No archived strategic assessment yet. History begins on the first successful run after deployment.',target,'muted');
+    return;
+  }
+  const row=elem('div',null,target,'item');
+  elem('strong','Assessment ID: '+r.id,row);
+  elem('div','Archived: '+new Date(r.recordedAt).toLocaleString()+' · SHA-256: '+String(r.sha256||'').slice(0,20)+'…',row,'coverage-caption');
+  elem('div',r.previousId?'Previous assessment: '+r.previousId:'First recorded assessment in this ledger.',row,'coverage-caption');
+  const a=elem('a','Open archived evidence and integrity check ↗',row);
+  a.href=base()+'/strategic/evidence?id='+encodeURIComponent(r.id);
+  a.rel='noopener noreferrer';a.target='_blank';
+  elem('p','The checksum detects content changes. It does not prove that source statements are true.',target,'muted');
+}
 function render(data){
   el('cards').replaceChildren();el('signals').replaceChildren();el('sources').replaceChildren();el('summary').replaceChildren();
   coverageView(data);
+  renderEvidenceLedger(data);
   el('updated').textContent=data.generatedAt?'Updated '+new Date(data.generatedAt).toLocaleString():'No completed collection yet';
   const all=Array.isArray(data.signals)?data.signals:[];
   const cover=Array.isArray(data.sources)?data.sources:[];
