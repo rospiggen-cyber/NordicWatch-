@@ -19,6 +19,15 @@
   function isBlackSeaStrategicSpillover(content){
     return blackSeaPlace.test(content)&&blackSeaNatoLink.test(content)&&blackSeaShipping.test(content)&&blackSeaThreat.test(content);
   }
+  // Europe-wide physical hybrid campaign reporting is strategic context, not a Nordic incident coordinate.
+  // Require actor + European scope + physical methods + campaign/aggregation cue to avoid generic global news.
+  function isEuropeWideRussianHybridCampaign(content){
+    const russian=/\b(?:russia|russian|ryssland|rysk\w*|kremlin)\b/.test(content);
+    const european=/\b(?:europe|european|europa|europeisk\w*|europe-wide|eu-wide)\b/.test(content);
+    const physicalHybrid=/\b(?:hybrid(?:attac?k|angrepp)\w*|hybrid[\s-]+(?:attacks?|angrepp|sabotage)|sabotag\w*|mordbrand\w*|arson|incendiary|(?:physical|kinetic|fysiska|valdsamma|violent)\s+hybrid\w*)\b/.test(content);
+    const campaign=/\b(?:granskning|kartlaggning|investigation|investigators?|serie|series|campaign|kampanj\w*|wave|vag|over\s+\d+|more than\s+\d+|[2-9]\d*\s+(?:attacks?|incident\w*|fall|cases)|across europe|europe-wide|trappar upp|escalating|surge|surging)\b/.test(content);
+    return russian&&european&&physicalHybrid&&campaign;
+  }
   function evaluateNordicRelevance(item){
     if(!item||typeof item!=='object')throw new TypeError('Invalid relevance input');
     // Publisher location and a generic NATO affiliation alone are not operational linkage.
@@ -34,13 +43,16 @@
     // without locating the reported event in the Nordic/Baltic AOI.
     const incidentalForeignMention=outsideAoi.test(content)&&nordicDemonym.test(content)&&incidentalContext.test(content);
     const directAoi=matchedRegions.length>0&&matchedTopics.length>0&&!genericGerman&&!incidentalForeignMention;
-    const strategicSpillover=!directAoi&&isBlackSeaStrategicSpillover(content);
-    if(strategicSpillover){matchedRegions.push('Black Sea / NATO southeastern flank');matchedTopics.push('MARITIME_SECURITY')}
+    const blackSeaSpillover=!directAoi&&isBlackSeaStrategicSpillover(content);
+    const europeHybridSpillover=!directAoi&&!blackSeaSpillover&&isEuropeWideRussianHybridCampaign(content);
+    const strategicSpillover=blackSeaSpillover||europeHybridSpillover;
+    if(blackSeaSpillover){matchedRegions.push('Black Sea / NATO southeastern flank');matchedTopics.push('MARITIME_SECURITY')}
+    if(europeHybridSpillover){matchedRegions.push('Europe-wide hybrid security context');matchedTopics.push('HYBRID_SECURITY')}
     const relevant=directAoi||strategicSpillover;
     const matchedAliases=regions.flatMap(([,r])=>content.match(new RegExp('\\b(?:'+r+')\\b','g'))||[]);
     const extractedCountries=[...new Set(content.match(/\b(?:poland|polish|sweden|swedish|finland|finnish|norway|norwegian|denmark|danish|danmark|dansk|iceland|estonia|latvia|lithuania|lietuva|lietuvos|lietuvoje)\b/g)||[])];
     const extractedPlaces=[...new Set([...matchedAliases,...(content.match(/\b(?:masuria|masurian|bemowo piskie)\b/g)||[])])];
-    return {directGeographicRelevance:directAoi,correlatedStrategicRelevance:strategicSpillover,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:strategicSpillover?['Strategic spillover: threat to merchant shipping on NATO Black Sea flank','Security topic: MARITIME_SECURITY']:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[incidentalForeignMention?'Nordic entity or participant mentioned in an event explicitly located outside the AOI':matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
+    return {directGeographicRelevance:directAoi,correlatedStrategicRelevance:strategicSpillover,normalizedText:content,extractedCountries,extractedPlaces,matchedAliases:[...new Set(matchedAliases)],relevant,relevanceScore:relevant?Math.min(100,60+matchedRegions.length*5+matchedTopics.length*5):0,matchedRegions,matchedEntities,matchedTopics,reason:europeHybridSpillover?['Strategic context: reported multi-incident Russian physical hybrid activity across Europe; attribution is not verified by relevance routing','Security topic: HYBRID_SECURITY']:blackSeaSpillover?['Strategic spillover: threat to merchant shipping on NATO Black Sea flank','Security topic: MARITIME_SECURITY']:relevant?['Named AOI location or established event association','Security topic: '+matchedTopics.join(', ')]:[incidentalForeignMention?'Nordic entity or participant mentioned in an event explicitly located outside the AOI':matchedRegions.length?'No security topic established':'No explicit Nordic/Baltic operational connection']};
   }
   function safeRelevance(item,evaluate=evaluateNordicRelevance){try{const result=evaluate(item);if(!result||typeof result.relevant!=='boolean')throw Error('Invalid relevance result');return result}catch{return {relevant:false,relevanceScore:0,matchedRegions:[],matchedEntities:[],matchedTopics:[],reason:['Relevance processing degraded'],degraded:true}}}
   const host=url=>{try{return new URL(url).hostname}catch{return ''}};
