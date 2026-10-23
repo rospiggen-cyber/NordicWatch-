@@ -51,3 +51,11 @@ Browser fetch/parse counters describe returned JSON records. RSS parser counts a
 - `node tests/news-routing.browser.cjs` with Playwright available via Node module resolution and Microsoft Edge installed. Uses an isolated local server, mocked data, desktop and Pixel 7/Android viewport emulation; no user browser profile or notifications. This is viewport emulation, not a physical Android device test.
 
 The app remains v1.1; the service-worker cache revision includes the shared routing module for offline use. These local source changes require normal frontend publication and Worker deployment to reach production.
+
+## Europe-wide physical hybrid campaign context (23 October 2026)
+
+`NW-HYBRID-001` documents a false-negative from SVT/EBU's 23 October 2026 investigative roundup of 54 suspected Russian-linked incidents. The short title/description had no named Nordic/Baltic country, so the former AOI-only rule silently excluded the reporting even though it concerns European security and potential regional spillover.
+
+The relevance evaluator now admits a tightly bounded class of **European Russia-linked physical hybrid campaign/investigative reporting** requiring all four elements in supplied title/description: Russian actor, Europe-wide scope, physical hybrid method, and campaign/aggregation cue. These are represented as `correlatedStrategicRelevance`, **not** a Nordic geographic incident, not confirmation of Russian attribution and not evidence of an individual attack. Generic political, economic and cyber-only European news, isolated overseas sabotage, and stale/recycled reports remain excluded by tests. Normal 72-hour freshness, source provenance, independence rules and EventScore thresholds remain unchanged.
+
+**Unresolved:** This fixes routing if reporting is already collected; it does not discover missing sources, ingest the 54 individual incidents, reconstruct cross-border causal chains or verify current production coverage. Data completeness and operator review remain necessary.
