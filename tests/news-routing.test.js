@@ -108,3 +108,45 @@ test('military sensor relevance does not introduce general radar and local food 
   assert.equal(R.evaluateNordicRelevance({title}).relevant,false,title);
  }
 });
+
+
+test('NW-HYBRID-001: SVT Europe-wide physical hybrid investigation routes as unverified strategic context',()=>{
+ const now=Date.parse('2026-10-23T08:00:00Z');
+ const article={title:'Granskning: Så trappar Ryssland upp våldsamma hybridattackerna',description:'Under det senaste halvåret har över 50 fysiska hybridattacker riktats mot Europa – där spåren leder till Ryssland.',publishedAt:'2026-10-23T06:01:00Z',url:'https://www.svt.se/nyheter/inrikes/granskning-sa-trappar-ryssland-upp-valdsamma-hybridattackerna'};
+ const routed=R.route([article],{now});
+ assert.equal(routed.articles.length,1);
+ assert.equal(routed.counters.whatChanged,1);
+ assert.equal(routed.events[0].relevance.directGeographicRelevance,false,'Europe is not a verified Nordic location');
+ assert.equal(routed.events[0].relevance.correlatedStrategicRelevance,true);
+ assert(routed.events[0].relevance.matchedTopics.includes('HYBRID_SECURITY'));
+ assert(routed.events[0].relevance.matchedRegions.includes('Europe-wide hybrid security context'));
+ assert.equal(routed.events[0].evidenceType,'INFERRED','relevance does not confirm attribution');
+ assert.equal(B.build({articles:routed.articles,now}).relevantStoredNewsEvaluated,1);
+ assert.equal(R.route([article],{now:Date.parse('2026-11-03T00:00:00Z')}).articles.length,0,'old article must not be recycled as breaking news');
+});
+
+test('Europe-wide hybrid strategic context gate rejects general European and isolated foreign stories',()=>{
+ const positive=[
+  'Investigation finds Russian-linked hybrid attacks across Europe',
+  'Ryssland: granskning av hybridattacker i Europa',
+  'European investigation: Russian sabotage campaign uses arson across Europe'
+ ];
+ for(const title of positive){
+  const result=R.evaluateNordicRelevance({title});
+  assert.equal(result.relevant,true,title);
+  assert.equal(result.directGeographicRelevance,false,title);
+  assert.equal(result.correlatedStrategicRelevance,true,title);
+ }
+ const negative=[
+  'EU summit discusses sanctions on Russia and European trade',
+  'Investigation: Russian cyberattacks spread across Europe',
+  'Russian sabotage attempt at a European railway station',
+  'Russia invests in hybrid car technology across Europe',
+  'NATO fleet completes routine Black Sea maritime exercise near Bulgaria'
+ ];
+ for(const title of negative){
+  const result=R.evaluateNordicRelevance({title});
+  assert.equal(result.correlatedStrategicRelevance,false,title);
+  assert.equal(result.relevant,false,title);
+ }
+});
