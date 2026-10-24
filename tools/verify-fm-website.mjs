@@ -14,8 +14,17 @@ console.log("Official index links:",links.length,links.slice(0,5));
 if(links.length===0)throw Error("Official index has no parseable links; production coverage would fail");
 const results=[];
 for(const url of links.slice(0,7)){
- try{const h=await fetchHtml(url),article=parseOfficialNewsArticle(h,url);results.push({url,article:article&&{title:article.title,date:article.publishedAt,summaryLength:article.summary.length},inspect:article?undefined:{start:h.slice(0,550),bytes:h.length,keys:[...h.matchAll(/(?:Marinen testar|Saildrone|2026-10-23|23 oktober|publishedAt|publishDate)/gi)].slice(0,10).map(m=>h.slice(Math.max(0,m.index-70),m.index+220)),h1:h.match(/<h1\\b[^>]*>[\\s\\S]{0,250}/i)?.[0],dateMatches:[...h.matchAll(/(?:Publiceringsdatum|Publicerad|datePublished|published_time)/gi)].slice(0,7).map(m=>h.slice(Math.max(0,m.index-80),m.index+180)),metas:[...h.matchAll(/<meta\\b[^>]*>/gi)].slice(0,30).map(m=>m[0].slice(0,180))}});}
- catch(error){results.push({url,error:String(error)})}
+ try{
+  const h=await fetchHtml(url),article=parseOfficialNewsArticle(h,url);
+  const visible=h.replace(/<script\b[\s\S]*?<\/script>/gi," ").replace(/<style\b[\s\S]*?<\/style>/gi," ");
+  const metas=[...h.matchAll(/<meta\b[^>]*>/gi)].map(m=>m[0]).filter(m=>/title|description|date|publish|time/i.test(m));
+  results.push({url,article:article&&{title:article.title,date:article.publishedAt,summaryLength:article.summary.length},inspect:article?undefined:{
+   title:h.match(/<title\b[^>]*>[\s\S]*?<\/title>/i)?.[0],
+   metas:metas.slice(0,12),
+   visibleMarkers:[...visible.matchAll(/(?:publicer|2026|oktober|<time|sjöövervakning)/gi)].slice(0,14).map(m=>visible.slice(Math.max(0,m.index-90),m.index+200)),
+   end:visible.slice(-800)
+  }});
+ }catch(error){results.push({url,error:String(error)})}
 }
 console.log(JSON.stringify(results,null,2));
 if(!results.some(x=>x.article))throw Error("No dated article extracted from original site; do not deploy");
