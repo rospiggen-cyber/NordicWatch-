@@ -9,6 +9,8 @@ on:
       - "cloudflare/event-feed-worker.js"
       - "cloudflare/news-reliability-core.mjs"
       - "cloudflare/event-discovery-core.mjs"
+      - "cloudflare/fm-website-collector.mjs"
+      - "tests/fm-website-collector.test.mjs"
       - "cloudflare/event-state-followup.mjs"
       - "cloudflare/kv-catalog.mjs"
       - "cloudflare/strategic-source-collector.mjs"

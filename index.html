@@ -859,8 +859,9 @@ function initMaritimeSignals(){
 const NEWS_SEEN_KEY="NORDICWATCH_NEWS_SEEN",NEWS_REFRESH_MS=10*60*1000,NEWS_HIGH_RISK=60;
 const NEWS_HISTORY_KEY="NORDICWATCH_NEWS_HISTORY",BRIEF_LAST_KEY="NORDICWATCH_LAST_BRIEF";
 let currentArticles=[];
-const NEWS_TERMS={drone:14,missile:18,sabotage:20,jamming:18,gnss:18,military:8,nato:8,submarine:16,attack:20,destroyer:16,warship:14,naval:10,krigsfartyg:14,robotjagare:16,örlogsfartyg:14,korvett:10,minläggare:10,övning:6,övar:6,övat:6};
+const NEWS_TERMS={sjödrönare:14,sjöövervakning:10,marinen:10,drone:14,missile:18,sabotage:20,jamming:18,gnss:18,military:8,nato:8,submarine:16,attack:20,destroyer:16,warship:14,naval:10,krigsfartyg:14,robotjagare:16,örlogsfartyg:14,korvett:10,minläggare:10,övning:6,övar:6,övat:6};
 const NEWS_PLACES=[
+  {name:"Baltic Sea / Östersjön",lat:58.5,lon:19.5,terms:["östersjön","ostersjon","baltic sea"]},
  {name:"Svalbard / Barentsburg",lat:78.06,lon:14.22,terms:["svalbard","barentsburg","professor molchanov"]},{name:"Jan Mayen / High North",lat:70.98,lon:-8.46,terms:["jan mayen","high north"]},{name:"Barents Sea",lat:72,lon:30,terms:["barents sea"]},
  {name:"Schleswig-Holstein",lat:54.32,lon:10.14,terms:["schleswig-holstein","kiel","lübeck"]},{name:"Mecklenburg-Vorpommern",lat:54.09,lon:12.14,terms:["mecklenburg-vorpommern","rostock"]},{name:"Northern Poland",lat:54.35,lon:18.65,terms:["gdansk","gdańsk","gdynia","szczecin"]},
  {name:"Kaliningrad",lat:54.71,lon:20.51,terms:["kaliningrad","baltijsk"]},{name:"Suwałki",lat:54.10,lon:23.20,terms:["suwałki","suwalki"]},
