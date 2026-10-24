@@ -3,7 +3,7 @@ export const FM_NEWS_INDEX = "https://www.forsvarsmakten.se/aktuellt/nyheter/";
 const HOST = "www.forsvarsmakten.se";
 const MONTHS = {"januari":1,"februari":2,"mars":3,"april":4,"maj":5,"juni":6,"juli":7,"augusti":8,"september":9,"oktober":10,"november":11,"december":12};
 const named = {"amp":"&","quot":"\"","apos":"'","lt":"<","gt":">","nbsp":" ","aring":"å","auml":"ä","ouml":"ö","Aring":"Å","Auml":"Ä","Ouml":"Ö","ndash":"–","mdash":"—"};
-function decode(s){return String(s||"").replace(/&(#x[0-9a-f]+|#\d+|[a-zA-Z]+);/g,(_,k)=>{if(k[0]==="#"){const n=k[1].toLowerCase()==="x"?parseInt(k.slice(2),16):Number(k.slice(1));return n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}return Object.hasOwn(named,k)?named[k]:" "})}
+function decode(s){return String(s||"").replace(/&(#x[0-9a-f]+|#\d+|[a-zA-Z]+);/gi,(_,k)=>{if(k[0]==="#"){const n=k[1].toLowerCase()==="x"?parseInt(k.slice(2),16):Number(k.slice(1));return n>0&&n<=0x10ffff?String.fromCodePoint(n):" "}return Object.hasOwn(named,k)?named[k]:" "})}
 function plain(html){return decode(String(html||"").replace(/<script\b[\s\S]*?<\/script>/gi," ").replace(/<style\b[\s\S]*?<\/style>/gi," ").replace(/<[^>]*>/g," ").replace(/\s+/g," ")).trim()}
 function attribute(tag,key){const m=tag.match(new RegExp("(?:\\s|^)"+key+"\\s*=\\s*([\"'])([\\s\\S]*?)\\1","i"));return decode(m?.[2]||"")}
 function meta(html,key){const tag=[...html.matchAll(/<meta\b[^>]*>/gi)].map(x=>x[0]).find(t=>attribute(t,"property")===key||attribute(t,"name")===key);return tag?attribute(tag,"content"):""}
