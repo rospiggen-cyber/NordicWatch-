@@ -28,12 +28,27 @@ function localSwedishDate(date,time){
 }
 export function parseOfficialNewsArticle(html,url){
  const canonical=trustedArticle(url);if(!canonical||typeof html!=="string"||html.length>2_000_000)return null;
- const h1=html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i),title=plain(h1?.[1])||meta(html,"og:title")||meta(html,"twitter:title");
+ const h1=html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i),title=plain(h1?.[1])||meta(html,"og:title")||meta(html,"twitter:title")||plain(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]);
  const intro=meta(html,"description")||meta(html,"og:description"),paragraphs=[...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>plain(m[1])).filter(p=>p.length>35).slice(0,8);const summary=[intro,...paragraphs].filter(Boolean).join(" ").slice(0,1200);
  let published=meta(html,"article:published_time")||meta(html,"datePublished")||html.match(/"datePublished"\s*:\s*"([^"]+)"/i)?.[1]||"";
  if(published&&!/[zZ]|[+-]\d{2}:?\d{2}$/.test(published))published="";
  if(published&&!Number.isFinite(Date.parse(published)))published="";
  if(!published){const match=plain(html).match(/(?:Publiceringsdatum|Publicerad)\s*:\s*(\d{1,2}\s+[a-zåäö]+\s+\d{4})\s*(?:kl\.?\s*)?(\d{1,2}:\d{2})/i);if(match)published=localSwedishDate(match[1],match[2])||""}
+if(!published){
+  // The official Swedish Armed Forces website encodes UTC in <time datetime="YYYY-MM-DD HH:mm:ss">
+  // while rendering Stockholm local time in the same element (e.g. 09:57Z / 11:57 CEST).
+  // Require matching visible local clock rather than assuming any timezone-less date is UTC.
+  const visible=html.replace(/<script\b[\s\S]*?<\/script>/gi," ");
+  const match=visible.match(/Publiceringsdatum:\s*<\/span>\s*<time\b[^>]*\bdatetime=["'](\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}):(\d{2})["'][^>]*>([\s\S]*?)<\/time>/i);
+  if(match){
+   const candidate=match[1]+"T"+match[2]+":"+match[3]+"Z";
+   const shown=plain(match[4]).match(/\bkl\s*:?\s*(\d{1,2}):(\d{2})/i);
+   const d=new Date(candidate);
+   const local=Number.isFinite(+d)?Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Stockholm",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d).map(x=>[x.type,x.value])):{};
+   if(shown&&+shown[1]===+local.hour&&+shown[2]===+local.minute)published=d.toISOString();
+  }
+}
+
  if(!title||!published||!summary)return null;
  return {title:title.slice(0,240),summary:summary.slice(0,1200),url:canonical,publishedAt:new Date(published).toISOString(),sourceId:"se",sourceName:"Swedish Armed Forces",sourceChannel:"official-website"};
 }
