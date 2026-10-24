@@ -14,7 +14,7 @@ console.log("Official index links:",links.length,links.slice(0,5));
 if(links.length===0)throw Error("Official index has no parseable links; production coverage would fail");
 const results=[];
 for(const url of links.slice(0,7)){
- try{const h=await fetchHtml(url),article=parseOfficialNewsArticle(h,url);results.push({url,article:article&&{title:article.title,date:article.publishedAt,summaryLength:article.summary.length},inspect:article?undefined:{h1:h.match(/<h1\\b[^>]*>[\\s\\S]{0,250}/i)?.[0],dateMatches:[...h.matchAll(/(?:Publiceringsdatum|Publicerad|datePublished|published_time)/gi)].slice(0,7).map(m=>h.slice(Math.max(0,m.index-80),m.index+180)),metas:[...h.matchAll(/<meta\\b[^>]*>/gi)].slice(0,30).map(m=>m[0].slice(0,180))}});}
+ try{const h=await fetchHtml(url),article=parseOfficialNewsArticle(h,url);results.push({url,article:article&&{title:article.title,date:article.publishedAt,summaryLength:article.summary.length},inspect:article?undefined:{start:h.slice(0,550),bytes:h.length,keys:[...h.matchAll(/(?:Marinen testar|Saildrone|2026-10-23|23 oktober|publishedAt|publishDate)/gi)].slice(0,10).map(m=>h.slice(Math.max(0,m.index-70),m.index+220)),h1:h.match(/<h1\\b[^>]*>[\\s\\S]{0,250}/i)?.[0],dateMatches:[...h.matchAll(/(?:Publiceringsdatum|Publicerad|datePublished|published_time)/gi)].slice(0,7).map(m=>h.slice(Math.max(0,m.index-80),m.index+180)),metas:[...h.matchAll(/<meta\\b[^>]*>/gi)].slice(0,30).map(m=>m[0].slice(0,180))}});}
  catch(error){results.push({url,error:String(error)})}
 }
 console.log(JSON.stringify(results,null,2));
