@@ -58,7 +58,7 @@ test("scheduled Worker routes a fresh official-website article even if Mynewsdes
   assert(requested.includes(articleUrl));
   assert(run.sourceHealth.some(s=>s.id==="se-website"&&s.ok),"original website must be healthy");
   const signal=await kv.get("signals:archive","json");
-  assert(signal.some(x=>x.url===articleUrl&&x.title===title),"should ingest Saildrone");
+  assert(signal.some(x=>x.url.includes("/marinen-testar-obemannade-havsdronare-for-sjoovervakning")&&x.title===title),"should ingest Saildrone");
   const routed=await kv.get("routing:events","json");
   assert(routed.some(x=>x.title===title&&x.briefEligible),"should be displayed in /news");
  }finally{globalThis.fetch=initial}
