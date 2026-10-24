@@ -33,6 +33,15 @@ test("Saildrone article preserves original date and is relevant, not a hostile d
  assert.equal(event.eventType,"official_defence_announcement");
  assert.notEqual(event.eventType,"drone_incident");
 });
+test("real Försvarsmakten article markup preserves UTC time and decodes Swedish entities",()=>{
+ const real='<html><head><title>Marinen testar obemannade havsdr&#xF6;nare f&#xF6;r sj&#xF6;&#xF6;vervakning</title></head><body><span class="show-for-sr">Publiceringsdatum: </span> <time datetime="2026-10-23 09:57:32">ig&#xE5;r kl: 11:57</time><p class="fm-preamble">Försvarsmakten testar Saildrone för sjöövervakning i Östersjön med NATO.</p></body></html>';
+ const item=parseOfficialNewsArticle(real,articleUrl);
+ assert(item);
+ assert.equal(item.publishedAt,"2026-10-23T09:57:32.000Z");
+ assert.equal(item.title,"Marinen testar obemannade havsdrönare för sjöövervakning");
+ assert.equal(R.route([item],{now:Date.parse("2026-10-24T06:15:00Z")}).articles.length,1);
+});
+
 test("missing publication evidence is dropped; no fetch time substituted",()=>{
  const bad=html.replace("Publiceringsdatum: 23 oktober 2026 kl. 09:57","");
  assert.equal(parseOfficialNewsArticle(bad,articleUrl),null);
