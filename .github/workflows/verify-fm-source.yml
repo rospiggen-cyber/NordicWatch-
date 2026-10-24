@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "tools/verify-fm-source.mjs"
+      - "tools/verify-fm-website.mjs"
+      - "cloudflare/fm-website-collector.mjs"
       - ".github/workflows/verify-fm-source.yml"
 permissions:
   contents: read
@@ -16,3 +18,4 @@ jobs:
         with:
           node-version: "22"
       - run: node tools/verify-fm-source.mjs
+      - run: node tools/verify-fm-website.mjs
