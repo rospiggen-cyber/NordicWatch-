@@ -29,7 +29,7 @@ function localSwedishDate(date,time){
 export function parseOfficialNewsArticle(html,url){
  const canonical=trustedArticle(url);if(!canonical||typeof html!=="string"||html.length>2_000_000)return null;
  const h1=html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i),title=plain(h1?.[1])||meta(html,"og:title")||meta(html,"twitter:title");
- const summary=meta(html,"description")||meta(html,"og:description")||plain(html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/i)?.[1]);
+ const intro=meta(html,"description")||meta(html,"og:description"),paragraphs=[...html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].map(m=>plain(m[1])).filter(p=>p.length>35).slice(0,8);const summary=[intro,...paragraphs].filter(Boolean).join(" ").slice(0,1200);
  let published=meta(html,"article:published_time")||meta(html,"datePublished")||html.match(/"datePublished"\s*:\s*"([^"]+)"/i)?.[1]||"";
  if(published&&!/[zZ]|[+-]\d{2}:?\d{2}$/.test(published))published="";
  if(published&&!Number.isFinite(Date.parse(published)))published="";
