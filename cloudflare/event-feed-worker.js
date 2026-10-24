@@ -16,6 +16,7 @@ import {OFFICIAL_SOURCES,configuredSources,parseFeed,discoverTimed as discover,e
 import {configuredExternalSources,parseExternalFeed,importReports,correlate as correlateExternal,toEvent as externalToEvent,sourceTrust} from "../external-report-core.mjs";
 import {configuredExternalFeedValue,normalizeArticle,retainRollingSignals,coverageFromRun,verificationFor,addRevision,findFollowUps,summarizeSourceHealth} from "./news-reliability-core.mjs";
 import {runStrategicCollection} from "./strategic-source-collector.mjs";
+import {FM_NEWS_INDEX,linksFromOfficialNewsIndex,parseOfficialNewsArticle} from "./fm-website-collector.mjs";
 import {collectCopernicus,getCopernicusSnapshot} from "./copernicus-mapping-collector.mjs";
 const cors=origin=>({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=60","x-content-type-options":"nosniff"});
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","x-content-type-options":"nosniff",...headers}});
@@ -23,7 +24,31 @@ async function kvEvents(env,caller){if(!env.EVENTS)return[];return (await indexe
 // Serve client polling from one compact KV snapshot instead of rereading every event value.
 async function kvEventSnapshot(env,caller){if(!env.EVENTS)return[];const snapshot=await env.EVENTS.get("events:snapshot","json");if(Array.isArray(snapshot))return snapshot;const events=await kvEvents(env,caller);await env.EVENTS.put("events:snapshot",JSON.stringify(events));return events}
 async function aircraft(env){if(!env.ADSB_ENDPOINT)return[];try{const u=new URL(env.ADSB_ENDPOINT);if(u.protocol!=="https:")return[];const r=await fetch(u,{headers:{accept:"application/json"},cf:{cacheTtl:0}});if(!r.ok)return[];const body=await r.json();return Array.isArray(body.ac)?body.ac:Array.isArray(body.aircraft)?body.aircraft:[]}catch{return[]}}
-async function fetchSource(item){const response=await fetch(item.url,{headers:{accept:"application/rss+xml, application/atom+xml, application/xml, text/xml;q=.9","user-agent":"NordicWatch-EventDiscovery/1.1"},redirect:"follow",cf:{cacheTtl:300,cacheEverything:true}});if(!response.ok||!officialSource(response.url))throw new Error(`source_${item.source.id}_${response.status}`);const length=Number(response.headers.get("content-length")||0);if(length>2_000_000)throw new Error(`source_${item.source.id}_too_large`);return parseFeed(await response.text(),response.url)}
+async function fetchOfficialWebsite(item){
+ const headers={accept:"text/html","user-agent":"NordicWatch-OfficialNews/1.0"};
+ const request=async url=>{
+  const response=await fetch(url,{headers,redirect:"follow",cf:{cacheTtl:300,cacheEverything:true}});
+  const final=new URL(response.url);
+  if(!response.ok||final.protocol!=="https:"||final.hostname!=="www.forsvarsmakten.se"||final.port)throw new Error("se_website_http_or_redirect_"+response.status);
+  if(Number(response.headers.get("content-length")||0)>2_000_000)throw new Error("se_website_oversized");
+  const html=await response.text();
+  if(html.length>2_000_000)throw new Error("se_website_oversized");
+  return html;
+ };
+ if(item.url!==FM_NEWS_INDEX)throw new Error("se_website_untrusted_index");
+ const links=linksFromOfficialNewsIndex(await request(FM_NEWS_INDEX));
+ if(!links.length)throw new Error("se_website_no_article_links");
+ const articles=[];
+ for(const link of links){
+  try{
+   const article=parseOfficialNewsArticle(await request(link),link);
+   if(article)articles.push(article);
+  }catch{} // Continue checking remaining articles; zero parsed records is degraded source coverage.
+ }
+ if(!articles.length)throw new Error("se_website_no_dated_articles");
+ return articles;
+}
+async function fetchSource(item){if(item.format==="official-html")return fetchOfficialWebsite(item);const response=await fetch(item.url,{headers:{accept:"application/rss+xml, application/atom+xml, application/xml, text/xml;q=.9","user-agent":"NordicWatch-EventDiscovery/1.1"},redirect:"follow",cf:{cacheTtl:300,cacheEverything:true}});if(!response.ok||!officialSource(response.url))throw new Error(`source_${item.source.id}_${response.status}`);const length=Number(response.headers.get("content-length")||0);if(length>2_000_000)throw new Error(`source_${item.source.id}_too_large`);return parseFeed(await response.text(),response.url)}
 async function fetchExternalSource(item){const response=await fetch(item.url,{headers:{accept:"application/rss+xml, application/atom+xml, application/xml, text/xml;q=.9","user-agent":"NordicWatch-ExternalReport/1.1"},redirect:"follow",cf:{cacheTtl:300,cacheEverything:true}});if(!response.ok||!sourceTrust(response.url))throw new Error(`external_source_${response.status}`);const length=Number(response.headers.get("content-length")||0);if(length>2_000_000)throw new Error("external_source_too_large");return parseExternalFeed(await response.text(),response.url)}
 async function notify(env,alert){if(!env.ALERT_WEBHOOK_URL||!env.ALERT_WEBHOOK_TOKEN)return false;const url=new URL(env.ALERT_WEBHOOK_URL);if(url.protocol!=="https:")return false;const escalation=alert.event.escalation,title=escalation&&escalation.escalationScore>=75?`ESCALATION — ${alert.event.countries.slice(0,2).join(" / ")||alert.event.areaName}`:`NordicWatch Alert — ${alert.event.title}`;const response=await fetch(url,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${env.ALERT_WEBHOOK_TOKEN}`},body:JSON.stringify({kind:escalation?"EVENT_ESCALATION":"EVENT_DISCOVERY",title,body:alert.explanation,tag:`nw-discovery-${alert.event.id}`,url:alert.event.sourceUrl,score:alert.score,eventScore:alert.event.discovery?.score,escalationScore:escalation?.escalationScore,sourceConfidence:escalation?.sourceConfidence})});return response.ok}
 const signalTime=s=>{const value=+new Date(s?.lastUpdatedAt||s?.eventTime||s?.publishedAt||s?.ingestedAt||s?.lastObservedAt||s?.startTime||0);return Number.isFinite(value)?value:null};
