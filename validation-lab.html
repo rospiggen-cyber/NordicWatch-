@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>NordicWatch · Validation Lab</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0a1220;color:#ecf2ff}
+*{box-sizing:border-box}body{margin:0;padding:16px;line-height:1.5}
+main{max-width:980px;margin:0 auto}a{color:#73d7e7}a:hover{text-decoration:underline}
+.header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:clamp(1.4rem,4vw,2.25rem);margin:0}h2{font-size:1.12rem;margin:0 0 10px}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.69rem;color:#a1aebf}
+p{margin:8px 0 16px;color:#b7c3d4}.panel{border:1px solid #324257;border-radius:15px;background:#101c2c;padding:16px;margin:14px 0}
+.notice{border-left:3px solid #e6b75b;padding:10px 15px;background:#172336;border-radius:6px}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+button{border:1px solid #67c5d4;color:#071521;background:#67c5d4;border-radius:9px;padding:11px 17px;cursor:pointer;font-weight:700;font-size:1rem}
+button:hover{background:#a4e5ec}.summary{font-weight:750;font-size:1.15rem}
+.result{border-top:1px solid #2c4058;padding:12px 0;display:grid;grid-template-columns:105px 1fr;gap:10px}
+.result:first-child{border-top:0}.status{font-weight:750;font-size:.8rem}.pass{color:#79dda4}.fail{color:#ff8e8e}
+small,.small{color:#9eaebe;font-size:.79rem}.title{font-weight:650}
+.actual{color:#e0e9f5;font-size:.85rem;margin-top:3px;overflow-wrap:anywhere}
+details{margin-top:5px}summary{cursor:pointer;color:#b8c7d8}
+@media(max-width:460px){body{padding:12px}.result{grid-template-columns:70px 1fr}}
+</style>
+</head>
+<body><main>
+<header class="header"><div><div class="eyebrow">NordicWatch · Assurance</div><h1>Validation Lab</h1></div><a href="./index.html">← Tillbaka till NordicWatch</a></header>
+<p class="notice"><strong>Isolerad testmiljö.</strong> Händelserna är syntetiska testfixturer inspirerade av öppet rapporterade fall. Testerna läser de faktiska klassificeringsmodulerna men skriver inte till appens arkiv, kartdata eller larm. PASS betyder att mjukvarans förväntade beteende uppfylls – inte att en verklig incident har verifierats.</p>
+<section class="panel"><div class="eyebrow">Regression · FAT/OQ</div><h2>Relevans, tidslogik och observationstäckning</h2><p>Kontrollerar att drönarfynd, gränssabotage och flygplatsstörningar känns igen, att rutinmaterial sållas bort och att avsaknad av data redovisas tydligt.</p>
+<div class="controls"><button id="run">Kör alla testfall</button><span id="summary" class="summary" aria-live="polite">Ej körda</span></div><div id="updated" class="small"></div></section>
+<section class="panel"><h2>Testresultat</h2><div id="results" aria-live="polite">Klicka på Kör alla testfall.</div></section>
+<section class="panel"><h2>Vad labbet inte verifierar</h2><p>Liveanslutna RSS-källor, Cloudflare Workers, ADS-B, AIS och GNSS ingår inte i dessa isolerade regressionstester. För dessa behövs separat integrationstest och täckningskontroll mot observerat utfall.</p><a href="./VALIDATION_LAB.md">Testplan och evidensprinciper</a></section>
+</main>
+<script src="./germany-infrastructure.js"></script>
+<script src="./news-freshness.js"></script>
+<script src="./news-routing.js"></script>
+<script src="./situational-engine.js"></script>
+<script src="./validation-lab.js"></script>
+<script>
+(function(){
+'use strict';
+const button=document.getElementById('run'),summary=document.getElementById('summary'),container=document.getElementById('results'),updated=document.getElementById('updated');
+function row(result){
+  const article=document.createElement('article');article.className='result';
+  const status=document.createElement('div');status.className='status '+(result.pass?'pass':'fail');status.textContent=result.pass?'PASS':'FAIL';
+  const detail=document.createElement('div');
+  const group=document.createElement('div');group.className='small';group.textContent=result.group+' · '+result.id;
+  const title=document.createElement('div');title.className='title';title.textContent=result.title;
+  const actual=document.createElement('div');actual.className='actual';actual.textContent='Förväntat: '+result.expected+' · Utfall: '+result.actual;
+  detail.append(group,title,actual);
+  if(result.notes){const more=document.createElement('details');const label=document.createElement('summary');label.textContent='Bedömningsgrund';const note=document.createElement('div');note.className='small';note.textContent=result.notes;more.append(label,note);detail.append(more)}
+  article.append(status,detail);return article;
+}
+function run(){
+  try{
+    const report=NordicWatchValidationLab.run({routing:NordicWatchNewsRouting,freshness:NordicWatchFreshness,situational:NordicWatchSituational});
+    summary.textContent=report.passed+'/'+report.total+' PASS · '+report.failed+' FAIL';
+    summary.className='summary '+(report.failed?'fail':'pass');
+    updated.textContent='Senaste körning: '+new Date().toLocaleString('sv-SE')+' · Referensklocka: '+report.generatedAt;
+    container.replaceChildren(...report.results.map(row));
+  }catch(error){summary.textContent='Kunde inte genomföra testen';summary.className='summary fail';container.textContent=String(error.message||error)}
+}
+button.addEventListener('click',run);run();
+})();
+</script>
+</body></html>
