@@ -33,12 +33,16 @@
   const routineContext=/\b(?:sports? competition|armed forces day|sporting event|football tournament|celebrat(?:es|ion|ed) .*? sports?|ceremonial parade|charity match|hospital|healthcare|medical center|patient care|sundhed|sygehus|tankanlaeg til helikopter|tankanlag til helikopter)\b/;
   const commentaryContext=/\b(?:a blueprint for|the finland model|opinion column|editorial analysis|lessons for the u\\.?s\\.? navy)\b/;
   const incidentOverride=/\b(?:sabotag\w*|attacked?|airspace violation|intrusion|hostile drone|explosion|damaged by|disrupted by|military deployment|readiness increase|combat operation|missile strike|cyberattack|suspected interference)\b/;
+  // Police/coast-guard vessel interventions are watchable reporting, not verified hostile activity.
+  const maritimeVessel=/\b(?:fartyg\w*|lastfartyg\w*|fraktfartyg\w*|handelsfartyg\w*|tankfartyg\w*|skepp\w*|ships?|vessels?)\b/;
+  const maritimeEnforcement=/\b(?:polis(?:en|ens|kontroll\w*|insats\w*|razzia\w*)?|police|bordad\w*|bordat|borda\w*|boarded|boarding|border (?:check|control)|granskontroll\w*|kustbevakning\w*|coast guard|razzia\w*|raid\w*|rad|kontrollerad\w*|inspekterad\w*)\b/;
   function evaluateNordicRelevance(item){
     if(!item||typeof item!=='object')throw new TypeError('Invalid relevance input');
     // Publisher location and a generic NATO affiliation alone are not operational linkage.
     const content=text([item.title,item.description,item.summary,item.areaName,item.region,item.location,item.destination,item.origin,item.route,JSON.stringify(item.entities||[]),JSON.stringify(item.participants||[]),JSON.stringify(item.locations||[])].filter(Boolean).join(' '));
     const matchedRegions=regions.filter(([,r])=>new RegExp('\\b(?:'+r+')\\b').test(content)).map(([name])=>name);
     const matchedTopics=topics.filter(([,r])=>new RegExp('\\b(?:'+r+')\\b').test(content)).map(([name])=>name);
+    if(maritimeVessel.test(content)&&maritimeEnforcement.test(content))matchedTopics.push('MARITIME_SECURITY');
     const matchedEntities=[...new Set(content.match(/\b(?:namejs(?:\s+20\d\d)?|s102b|korpen|il[- ]?20|rc[- ]?135|professor molchanov|uss paul ignatius|hms karlstad|fns hameenmaa)\b/g)||[])];
     const german=G.geography(item);if(german.directGeographicRelevance&&!matchedRegions.includes('Northern Germany'))matchedRegions.push('Northern Germany');
     const germanInfrastructure=german.directGeographicRelevance&&G.infrastructureIncidentTerms(item);
