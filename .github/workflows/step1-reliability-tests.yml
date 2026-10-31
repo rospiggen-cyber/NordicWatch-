@@ -31,6 +31,7 @@ on:
       - "situation-ui.js"
       - "regional-delta.js"
       - "index.html"
+      - "tests/map-tile-policy.test.js"
       - "tests/news-reliability.test.mjs"
       - "tests/event-discovery.test.mjs"
       - "tests/finland-civil-restrictions.test.mjs"
@@ -79,3 +80,4 @@ jobs:
           node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/teach-nordicwatch.test.js tests/teach-persistence.test.js tests/cascade-lab.test.js tests/external-report.test.mjs tests/event-discovery.test.mjs tests/finland-civil-restrictions.test.mjs
           node --test tests/situation-engine.test.js tests/situation-evidence.test.js tests/regional-delta.test.js tests/brief-coverage.test.js
           node --test tests/situational-engine.test.js tests/validation-lab.test.js
+          node --test tests/map-tile-policy.test.js

@@ -12,7 +12,7 @@ distribution or commercial use is prohibited.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1220">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -204,7 +204,7 @@ changes:[
 ["Alert engine added","High-interest military-air patterns can trigger device notifications with cooldown/deduplication."],
 ["Other layers remain demo","Hotspots, infrastructure and GNSS are still analysis/demo layers."]]};
 const map=L.map("map",{zoomControl:false}).setView([59.5,19],4);L.control.zoom({position:"bottomright"}).addTo(map);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:10,attribution:"&copy; OpenStreetMap contributors"}).addTo(map);
 const G={hotspots:L.layerGroup().addTo(map),trails:L.layerGroup().addTo(map),military:L.layerGroup().addTo(map),events:L.layerGroup().addTo(map),uav:L.layerGroup().addTo(map),behavior:L.layerGroup().addTo(map),vessels:L.layerGroup().addTo(map),infra:L.layerGroup().addTo(map),gps:L.layerGroup().addTo(map)};
 function c(lat,lon,r,col,p,g){return L.circle([lat,lon],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:.15}).bindPopup(p).addTo(G[g])}
  
