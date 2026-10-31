@@ -72,12 +72,11 @@ async function notifySituations(){
   if(navigator.locks)await navigator.locks.request('nordicwatch-situation-alerts',run);else await run();
 }
 let briefPending=false;
-async function generateBrief(kind){
+function generateBrief(kind){
   if(briefPending)return;
   briefPending=true;
   try {
-  briefNewsCoverage=null;briefExternalCoverage=false;
-  await Promise.allSettled([loadNews(),initEventEngine()]);
+  // Feeds already refresh at startup and on intervals. Never block the UI on network.
   const routed=routeNewsEvidence();refreshSituations(true);const previous=maritimeRead('NORDICWATCH_BRIEF_V2',null),brief=BX.build({kind,articles:routed.articles,events:allEvents,situations:situationClusters,signals:situationObservations,upstreamTriggers:typeof upstreamTriggerSnapshot==='function'?upstreamTriggerSnapshot():[],previous,coverage:{newsChecked:!routed.degraded&&briefNewsCoverage?.healthy===true,externalChecked:briefExternalCoverage},geographic:a=>NR.safeRelevance(a).relevant});
   generateBriefLiveDetails(kind);const content=document.getElementById('briefContent'),details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Current coverage, live observations and legacy brief detail';details.append(summary);while(content.firstChild)details.append(content.firstChild);content.append(details);
   const top=document.createElement('section');const heading=document.createElement('h3');heading.textContent=(kind==='morning'?'Morning Brief':'Evening Brief')+' 2.0 · '+(kind==='morning'?'current operational picture':'material changes since last brief');top.append(heading);
