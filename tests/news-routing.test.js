@@ -150,3 +150,34 @@ test('Europe-wide hybrid strategic context gate rejects general European and iso
   assert.equal(result.relevant,false,title);
  }
 });
+
+test('NW-MARITIME-001: Swedish police boarding at Gotland becomes a watchable report, not verified hostile attribution',()=>{
+ const now=Date.parse('2026-10-31T15:00:00Z');
+ const articles=[
+  {title:'Polisen bordade fartyg utanför Gotland',description:'En gränskontroll genomfördes under natten. Resedokument utan anmärkning.',publishedAt:'2026-10-31T13:38:00Z',url:'https://www.svt.se/nyheter/inrikes/polisen-har-kontrollerat-fartyg-utanfor-gotland'},
+  {title:'Nattlig räd mot rysskopplat fartyg vid Gotland',description:'Polisen genomförde en kontroll. Uppgifter om ryska kopplingar är inte bekräftade.',publishedAt:'2026-10-31T13:24:00Z',url:'https://www.tv4.se/artikel/test'},
+  {title:'Gotlandsfärjan får ny tidtabell',description:'Fartyg avgår från Gotland enligt plan.',publishedAt:'2026-10-31T13:00:00Z',url:'https://www.example.org/ferry'}
+ ];
+ const result=R.route(articles,{now});
+ assert.equal(result.articles.length,2);
+ assert.equal(result.counters.dailyBriefEvaluated,2);
+ assert.equal(result.counters.whatChanged,2);
+ for(const article of result.articles){
+  assert(article.relevance.matchedTopics.includes('MARITIME_SECURITY'));
+  assert(article.relevance.matchedRegions.includes('Sweden'));
+  assert.equal(article.evidenceType,'INFERRED','news reporting must not become confirmed military/hybrid activity');
+ }
+ const later=R.route(articles,{now:Date.parse('2026-11-04T15:00:00Z')});
+ assert.equal(later.articles.length,0,'stale reporting must not reappear');
+});
+test('NW-MARITIME-001: vessel mention or routine police activity alone is not a maritime security signal',()=>{
+ for(const title of ['Gotland ferry ship arrives on schedule','Police patrol monitors road traffic on Gotland','Cargo ship detained in Egypt; Swedish paint manufacturer comments','Polish cargo ship near Gotland']){
+  const result=R.evaluateNordicRelevance({title});
+  assert.equal(result.matchedTopics.includes('MARITIME_SECURITY'),false,title);
+ }
+});
+test('NW-MARITIME-001: focused Swedish GDELT query covers Gotland vessel reports without extra polling requests',()=>{
+ const fs=require('node:fs'),page=fs.readFileSync(require.resolve('../index.html'),'utf8');
+ assert.match(page,/"Gotland" OR "Sundsvall" OR "Bottenhavet"/);
+ assert.match(page,/"krigsfartyg" OR "robotjagare" OR "fartyg"/);
+});
