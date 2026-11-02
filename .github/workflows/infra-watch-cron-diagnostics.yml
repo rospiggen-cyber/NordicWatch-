@@ -1,0 +1,47 @@
+name: Diagnose NordicWatch cron
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/infra-watch-cron-diagnostics.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '87bb63fea0d987f93dfc1fd28880307a' }}
+    steps:
+      - name: Verify configured Cron Triggers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo "::error::Cloudflare API token missing"
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 25 \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts/nordicwatch-event-feed/schedules" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" |
+            jq '{success, schedules: .result.schedules, errors: [.errors[]?.message]}'
+
+      - name: Read Worker invocation outcomes (last three hours)
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          START="$(date -u -d '3 hours ago' +%Y-%m-%dT%H:%M:%SZ)"
+          END="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          jq -n --arg account "$CLOUDFLARE_ACCOUNT_ID" --arg start "$START" --arg end "$END" \
+            '{query: "query WorkerRuns($accountTag: string, $datetimeStart: string, $datetimeEnd: string, $scriptName: string) { viewer { accounts(filter: {accountTag: $accountTag}) { workersInvocationsAdaptive(limit: 100, filter: {scriptName: $scriptName, datetime_geq: $datetimeStart, datetime_leq: $datetimeEnd}) { dimensions { datetime scriptName status } sum { requests errors subrequests } } } } }", variables: {accountTag:$account,datetimeStart:$start,datetimeEnd:$end,scriptName:"nordicwatch-event-feed"}}' |
+            curl --fail --silent --show-error --max-time 30 \
+              "https://api.cloudflare.com/client/v4/graphql" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              --data-binary @- |
+            jq '{errors, invocations: [.data.viewer.accounts[]?.workersInvocationsAdaptive[]? | {time:.dimensions.datetime,status:.dimensions.status,requests:.sum.requests,errors:.sum.errors,subrequests:.sum.subrequests}]}'
