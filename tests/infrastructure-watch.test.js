@@ -104,3 +104,32 @@ test("mixed Belgian and Swedish headline remains non-geolocated cross-border con
   assert.equal(incident.country,"Cross-border report");
   assert.equal(Watch.assess([article],now).watches.length,0,"a single multi-country report must not manufacture a cluster");
 });
+
+test("a Swedish Coop incident stays in Sweden when the summary cites a past French case",()=>{
+  const coop=row("Coop skulle uppdatera nätet – då kom hackerattacken","https://www.sverigesradio.se/artikel/coop",{
+    description:"Sex svenska Coop-butiker drabbade. Efter ett liknande fryshaveri i Frankrike skulle systemet uppdateras."});
+  const incident=Watch.classify(coop,now);
+  assert(incident);
+  assert.equal(incident.country,"Sweden");
+  assert.equal(incident.scope,"NORDIC");
+});
+test("Belgian headline is Belgium-specific despite mentioning Swedish background context",()=>{
+  const belgian=row("Fryshaveri i belgiska matbutiker efter cyberattack","https://www.sverigesradio.se/artikel/belgium",{
+    description:"Liknande kylsystemhaverier rapporteras också i Sverige."});
+  const incident=Watch.classify(belgian,now);
+  assert(incident);
+  assert.equal(incident.country,"Belgium");
+  assert.equal(incident.scope,"EUROPE_CONTEXT");
+});
+test("mixed-country context cannot inflate the independently localized WATCH report counts",()=>{
+  const sweden=row("ICA frysar hackade i Sverige","https://example.se/ica");
+  const belgium=row("Delhaize kylsystem hackade i Belgien","https://example.be/delhaize");
+  const mixed=row("Frigos de Delhaize cyberattaqués en Belgique et Suède","https://example.be/mixed");
+  const out=Watch.assess([sweden,belgium,mixed],now);
+  assert.equal(out.incidents.length,3);
+  const cross=out.watches.find(w=>w.scope==="CROSS_BORDER");
+  assert(cross);
+  assert.equal(cross.reportCount,2);
+  assert.equal(cross.sourceCount,2);
+  assert(!cross.countries.includes("Cross-border report"));
+});
