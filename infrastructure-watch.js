@@ -7,7 +7,6 @@
   "use strict";
   const WINDOW_MS=72*3600000;
   const normalize=v=>String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-  const place=/\b(sweden|swedish|sverige|svensk\w*|norge|norway|norwegian|danmark|denmark|danish|finland|finnish|suomi|estonia|estland|latvia|lettland|lithuania|litauen|gotland|stockholm|uppsala|malmo|gothenburg|goteborg|oslo|helsinki|copenhagen|kopenhamn|tallinn|riga|vilnius)\b/i;
   const retail=/\b(ica|coop|willys|hemkop|city gross|axfood|kesko|k-?market|s-?market|rema 1000|matbutik\w*|mataffar\w*|supermarket\w*|grocery stores?)\b/i;
   const cold=/\b(frys\w*|kyl\w*|fridge\w*|freezer\w*|refrigerat\w*|cold[- ]?storage|cold[- ]?chain|defrost\w*|livsmedelskyla)\b/i;
   const energy=/\b(elavbrott\w*|elnat\w*|kraftnat\w*|elcentral\w*|power grid|power outages?|electricity grid|district heating|fjarrvarme|transformer\w*)\b/i;
@@ -25,14 +24,9 @@
     return match?Date.parse(match[1]+"-"+match[2]+"-"+match[3]+"T"+match[4]+":"+match[5]+":"+match[6]+"Z"):Date.parse(v);
   }
   function countryOf(content,sourceCountry,host){
-    const c=normalize(sourceCountry);
-    if(/\b(sweden|sverige)\b/.test(c))return"Sweden";
-    if(/\b(norway|norge)\b/.test(c))return"Norway";
-    if(/\b(denmark|danmark)\b/.test(c))return"Denmark";
-    if(/\b(finland|suomi)\b/.test(c))return"Finland";
-    if(/\b(estonia|estland)\b/.test(c))return"Estonia";
-    if(/\b(latvia|lettland)\b/.test(c))return"Latvia";
-    if(/\b(lithuania|litauen)\b/.test(c))return"Lithuania";
+    // GDELT sourcecountry is the publisher location, never the incident location.
+    // Ignore it to avoid placing foreign stories in the Nordic AOI.
+    if(/\b(france|french|usa|u\.s\.|united states|russia|russian|spain|spanish|germany|german)\b/.test(content)&&!/(sweden|swedish|sverige|svensk|norge|norway|danmark|denmark|suomi|finland|estonia|latvia|lithuania)/.test(content))return null;
     if(/\b(sweden|swedish|sverige|svensk\w*|stockholm|uppsala|gotland|goteborg|malmo)\b/.test(content))return"Sweden";
     if(/\b(norway|norwegian|norge|oslo)\b/.test(content))return"Norway";
     if(/\b(denmark|danish|danmark|copenhagen|kopenhamn)\b/.test(content))return"Denmark";
@@ -93,7 +87,7 @@
   function endpoint(){
     const url=new URL("https://api.gdeltproject.org/api/v2/doc/doc");
     url.search=new URLSearchParams({
-      query:'(("Sweden" OR "Sverige" OR "Norway" OR "Norge" OR "Denmark" OR "Danmark" OR "Finland" OR "Suomi" OR "Baltic" OR "ICA" OR "Coop Sverige") ("cyberattack" OR "cyberangrepp" OR "hackade" OR "hackats" OR "hacked" OR "driftstörningar" OR "avbrott" OR "disruption" OR "outage" OR "malfunction") ("frysar" OR "frysdiskar" OR "kylsystem" OR "freezers" OR "refrigeration" OR "cold storage" OR "elnät" OR "power grid" OR "vattenverk" OR "water supply" OR "sjukhus" OR "hospital" OR "railway" OR "telecom"))',
+      query:'(("Sweden" OR "Sverige" OR "Norway" OR "Norge" OR "Denmark" OR "Danmark" OR "Finland" OR "Suomi" OR "Baltic" OR "ICA" OR "Coop") ("cyberattack" OR "cyberangrepp" OR "hackade" OR "hackats" OR "hacked" OR "driftstörningar" OR "avbrott" OR "disruption" OR "outage" OR "malfunction") ("frysar" OR "frysdiskar" OR "kylsystem" OR "freezers" OR "refrigeration" OR "cold storage" OR "elnät" OR "power grid" OR "vattenverk" OR "water supply" OR "sjukhus" OR "hospital" OR "railway" OR "telecom"))',
       mode:"ArtList",maxrecords:"75",format:"json",sort:"DateDesc",timespan:"3d"
     });
     return url.href;
