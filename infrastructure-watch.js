@@ -26,12 +26,12 @@
   function countryOf(content,sourceCountry,host){
     // GDELT sourcecountry is the publisher location, never the incident location.
     // Ignore it to avoid placing foreign stories in the Nordic AOI.
-    const nordicMention=/\b(sweden|swedish|sverige|svensk\w*|norge|norway|danmark|denmark|suomi|finland|estonia|latvia|lithuania)\b/.test(content);
+    const nordicMention=/\b(sweden|swedish|suede|suedois\w*|sverige|svensk\w*|norge|norway|danmark|denmark|suomi|finland|estonia|latvia|lithuania)\b/.test(content);
     const belgian=/\b(belgium|belgian|belgien|belgique|belges?|belgische|belgie)\b/.test(content);
     const french=/\b(france|french|francais|francaise|frankrike)\b/.test(content);
     if(!nordicMention&&belgian&&!french)return"Belgium";
     if(!nordicMention&&french&&!belgian)return"France";
-    if((belgian||french)&&nordicMention)return null; // Cross-country context is not an incident coordinate.
+    if(((belgian||french)&&nordicMention)||(belgian&&french))return"Cross-border report"; // Multiple country mentions, never mapped as one incident coordinate.
     if(/\b(usa|u\.s\.|united states|russia|russian|spain|spanish|germany|german)\b/.test(content)&&!nordicMention)return null;
     if(/\b(sweden|swedish|sverige|svensk\w*|stockholm|uppsala|gotland|goteborg|malmo)\b/.test(content))return"Sweden";
     if(/\b(norway|norwegian|norge|oslo)\b/.test(content))return"Norway";
@@ -68,7 +68,7 @@
     const methods=[];
     if(/\b(defrost\w*|avfrost\w*)\b/.test(body)&&/\b(manipulat\w*|andra\w*|andrat|changed|altered|hack\w*|attack\w*)\b/.test(body))methods.push("DEFROST_SETTINGS_REPORTED");
     if(/\b(setpoint\w*|borvarde\w*|temperature settings?|temperaturinstallning\w*)\b/.test(body)&&/\b(manipulat\w*|andra\w*|andrat|changed|altered|hack\w*|attack\w*)\b/.test(body))methods.push("SETPOINT_CHANGE_REPORTED");
-    return {id:url.origin+url.pathname,title,url:url.href,host,seenAt:new Date(seenAt).toISOString(),country,operator,category,family,label,status,sourceName:host,scope:country==="Belgium"||country==="France"?"EUROPE_CONTEXT":"NORDIC",systems,methods};
+    return {id:url.origin+url.pathname,title,url:url.href,host,seenAt:new Date(seenAt).toISOString(),country,operator,category,family,label,status,sourceName:host,scope:country==="Belgium"||country==="France"?"EUROPE_CONTEXT":country==="Cross-border report"?"CROSS_BORDER_CONTEXT":"NORDIC",systems,methods};
   }
   function tracePattern(rows){
     // Require separate named affected operators for a shared indicator; repeat press coverage is not enough.
@@ -165,11 +165,18 @@
         box.append(node("div","meta",(item.status==="CYBER_REPORTED"?"CYBER CLAIM REPORTED":"OPERATIONAL DISRUPTION REPORTED")+" · "+item.label+" · "+item.country));
         const link=node("a","news-title",item.title);link.href=item.url;link.target="_blank";link.rel="noopener noreferrer nofollow";link.referrerPolicy="no-referrer";
         box.append(link,node("div","meta",item.host+" · indexed "+new Date(item.seenAt).toLocaleString()));
+        if(item.scope==="CROSS_BORDER_CONTEXT")box.append(node("div","meta","Cross-border source context only · location and common cause unverified."));
         container.append(box);
       }
       if(!result.incidents.length)container.append(node("div","meta","No matching current reports. This does not establish that no incidents occurred."));
       container.append(node("div","meta","Reports and patterns are not proof of a cyberattack. No actor attribution or automatic FLASH."));
-      const attribution=node("a","meta","Discovery source: GDELT Project");attribution.href="https://www.gdeltproject.org/";attribution.target="_blank";attribution.rel="noopener noreferrer";container.append(attribution);
+      const credit=node("div","meta","Discovery and broadcaster feeds: ");
+      let firstCredit=true;
+      for(const [name,url] of [["GDELT Project","https://www.gdeltproject.org/"],["SVT","https://www.svt.se/nyheter/rss.xml"],["Sveriges Radio","https://api.sr.se/api/rss/program/83"],["RTBF","https://rss.rtbf.be/article/rss/highlight_rtbf_info-belgique.xml"],["France 24","https://www.france24.com/fr/rss"]]){
+        if(!firstCredit)credit.append(document.createTextNode(" · "));firstCredit=false;
+        const attribution=node("a",null,name);attribution.href=url;attribution.target="_blank";attribution.rel="noopener noreferrer";credit.append(attribution);
+      }
+      container.append(credit);
     }
     async function refresh(){
       const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),14000);

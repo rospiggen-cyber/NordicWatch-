@@ -95,3 +95,12 @@ test("Belgian Delhaize and Swedish ICA form a cross-border WATCH, not attributio
   assert.equal(cross.trace.entryPoint,"UNKNOWN");
   assert.equal(cross.trace.sharedSystems.length,0);
 });
+
+test("mixed Belgian and Swedish headline remains non-geolocated cross-border context",()=>{
+  const article=row("Les frigos des supermarchés touchés par une cyberattaque en Belgique et Suède","https://www.rtbf.be/article/example",{sourcecountry:"Belgium"});
+  const incident=Watch.classify(article,now);
+  assert(incident);
+  assert.equal(incident.scope,"CROSS_BORDER_CONTEXT");
+  assert.equal(incident.country,"Cross-border report");
+  assert.equal(Watch.assess([article],now).watches.length,0,"a single multi-country report must not manufacture a cluster");
+});
