@@ -1,0 +1,65 @@
+name: Deploy Civil Infrastructure Watch Worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare/infra-watch-worker.mjs"
+      - "cloudflare/infrastructure-watch-collector.mjs"
+      - "infrastructure-watch.js"
+      - "tests/infrastructure-watch.test.js"
+      - "tests/infrastructure-watch-collector.test.mjs"
+      - ".github/workflows/deploy-infra-watch.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-infra-watch-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '87bb63fea0d987f93dfc1fd28880307a' }}
+      EVENTS_KV_ID: ${{ vars.CLOUDFLARE_EVENTS_KV_ID || secrets.CLOUDFLARE_EVENTS_KV_ID || '829ba2495fab44d38d1f378a59c09b67' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify secrets and syntax
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[[:xdigit:]]{32}$ ]]
+          [[ "$EVENTS_KV_ID" =~ ^[[:xdigit:]]{32}$ ]]
+          node --check cloudflare/infra-watch-worker.mjs
+          node --check cloudflare/infrastructure-watch-collector.mjs
+          node --check infrastructure-watch.js
+          node --test tests/infrastructure-watch.test.js tests/infrastructure-watch-collector.test.mjs
+      - name: Configure isolated collector
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > wrangler.infra-watch.deploy.toml <<EOF
+          name = "nordicwatch-infra-watch"
+          main = "cloudflare/infra-watch-worker.mjs"
+          compatibility_date = "2026-09-02"
+
+          [vars]
+          APP_ORIGIN = "https://rospiggen-cyber.github.io"
+          INFRA_WATCH_ENABLED = "true"
+
+          [[kv_namespaces]]
+          binding = "EVENTS"
+          id = "${EVENTS_KV_ID}"
+
+          [triggers]
+          crons = ["*/15 * * * *"]
+          EOF
+      - name: Deploy independent Worker and schedule
+        run: npx --yes wrangler@4.130.0 deploy --config wrangler.infra-watch.deploy.toml --keep-vars
