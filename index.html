@@ -619,6 +619,7 @@ function showActivityDetails(){
 
 const EVENT_SNAPSHOT_KEY="NORDICWATCH_EVENT_SNAPSHOT",EVENT_START_ALERT_KEY="NORDICWATCH_EVENT_START_ALERTS",EVENT_REFRESH_MS=5*60*1000;
 const eventWorkerBase=()=>String(NordicWatchStorage.getItem("NORDICWATCH_EVENT_WORKER")||"https://nordicwatch-event-feed.rospiggen.workers.dev").replace(/\/$/,"");
+const infrastructureWorkerBase=()=>String(NordicWatchStorage.getItem("NORDICWATCH_INFRA_WORKER")||"https://nordicwatch-infra-watch.rospiggen.workers.dev").replace(/\/$/,"");
 const eventTypeLabel=value=>String(value).replace(/_/g," ").toUpperCase();
 const eventTime=value=>new Date(value).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
 const eventCountry=e=>e.areaName||e.countries[0]||"regional event area";
@@ -1132,7 +1133,7 @@ isolateMapTouch(layersPanel);
 
 initSituationUI();
 // Independent low-volume public-source watch; offset from the main GDELT queries.
-setTimeout(()=>window.NordicWatchInfrastructureWatch.mount(document.getElementById("infrastructureWatch"),{workerUrl:eventWorkerBase()}),5000);
+setTimeout(()=>window.NordicWatchInfrastructureWatch.mount(document.getElementById("infrastructureWatch"),{workerUrl:infrastructureWorkerBase()}),5000);
 // Offset the dedicated query from the main GDELT request (public rate limit).
 setTimeout(()=>{loadGermanyInfrastructure();setInterval(loadGermanyInfrastructure,15*60*1000)},6000);
 setInterval(renderGermanyHotspots,60000);
