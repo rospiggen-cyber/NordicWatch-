@@ -37,6 +37,7 @@ test("multiple articles about one operator do not establish cross-operator patte
 test("foreign cases without Nordic context do not appear as local incidents",()=>{
   const foreign=row("French supermarket freezers hacked","https://news.fr/french",{sourcecountry:"France"});
   assert.equal(Watch.classify(foreign,now),null);
+  assert.equal(Watch.classify({...foreign,url:"https://svt.se/news",sourcecountry:"Sweden"},now),null);
 });
 
 test("irrelevant retail promotions and stale reports stay out",()=>{
