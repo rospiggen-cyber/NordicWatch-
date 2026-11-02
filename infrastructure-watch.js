@@ -133,12 +133,15 @@
   }
   function mount(container,options={}){
     if(!container||typeof document==="undefined")return null;
-    let previous=null;
+    let previous=null,lastDirectFallback=0;
     const source=options.fetcher||fetch;
     function node(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=String(value);return e}
-    function render(result,coverage){
+    function render(result,coverage,details={}){
       container.replaceChildren();
-      const meta=node("div","meta",coverage==="OK"?"GDELT news discovery · last 72 h · " + result.incidents.length + " qualifying reports":"Source unavailable or incomplete · last verified observations only");
+      const state=details.sourceStatus||"UNKNOWN";
+      const last=details.lastSuccessfulAt?new Date(details.lastSuccessfulAt).toLocaleString():"not yet available";
+      const label=coverage==="OK"?"LIVE · 24/7 Worker monitoring · last source check "+last:coverage==="FALLBACK"?"DEGRADED · local browser fallback only; 24/7 backend not verified":"DEGRADED · source/Worker status "+state+" · last successful check "+last;
+      const meta=node("div","meta",label+" · 72 h window · "+result.incidents.length+" qualifying reports");
       container.append(meta);
       for(const watch of result.watches){
         const block=node("div","news-item");
@@ -166,23 +169,41 @@
       }
       if(!result.incidents.length)container.append(node("div","meta","No matching current reports. This does not establish that no incidents occurred."));
       container.append(node("div","meta","Reports and patterns are not proof of a cyberattack. No actor attribution or automatic FLASH."));
+      const attribution=node("a","meta","Discovery source: GDELT Project");attribution.href="https://www.gdeltproject.org/";attribution.target="_blank";attribution.rel="noopener noreferrer";container.append(attribution);
     }
     async function refresh(){
       const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),14000);
       try{
-        const response=await source(endpoint(),{signal:controller.signal,headers:{accept:"application/json"}});
-        if(!response.ok)throw Error("HTTP "+response.status);
+        const workerUrl=String(options.workerUrl||"").replace(/\\/$/,"");
+        if(!workerUrl)throw Error("Worker endpoint not configured");
+        const response=await source(workerUrl+"/infra-watch",{signal:controller.signal,headers:{accept:"application/json"}});
+        if(!response.ok)throw Error("Worker HTTP "+response.status);
         const body=await response.json();
-        if(!Array.isArray(body.articles))throw Error("Malformed source response");
-        previous=assess(body.articles);
-        render(previous,"OK");
+        if(!body.enabled||!body.watch||!Array.isArray(body.watch.incidents)||!Array.isArray(body.watch.watches))throw Error("Invalid Worker snapshot");
+        previous=body.watch;
+        render(previous,body.degraded?"DEGRADED":"OK",{sourceStatus:body.sourceHealth?.status,lastSuccessfulAt:body.lastSuccessfulAt});
       }catch{
-        if(previous)render(assess(previous.incidents.map(x=>({...x,publishedAt:x.seenAt}))),"DEGRADED");
-        else render(assess([]),"DEGRADED");
+        // Only a visibly degraded, rate-limited browser fallback is allowed.
+        // Browser discovery is never presented as unattended 24/7 coverage.
+        if(Date.now()-lastDirectFallback>=15*60*1000){
+          lastDirectFallback=Date.now();
+          try{
+            const response=await source(endpoint(),{signal:controller.signal,headers:{accept:"application/json"}});
+            if(!response.ok)throw Error("GDELT HTTP "+response.status);
+            const body=await response.json();
+            if(!Array.isArray(body.articles))throw Error("Invalid GDELT response");
+            previous=assess(body.articles);
+            render(previous,"FALLBACK");
+            return;
+          }catch{}
+        }
+        const retained=previous?assess(previous.incidents.map(x=>({...x,publishedAt:x.seenAt}))):assess([]);
+        previous=retained;
+        render(retained,"DEGRADED",{sourceStatus:"WORKER_UNAVAILABLE"});
       }finally{clearTimeout(timeout)}
     }
     refresh();
-    const timer=setInterval(refresh,15*60*1000);
+    const timer=setInterval(refresh,5*60*1000);
     return {refresh,stop:()=>clearInterval(timer)};
   }
   return Object.freeze({parseDate,classify,tracePattern,assess,endpoint,mount});
