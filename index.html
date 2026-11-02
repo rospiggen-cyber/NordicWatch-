@@ -1132,7 +1132,7 @@ isolateMapTouch(layersPanel);
 
 initSituationUI();
 // Independent low-volume public-source watch; offset from the main GDELT queries.
-setTimeout(()=>window.NordicWatchInfrastructureWatch.mount(document.getElementById("infrastructureWatch")),18000);
+setTimeout(()=>window.NordicWatchInfrastructureWatch.mount(document.getElementById("infrastructureWatch"),{workerUrl:eventWorkerBase()}),5000);
 // Offset the dedicated query from the main GDELT request (public rate limit).
 setTimeout(()=>{loadGermanyInfrastructure();setInterval(loadGermanyInfrastructure,15*60*1000)},6000);
 setInterval(renderGermanyHotspots,60000);
