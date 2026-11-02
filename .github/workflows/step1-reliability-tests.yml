@@ -32,6 +32,8 @@ on:
       - "regional-delta.js"
       - "index.html"
       - "infrastructure-watch.js"
+      - "cloudflare/infrastructure-watch-collector.mjs"
+      - "tests/infrastructure-watch-collector.test.mjs"
       - "tests/infrastructure-watch.test.js"
       - "tests/map-tile-policy.test.js"
       - "tests/brief-nonblocking.test.js"
@@ -66,6 +68,7 @@ jobs:
           node --check external-report-core.mjs
           node --check news-routing.js
           node --check infrastructure-watch.js
+          node --check cloudflare/infrastructure-watch-collector.mjs
           node --check situational-engine.js
           node --check validation-lab.js
           node --check teach-nordicwatch.js
@@ -84,6 +87,6 @@ jobs:
           node --test tests/news-reliability.test.mjs tests/news-routing.test.js tests/teach-nordicwatch.test.js tests/teach-persistence.test.js tests/cascade-lab.test.js tests/external-report.test.mjs tests/event-discovery.test.mjs tests/finland-civil-restrictions.test.mjs
           node --test tests/situation-engine.test.js tests/situation-evidence.test.js tests/regional-delta.test.js tests/brief-coverage.test.js
           node --test tests/situational-engine.test.js tests/validation-lab.test.js
-          node --test tests/infrastructure-watch.test.js
+          node --test tests/infrastructure-watch.test.js tests/infrastructure-watch-collector.test.mjs
           node --test tests/map-tile-policy.test.js
           node --test tests/brief-nonblocking.test.js
