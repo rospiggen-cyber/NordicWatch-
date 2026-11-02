@@ -124,7 +124,7 @@ test("Belgian headline is Belgium-specific despite mentioning Swedish background
 test("mixed-country context cannot inflate the independently localized WATCH report counts",()=>{
   const sweden=row("ICA frysar hackade i Sverige","https://example.se/ica");
   const belgium=row("Delhaize kylsystem hackade i Belgien","https://example.be/delhaize");
-  const mixed=row("Frigos de Delhaize touchés en Belgique et Suède","https://example.be/mixed");
+  const mixed=row("Frigos de Delhaize cyberattaqués en Belgique et Suède","https://example.be/mixed");
   const out=Watch.assess([sweden,belgium,mixed],now);
   assert.equal(out.incidents.length,3);
   const cross=out.watches.find(w=>w.scope==="CROSS_BORDER");
