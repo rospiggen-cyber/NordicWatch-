@@ -7,6 +7,10 @@ on:
       - main
     paths:
       - "cloudflare/event-feed-worker.js"
+      - "cloudflare/infrastructure-watch-collector.mjs"
+      - "infrastructure-watch.js"
+      - "tests/infrastructure-watch-collector.test.mjs"
+      - "tests/infrastructure-watch.test.js"
       - "cloudflare/news-reliability-core.mjs"
       - "cloudflare/event-discovery-core.mjs"
       - "cloudflare/fm-website-collector.mjs"
@@ -86,6 +90,8 @@ jobs:
         run: |
           node --check cloudflare/news-reliability-core.mjs
           node --check cloudflare/event-feed-worker.js
+          node --check cloudflare/infrastructure-watch-collector.mjs
+          node --check infrastructure-watch.js
           node --check cloudflare/strategic-source-collector.mjs
           node --check cloudflare/copernicus-mapping-collector.mjs
           node --check earth-observation-core.js
@@ -109,6 +115,8 @@ jobs:
           EVENT_ALERT_THRESHOLD = "75"
           # Official strategic feeds only; does not affect military alerts.
           STRATEGIC_ENABLED = "true"
+          # Passive source-linked infrastructure discovery, collected every 15 minutes.
+          INFRA_WATCH_ENABLED = "true"
           # Direct Copernicus access returns 403 from Cloudflare; the public GitHub Actions snapshot is active instead.
           EARTH_OBSERVATION_ENABLED = "false"
           # Further approved US feeds can be added after endpoint verification.
