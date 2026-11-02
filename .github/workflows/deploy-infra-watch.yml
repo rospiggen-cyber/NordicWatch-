@@ -10,6 +10,7 @@ on:
       - "infrastructure-watch.js"
       - "tests/infrastructure-watch.test.js"
       - "tests/infrastructure-watch-collector.test.mjs"
+      - "tests/infra-watch-worker.test.mjs"
       - ".github/workflows/deploy-infra-watch.yml"
 
 permissions:
@@ -40,7 +41,7 @@ jobs:
           node --check cloudflare/infra-watch-worker.mjs
           node --check cloudflare/infrastructure-watch-collector.mjs
           node --check infrastructure-watch.js
-          node --test tests/infrastructure-watch.test.js tests/infrastructure-watch-collector.test.mjs
+          node --test tests/infrastructure-watch.test.js tests/infrastructure-watch-collector.test.mjs tests/infra-watch-worker.test.mjs
       - name: Configure isolated collector
         shell: bash
         run: |
