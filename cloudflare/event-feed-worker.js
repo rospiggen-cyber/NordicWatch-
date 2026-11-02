@@ -18,7 +18,7 @@ import {configuredExternalFeedValue,normalizeArticle,retainRollingSignals,covera
 import {runStrategicCollection} from "./strategic-source-collector.mjs";
 import {FM_NEWS_INDEX,linksFromOfficialNewsIndex,parseOfficialNewsArticle} from "./fm-website-collector.mjs";
 import {collectCopernicus,getCopernicusSnapshot} from "./copernicus-mapping-collector.mjs";
-import {collectInfrastructureWatch,readInfrastructureWatch} from "./infrastructure-watch-collector.mjs";
+import {readInfrastructureWatch} from "./infrastructure-watch-collector.mjs";
 const cors=origin=>({"content-type":"application/json; charset=utf-8","access-control-allow-origin":origin,"vary":"Origin","cache-control":"public, max-age=60","x-content-type-options":"nosniff"});
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json; charset=utf-8","x-content-type-options":"nosniff",...headers}});
 async function kvEvents(env,caller){if(!env.EVENTS)return[];return (await indexedRecords(env,"EVENTS",caller)).map(record=>record.value)}
@@ -115,5 +115,5 @@ export default {
   if(!snapshot)return json({enabled:true,degraded:true,reason:"Awaiting first scheduled collection",signals:[],analysis:[],sources:[]},200,cors(allowed));
   return json({enabled:true,...snapshot},200,{...cors(allowed),"cache-control":"public, max-age=120"});
  }if(url.pathname==="/situations")return json({schemaVersion:"1.1",situations:await env.EVENTS.get("situation:current","json")||[]},200,cors(allowed));if(url.pathname==="/events"){try{const eventRegistry=await env.EVENTS.get("event-state:registry","json")||{};return json({schemaVersion:"1.1",generatedAt:new Date().toISOString(),events:mergeEvents(await kvEventSnapshot(env,"GET /events")).filter(e=>NR.safeRelevance(e).relevant).map(e=>({...e,eventState:eventRegistry[e.eventId||e.id]||null,effectiveStatus:eventRegistry[e.eventId||e.id]?.status||IC.status(e)})),coverage:(await env.EVENTS.get("discovery:last-run","json"))?.coverage||null,sources:OFFICIAL_SOURCES.map(({id,name})=>({id,name}))},200,cors(allowed))}catch{return json({schemaVersion:"1.1",generatedAt:new Date().toISOString(),events:[],degraded:true},200,cors(allowed))}}return json({error:"not_found"},404,cors(allowed))},
- async scheduled(_event,env,ctx){ctx.waitUntil(runDiscovery(env));ctx.waitUntil(collectInfrastructureWatch(env))}
+ async scheduled(_event,env,ctx){ctx.waitUntil(runDiscovery(env))}
 };
