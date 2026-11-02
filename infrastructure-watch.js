@@ -27,7 +27,7 @@
     // GDELT sourcecountry is the publisher location, never the incident location.
     // Ignore it to avoid placing foreign stories in the Nordic AOI.
     const nordicMention=/\b(sweden|swedish|suede|suedois\w*|sverige|svensk\w*|norge|norway|danmark|denmark|suomi|finland|estonia|latvia|lithuania)\b/.test(content);
-    const belgian=/\b(belgium|belgian|belgien|belgique|belges?|belgische|belgie)\b/.test(content);
+    const belgian=/\b(belgium|belgian|belgien|belgique|belges?|belgisk\w*|belgische|belgie)\b/.test(content);
     const french=/\b(france|french|francais|francaise|frankrike)\b/.test(content);
     if(!nordicMention&&belgian&&!french)return"Belgium";
     if(!nordicMention&&french&&!belgian)return"France";
@@ -56,7 +56,8 @@
     const isCold=cold.test(body);
     const category=isCold?"COLD_CHAIN":energy.test(body)?"ENERGY":water.test(body)?"WATER":health.test(body)?"HEALTH":telecom.test(body)?"TELECOM":transport.test(body)?"TRANSPORT":isRetail?"RETAIL_OPERATIONS":null;
     if(!category||!interruption.test(body))return null;
-    const country=countryOf(body,article.sourcecountry||article.country,host);
+    // Prefer the headline geography: article summaries often mention foreign vendors, earlier attacks or comparisons.
+    const country=countryOf(normalize(title),article.sourcecountry||article.country,host)||countryOf(body,article.sourcecountry||article.country,host);
     if(!country)return null;
     const seenAt=parseDate(article.publishedAt||article.seendate||article.date||article.indexedAt);
     if(!Number.isFinite(seenAt)||seenAt>now+3600000||now-seenAt>WINDOW_MS)return null;
@@ -97,6 +98,8 @@
     const incidents=[...uniq.values()].sort((a,b)=>Date.parse(b.seenAt)-Date.parse(a.seenAt));
     const groups=new Map(),familyGroups=new Map();
     for(const item of incidents){
+      // A single mixed-country story is context, not an independently located incident in each country.
+      if(item.scope==="CROSS_BORDER_CONTEXT")continue;
       const key=item.country+"|"+item.family;
       if(!groups.has(key))groups.set(key,[]);
       groups.get(key).push(item);
