@@ -171,8 +171,9 @@
       if(!result.incidents.length)container.append(node("div","meta","No matching current reports. This does not establish that no incidents occurred."));
       container.append(node("div","meta","Reports and patterns are not proof of a cyberattack. No actor attribution or automatic FLASH."));
       const credit=node("div","meta","Discovery and broadcaster feeds: ");
+      let firstCredit=true;
       for(const [name,url] of [["GDELT Project","https://www.gdeltproject.org/"],["SVT","https://www.svt.se/nyheter/rss.xml"],["Sveriges Radio","https://api.sr.se/api/rss/program/83"],["RTBF","https://rss.rtbf.be/article/rss/highlight_rtbf_info-belgique.xml"],["France 24","https://www.france24.com/fr/rss"]]){
-        if(credit.childNodes.length)credit.append(document.createTextNode(" · "));
+        if(!firstCredit)credit.append(document.createTextNode(" · "));firstCredit=false;
         const attribution=node("a",null,name);attribution.href=url;attribution.target="_blank";attribution.rel="noopener noreferrer";credit.append(attribution);
       }
       container.append(credit);
