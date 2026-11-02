@@ -174,7 +174,7 @@
     async function refresh(){
       const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),14000);
       try{
-        const workerUrl=String(options.workerUrl||"").replace(/\\/$/,"");
+        const workerUrl=String(options.workerUrl||"").replace(/\/$/,"");
         if(!workerUrl)throw Error("Worker endpoint not configured");
         const response=await source(workerUrl+"/infra-watch",{signal:controller.signal,headers:{accept:"application/json"}});
         if(!response.ok)throw Error("Worker HTTP "+response.status);
