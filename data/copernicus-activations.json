@@ -1,10 +1,10 @@
 {
   "schemaVersion": "0.1",
-  "generatedAt": "2026-11-06T19:18:14.129Z",
+  "generatedAt": "2026-11-07T05:51:18.233Z",
   "sourceHealth": {
     "id": "CEMS_MAPPING_CATALOGUE",
     "status": "AVAILABLE",
-    "lastSuccessfulScan": "2026-11-06T19:18:14.129Z",
+    "lastSuccessfulScan": "2026-11-07T05:51:18.233Z",
     "pagesScanned": 3,
     "totalAdvertised": 268,
     "scope": "Copernicus published mapping activations only",
@@ -166,5 +166,5 @@
   "provider": "https://rapidmapping.emergency.copernicus.eu/backend/dashboard-api/public-activations-info/",
   "mode": "OFFICIAL_CEMS_GITHUB_SNAPSHOT",
   "degraded": false,
-  "lastAttemptAt": "2026-11-06T19:18:14.129Z"
+  "lastAttemptAt": "2026-11-07T05:51:18.233Z"
 }
