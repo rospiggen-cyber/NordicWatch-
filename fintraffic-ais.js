@@ -78,7 +78,9 @@
       fetchedAt:now,maxAgeMinutes:MAX_AGE_MS/60000,complete:false}};
   }
   class FintrafficAdapter {
-    constructor(endpoint=DEFAULT_ENDPOINT,request=fetch,now=Date.now){this.id=ID;this.endpoint=endpoint;this.request=request;this.now=now;this.lastCoverage=null}
+    // Browser fetch requires its Window receiver. Storing the bare function on
+    // an adapter and invoking it as this.request(...) causes Illegal invocation.
+    constructor(endpoint=DEFAULT_ENDPOINT,request=(...args)=>fetch(...args),now=Date.now){this.id=ID;this.endpoint=endpoint;this.request=request;this.now=now;this.lastCoverage=null}
     async load(){
       const response=await this.request(this.endpoint,{cache:"no-store"});
       if(!response.ok)throw new Error(`Fintraffic gateway HTTP ${response.status}`);
