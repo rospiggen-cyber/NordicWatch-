@@ -2,6 +2,9 @@ const test=require("node:test");
 const assert=require("node:assert/strict");
 const FT=require("../fintraffic-ais.js");
 const MC=require("../maritime-core.js");
+const vm=require("node:vm");
+const fs=require("node:fs");
+const path=require("node:path");
 const now=Date.parse("2026-11-15T12:00:00Z");
 const feature=(mmsi,lat,lon,at=now)=>({mmsi,type:"Feature",geometry:{type:"Point",coordinates:[lon,lat]},properties:{mmsi,sog:4.5,cog:128.4,navStat:3,timestamp:25,timestampExternal:at}});
 const payload={locations:{type:"FeatureCollection",dataUpdatedTime:new Date(now).toISOString(),features:[
@@ -47,4 +50,16 @@ test("adapter loads only through configured proxy and does not modify on upstrea
  assert.equal(adapter.lastCoverage.selected,1);
  const unavailable=new FT.FintrafficAdapter("https://worker.example",async()=>({ok:false,status:503}));
  await assert.rejects(unavailable.load(),/HTTP 503/);
+});
+
+test("default browser fetch is called with global receiver, never as an adapter method",async()=>{
+ const source=fs.readFileSync(path.join(__dirname,"../fintraffic-ais.js"),"utf8");
+ let requestReceiver;
+ const browser={fetch:function(){requestReceiver=this;return Promise.resolve({ok:true,json:async()=>payload})}};
+ vm.runInNewContext(source,browser);
+ const adapter=new browser.NordicWatchFintraffic.FintrafficAdapter("https://worker.example/fintraffic/ais",undefined,()=>now);
+ const records=await adapter.load();
+ assert.equal(records.length,1);
+ assert.notEqual(requestReceiver,adapter);
+ assert.ok(requestReceiver.NordicWatchFintraffic);
 });
