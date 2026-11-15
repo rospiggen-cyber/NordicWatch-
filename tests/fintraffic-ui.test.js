@@ -3,10 +3,10 @@ const root=path.join(__dirname,"..");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8"),sw=fs.readFileSync(path.join(root,"sw.js"),"utf8");
 test("opt-in AIS control, source credit and offline adapter asset are present",()=>{
  assert.match(html,/id="syncFintrafficBtn"/);
- assert.match(html,/<script src="fintraffic-ais\.js"><\/script>/);
+ assert.match(html,/<script src="fintraffic-ais\.js\?v=2"><\/script>/);
  assert.match(html,/Source: Fintraffic \/ digitraffic\.fi/);
  assert.match(html,/creativecommons\.org\/licenses\/by\/4\.0/);
- assert.match(sw,/\.\/fintraffic-ais\.js/);
+ assert.match(sw,/\.\/fintraffic-ais\.js\?v=2/);
  assert.match(sw,/nordicwatch-v1\.2-fintraffic-ais/);
 });
 test("AIS observations cannot generate standalone strategic signals or push notifications",()=>{
