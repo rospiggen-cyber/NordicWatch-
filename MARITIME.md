@@ -2,7 +2,24 @@
 
 ## Safety boundary
 
-No AIS provider, upstream endpoint or external maritime API is connected. The layer operates on validated local datasets and explicit mockdata. Schema validity means only that a record is structurally usable; it does not confirm the underlying claim.
+The layer supports validated local datasets, explicit mockdata and an **opt-in Fintraffic AIS pilot** through an isolated Cloudflare Worker. There is no MarineTraffic/Kpler data. Source coverage and ship identity are incomplete; a valid record does not establish the underlying claim, hostile intent, or even a verified physical location.
+
+The pilot is only active after pressing **Sync Fintraffic AIS**. After the first successful request it polls every 10 minutes while the page stays open. A failed fetch preserves earlier observations, shows an explicit error and does not imply vessels have disappeared. Raw Fintraffic AIS observations cannot trigger push notifications or strategic Scan Cards by themselves.
+
+The fixed pilot area is 58.5–61.5°N, 19–31°E (Gulf of Finland), with up to 300 freshest unique vessel positions per sync. This intentionally **does not represent full Baltic maritime coverage**. Future broader coverage and baselines require testing of volume, rate limits, freshness and false positives.
+
+### Provider, licence and deployment
+
+- Provider: Fintraffic / Digitraffic, https://www.digitraffic.fi/en/marine-traffic/
+- Licence: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), including commercial reuse with attribution and indication of modifications.
+- Data: `https://meri.digitraffic.fi/api/ais/v1/locations` (GeoJSON, `properties.timestampExternal` in epoch milliseconds) and `/api/ais/v1/vessels` (metadata array). Fintraffic requires gzip support; the Worker requests gzip.
+- Gateway: `cloudflare/maritime-worker.js` serves only `/fintraffic/ais` and `/health`, with fixed upstream URLs, 12-second upstream timeouts and 3 MiB response limits. It never accepts arbitrary target URLs or credentials.
+- Public hostname after authorized deployment: `https://nordicwatch-maritime.rospiggen.workers.dev/fintraffic/ais`. The GitHub Actions deployment uses the existing `CLOUDFLARE_API_TOKEN` secret and account ID; it does not change the ADS-B, event-feed or infrastructure Workers.
+- UI: `fintraffic-ais.js` normalizes observations, validates timestamps and pilot bounds, joins optional metadata by MMSI and submits every record to `maritime-core.js` validation.
+- Attribution displayed in the layer panel and record details: **Source: Fintraffic / digitraffic.fi, CC BY 4.0; processed by NordicWatch.**
+- History: latest four position reports per vessel are retained for at most six hours, capped at 1,200 live reports in the existing device-local store. The absence of an AIS message can be a receiver gap and is not automatically labelled a switched-off transponder.
+
+To verify after deployment: visit `/health`, press **Sync Fintraffic AIS** in NordicWatch, check the source timestamp and the pilot-coverage disclaimer, then verify `/fintraffic/ais` shows valid GeoJSON and the app quarantines malformed observations without rendering them.
 
 ## Internal record model
 
@@ -66,7 +83,7 @@ The map contains approximate analytical representations of selected cables, pipe
 
 ## Adapter interface
 
-Future sources implement `MaritimeAdapter` from `maritime-core.js`:
+Additional sources implement `MaritimeAdapter` from `maritime-core.js`:
 
 ```js
 class ApprovedAdapter extends NordicWatchMaritime.MaritimeAdapter {
