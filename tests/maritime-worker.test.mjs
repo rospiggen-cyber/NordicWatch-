@@ -36,3 +36,12 @@ test("location failure is explicit, and health does not claim a successful poll"
  assert.equal((await health.json()).liveDataChecked,false);
  assert.equal((await handle(req("/fintraffic/ais","OPTIONS"),{},okFetch)).status,204);
 });
+test("Cloudflare execution context is not mistaken for an upstream fetch function",async()=>{
+  const previous=globalThis.fetch;
+  globalThis.fetch=okFetch;
+  try{
+    const res=await handle(req("/fintraffic/ais"),{}, {waitUntil(){}});
+    assert.equal(res.status,200);
+    assert.equal((await res.json()).locations.type,"FeatureCollection");
+  }finally{globalThis.fetch=previous}
+});
