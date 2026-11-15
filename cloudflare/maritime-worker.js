@@ -33,8 +33,10 @@ async function handle(request,env={},requestFetch=fetch){
   if(url.pathname!=="/fintraffic/ais")return json({error:"not_found"},404,env);
   try{
     const [positions,metadata]=await Promise.allSettled(PATHS.map(path=>getJson(path,requestFetch)));
-    if(positions.status!=="fulfilled"||positions.value?.type!=="FeatureCollection"||!Array.isArray(positions.value.features))
-      throw new Error("Fintraffic AIS positions unavailable or invalid");
+    if(positions.status!=="fulfilled")
+      throw new Error("Fintraffic AIS positions: "+String(positions.reason?.message||"request failed").slice(0,75));
+    if(positions.value?.type!=="FeatureCollection"||!Array.isArray(positions.value.features))
+      throw new Error("Fintraffic AIS positions schema invalid");
     const ships=metadata.status==="fulfilled"&&Array.isArray(metadata.value)?metadata.value:null;
     return json({locations:positions.value,vessels:ships,metadataAvailable:ships!==null,
       provider:"Fintraffic / Digitraffic",license:"CC BY 4.0"},200,env);
