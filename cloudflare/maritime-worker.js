@@ -24,7 +24,10 @@ async function getJson(path,requestFetch){
   if(new TextEncoder().encode(data).length>MAX_BYTES)throw new Error("Fintraffic payload exceeds size limit");
   return JSON.parse(data);
 }
-async function handle(request,env={},requestFetch=fetch){
+// Cloudflare invokes fetch(request, env, executionContext). In tests, the third
+// argument may instead be an injected fetch function.
+async function handle(request,env={},ctxOrFetch=fetch){
+  const requestFetch=typeof ctxOrFetch==="function"?ctxOrFetch:fetch;
   const url=new URL(request.url);
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:headers(env)});
   if(request.method!=="GET")return json({error:"method_not_allowed"},405,env);
