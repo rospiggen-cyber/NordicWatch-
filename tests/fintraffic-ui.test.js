@@ -11,7 +11,9 @@ test("opt-in AIS control, source credit and offline adapter asset are present",(
 });
 test("AIS observations cannot generate standalone strategic signals or push notifications",()=>{
  assert.match(html,/x\.risk\.total>=MARITIME_ALERT_SCORE&&!isFintraffic\(x\.record\)/);
- assert.match(html,/maritimeEvents\.filter\(x=>!isFintraffic\(x\.record\)\|\|x\.behavior\)/);
- assert.match(html,/isFintraffic\(record\)\?\[\]:correlations/);
+ assert.match(html,/if\(isFintraffic\(record\)\)return \{record,correlations:\[\],risk:\{total:0,confidence:"POSITION_ONLY"\},behavior:null\}/);
+ assert.match(html,/maritimeEvents\.filter\(x=>!isFintraffic\(x\.record\)\)\.map/);
+ assert.match(html,/maritimeRecords\.filter\(x=>!isFintraffic\(x\)\)\)signals\.push/);
+ assert.match(html,/AIS POSITION ONLY · NOT A RISK ASSESSMENT/);
  assert.match(html,/FINTRAFFIC_REFRESH_MS=10\*60000/);
 });
