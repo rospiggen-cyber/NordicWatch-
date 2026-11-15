@@ -1,0 +1,75 @@
+name: Test and deploy Fintraffic maritime gateway
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare/maritime-worker.js"
+      - "fintraffic-ais.js"
+      - "tests/fintraffic-ais.test.js"
+      - "tests/fintraffic-ui.test.js"
+      - "tests/maritime-worker.test.mjs"
+      - ".github/workflows/deploy-maritime.yml"
+  pull_request:
+    paths:
+      - "cloudflare/maritime-worker.js"
+      - "fintraffic-ais.js"
+      - "index.html"
+      - "sw.js"
+      - "tests/fintraffic-ais.test.js"
+      - "tests/fintraffic-ui.test.js"
+      - "tests/maritime-worker.test.mjs"
+      - ".github/workflows/deploy-maritime.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nordicwatch-maritime-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax and maritime regression checks
+        run: |
+          node --check fintraffic-ais.js
+          node --check cloudflare/maritime-worker.js
+          node --check maritime-core.js
+          node --test tests/fintraffic-ais.test.js tests/fintraffic-ui.test.js tests/maritime-worker.test.mjs tests/maritime-core.test.js
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID || '87bb63fea0d987f93dfc1fd28880307a' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check authorized Cloudflare deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          [[ "$CLOUDFLARE_ACCOUNT_ID" =~ ^[[:xdigit:]]{32}$ ]]
+      - name: Write isolated Wrangler configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > wrangler.maritime.deploy.toml <<EOF
+          name = "nordicwatch-maritime"
+          main = "cloudflare/maritime-worker.js"
+          compatibility_date = "2026-11-15"
+
+          [vars]
+          APP_ORIGIN = "https://rospiggen-cyber.github.io"
+          EOF
+      - name: Deploy only maritime gateway
+        run: npx --yes wrangler@4.130.0 deploy --config wrangler.maritime.deploy.toml --keep-vars

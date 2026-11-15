@@ -11,7 +11,9 @@ test("dedicated Worker scheduled event writes its own KV snapshot and serves liv
   globalThis.fetch=async url=>{
     if(String(url).includes("gdeltproject.org"))return {ok:false,status:429};
     const isRTBF=String(url).includes("rss.rtbf.be");
-    const xml=isRTBF?'<?xml version="1.0"?><rss><channel><item><title>Les frigos touchés par une cyberattaque en Belgique et Suède</title><link>https://www.rtbf.be/article/attack-report</link><pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate></item></channel></rss>':'<?xml version="1.0"?><rss><channel></channel></rss>';
+    // Keep the fixture inside the collector's freshness window as time advances.
+    const recentDate=new Date(Date.now()-60*60000).toUTCString();
+    const xml=isRTBF?`<?xml version="1.0"?><rss><channel><item><title>Les frigos touchés par une cyberattaque en Belgique et Suède</title><link>https://www.rtbf.be/article/attack-report</link><pubDate>${recentDate}</pubDate></item></channel></rss>`:'<?xml version="1.0"?><rss><channel></channel></rss>';
     return {ok:true,url:String(url),headers:{get:()=>null},text:async()=>xml};
   };
   try{
