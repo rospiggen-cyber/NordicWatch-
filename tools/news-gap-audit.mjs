@@ -21,7 +21,7 @@ function canonical(value) {
       if (/^(utm_|fbclid$|gclid$)/i.test(k)) u.searchParams.delete(k);
     }
     u.searchParams.sort();
-    return u.href.replace(/\/$/, "").toLowerCase();
+    return u.href.replace(/\/$/, "");
   } catch { return ""; }
 }
 
@@ -42,7 +42,7 @@ function sameArticle(expected, candidate) {
   if (!titleA || titleA !== titleB) return false;
   // No cross-publisher fuzzy matches: syndicated headlines are not guaranteed
   // to be the same publication or a truly independent source.
-  return !a || !b || host(a) === host(b);
+  return Boolean(a && b && host(a) === host(b));
 }
 
 /**
