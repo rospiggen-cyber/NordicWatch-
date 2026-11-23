@@ -1,0 +1,17 @@
+# EXAMPLE ONLY. NOT DEPLOYED. No production bindings or secrets here.
+# Copy locally after provider authorization and allocate a DEDICATED staging KV.
+name = "nordicwatch-adsb-cache-staging"
+main = "cloudflare/adsb-cached-proxy.mjs"
+compatibility_date = "2026-11-23"
+
+[vars]
+ADSB_CACHE_ENABLED = "false"
+ADSB_PROVIDER_APPROVED = "false"
+
+[[kv_namespaces]]
+binding = "ADSB_CACHE"
+id = "REPLACE_WITH_DEDICATED_STAGING_KV_ID"
+
+# UTC; gated collector is OFF until approved and a key is configured.
+[triggers]
+crons = ["*/5 * * * *"]
