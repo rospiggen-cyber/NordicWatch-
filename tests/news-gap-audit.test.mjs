@@ -10,13 +10,14 @@ const article = (title, url, publishedAt = "2026-11-22T10:00:00Z") =>
 
 test("two candidate defence RSS feeds are explicit and lower-trust than official sources", () => {
   const defaults = configuredExternalFeedValue("").split(",");
-  for (const url of ["https://www.defenseone.com/rss/all/","https://www.thedrive.com/the-war-zone/feed"]) {
+  for (const url of ["https://www.defenseone.com/rss/all/","https://www.twz.com/feed"]) {
     assert(defaults.includes(url), url);
     assert.equal(sourceTrust(url)?.sourceType, "REPUTABLE_DEFENCE_PUBLICATION");
     assert.equal(sourceTrust(url)?.confirmed, false);
   }
   assert.equal(sourceTrust("https://www.defenseone.com/defense/article")?.confirmed, false);
   assert.equal(sourceTrust("https://www.thedrive.com/the-war-zone/article")?.confirmed, false);
+  assert.equal(sourceTrust("https://www.twz.com/news/example")?.sourceType, "REPUTABLE_DEFENCE_PUBLICATION");
   assert.equal(sourceTrust("https://x.com/post/1"), null);
 });
 
@@ -29,6 +30,18 @@ test("new publisher feeds parse only whitelisted publisher URLs and preserve pub
   const rows = parseExternalFeed(xml, "https://www.defenseone.com/rss/all/");
   assert.equal(rows.length, 1);
   assert.equal(rows[0].timestamp, "Sun, 22 Nov 2026 10:00:00 GMT");
+});
+
+test("The War Zone redirected feed and article host are accepted as lower-trust publisher content", () => {
+  const url = "https://www.twz.com/feed";
+  const xml = '<rss><channel><item><title>New maritime monitoring system in the Baltic</title>' +
+    '<link>https://www.twz.com/news/example-baltic</link>' +
+    '<pubDate>Mon, 23 Nov 2026 08:00:00 GMT</pubDate></item></channel></rss>';
+  const rows = parseExternalFeed(xml, url);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].timestamp, "Mon, 23 Nov 2026 08:00:00 GMT");
+  assert.equal(rows[0].sourceUrl, "https://www.twz.com/news/example-baltic");
+  assert.equal(sourceTrust(rows[0].sourceUrl)?.confirmed, false);
 });
 
 test("audits a found relevant story, a relevance rejection, and a stale publication", () => {
