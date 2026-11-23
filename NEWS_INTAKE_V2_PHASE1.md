@@ -15,14 +15,13 @@ Phase 1 adds only two **candidate** publisher RSS sources to the normal
 external collector:
 
 - Defense One: `https://www.defenseone.com/rss/all/`
-- The War Zone / The Drive: `https://www.thedrive.com/the-war-zone/feed`
+- The War Zone: `https://www.twz.com/feed` (old `thedrive.com/the-war-zone/feed` returned HTTP 301 to this URL)
 
 They remain in the `REPUTABLE_DEFENCE_PUBLICATION` tier, **not official or
 independently confirmed evidence**. RSS discovery must never be described as
 verified military movement. Publisher URLs and summaries are not a licence to
 republish full commercial articles. Obtain a commercial-use review before
-launching paid features. These URLs have directory-level evidence of recent
-RSS responses, but **production Worker HTTP/redirect/parse checks are pending**.
+launching paid features. Cloudflare user-operated staging smoke test (2026-11-23 08:17Z) returned HTTP 200 for Defense One (23 RSS items, 23 date fields) and The War Zone at twz.com (34 RSS items, 34 date fields). These are **tag counts**, not validated article quality, recency, or downstream parser ingest. Production collector acceptance, per-item URL host, licensing, AOI effects and >24-hour observation remain pending.
 
 ## Safe acceptance gates
 
