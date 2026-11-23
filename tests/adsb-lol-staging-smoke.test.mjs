@@ -20,7 +20,7 @@ test("counts fresh positioned aircraft without returning aircraft identities", a
   assert.equal(d.positioned, 3);
   assert.equal(d.nordicPositioned, 2);
   assert.equal(d.nordicFresh120s, 1);
-  assert.equal(JSON.stringify(d).includes("one"), false);
+  assert.equal(JSON.stringify(d).includes('"hex"'), false);
   const result = await checkAdsb(async (url, options) => {
     assert.equal(url, "https://api.adsb.lol/v2/mil");
     assert.equal(options.redirect, "manual");
