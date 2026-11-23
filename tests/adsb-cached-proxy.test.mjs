@@ -105,6 +105,25 @@ test("429 respected with zero retries; snapshots are not overwritten",async()=>{
   assert.equal(calls,1);
   assert.equal((await e.ADSB_CACHE.get(SNAPSHOT_KEY,"json")).snapshotAt,previous.snapshotAt);
 });
+test("minimum interval gate prevents tight loops and 429 enforces provider cooldown", async()=>{
+  const e=env();let calls=0;
+  const rate=await refreshSnapshot(e,{nowMs:NOW,fetcher:async()=>{
+    calls++;return upstream("{}",{status:429,headers:{"retry-after":"1800"}});
+  }});
+  assert.equal(rate.status,"RATE_LIMITED");
+  const skipped=await refreshSnapshot(e,{nowMs:NOW+60_000,fetcher:async()=>{
+    calls++;return upstream(aircraft);
+  }});
+  assert.equal(skipped.status,"COOLDOWN");
+  assert.equal(calls,1);
+  assert.equal(e.ADSB_CACHE.puts.filter(x=>x.k==="adsb:nordic-mil:v1:gate").length,1);
+  const next=await refreshSnapshot(e,{nowMs:NOW+1_800_000,fetcher:async()=>{
+    calls++;return upstream(aircraft);
+  }});
+  assert.equal(next.status,"OK");
+  assert.equal(calls,2);
+});
+
 test("HTML, broken JSON, missing schema, HTTP 403, redirect and oversize are handled",async()=>{
   const tests=[
     [upstream("<html>no</html>",{type:"text/html"}),"NOT_JSON"],
