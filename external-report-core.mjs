@@ -4,7 +4,7 @@ export const SOURCE_TIERS=Object.freeze([
  {sourceType:"OFFICIAL",trust:100,confirmed:true,hosts:["nato.int","gov.pl","wojsko-polskie.pl","wp.mil.pl","forsvarsmakten.se","puolustusvoimat.fi","mil.ee","mil.lv","mod.gov.lv","kariuomene.lt","kam.lt","forsvaret.dk","forsvaret.no","gov.uk","defense.gov","war.gov","navy.mil","marines.mil","af.mil","army.mil","dvidshub.net"]},
  {sourceType:"MAJOR_NEWS_AGENCY",trust:85,confirmed:true,hosts:["reuters.com","apnews.com","afp.com","pap.pl","polskieradio.pl","rtve.es"]},
  {sourceType:"PUBLIC_BROADCASTER",trust:80,confirmed:false,hosts:["dr.dk","lrt.lt"]},
- {sourceType:"REPUTABLE_DEFENCE_PUBLICATION",trust:65,confirmed:false,hosts:["janes.com","defensenews.com","navalnews.com","defenseone.com","thedrive.com"]}
+ {sourceType:"REPUTABLE_DEFENCE_PUBLICATION",trust:65,confirmed:false,hosts:["janes.com","defensenews.com","navalnews.com","defenseone.com","thedrive.com","twz.com"]}
 ]);
 const SOCIAL_HOSTS=["x.com","twitter.com","facebook.com","t.me","telegram.me","instagram.com","reddit.com","tiktok.com"];
 export function sourceTrust(value){const url=safeUrl(value);if(!url)return null;const host=new URL(url).hostname.toLowerCase();if(SOCIAL_HOSTS.some(x=>host===x||host.endsWith("."+x)))return null;const tier=SOURCE_TIERS.find(x=>x.hosts.some(h=>host===h||host.endsWith("."+h)));return tier?{url,sourceType:tier.sourceType,trust:tier.trust,confirmed:tier.confirmed}:null}
