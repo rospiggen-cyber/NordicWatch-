@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - "cloudflare/adsb-lol-staging-smoke.mjs"
+      - "cloudflare/adsb-cached-proxy.mjs"
       - "tests/adsb-lol-staging-smoke.test.mjs"
+      - "tests/adsb-cached-proxy.test.mjs"
       - ".github/workflows/adsb-staging-smoke.yml"
   push:
     paths:
       - "cloudflare/adsb-lol-staging-smoke.mjs"
+      - "cloudflare/adsb-cached-proxy.mjs"
       - "tests/adsb-lol-staging-smoke.test.mjs"
+      - "tests/adsb-cached-proxy.test.mjs"
       - ".github/workflows/adsb-staging-smoke.yml"
 
 permissions:
@@ -24,6 +28,8 @@ jobs:
         with:
           node-version: "22"
       - name: Check worker syntax
-        run: node --check cloudflare/adsb-lol-staging-smoke.mjs
+        run: |
+          node --check cloudflare/adsb-lol-staging-smoke.mjs
+          node --check cloudflare/adsb-cached-proxy.mjs
       - name: ADS-B staging regression tests (mocked, no API requests)
-        run: node --test tests/adsb-lol-staging-smoke.test.mjs
+        run: node --test tests/adsb-lol-staging-smoke.test.mjs tests/adsb-cached-proxy.test.mjs
