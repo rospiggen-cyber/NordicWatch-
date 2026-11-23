@@ -8,6 +8,8 @@
  */
 export const SNAPSHOT_KEY = "adsb:nordic-mil:v1:snapshot";
 export const HEALTH_KEY = "adsb:nordic-mil:v1:health";
+export const GATE_KEY = "adsb:nordic-mil:v1:gate";
+const MIN_POLL_MS = 5 * 60_000;
 export const UPSTREAM = "https://api.adsb.lol/v2/mil";
 export const STALE_SECONDS = 600; // 5-minute cron, maximum 10-minute observation age.
 const MAX_BYTES = 6_000_000;
@@ -78,7 +80,13 @@ async function setHealth(env, state, nowMs, extra={}) {
 export async function refreshSnapshot(env, options={}) {
   const nowMs = options.nowMs ?? Date.now();
   if (!enabled(env)) return {status:"DISABLED_OR_UNAUTHORIZED"};
+  const gate = await env.ADSB_CACHE.get(GATE_KEY,"json");
+  if (Number.isFinite(gate?.nextAllowedAt) && gate.nextAllowedAt > nowMs) {
+    return {status:"COOLDOWN",nextAllowedAt:new Date(gate.nextAllowedAt).toISOString()};
+  }
   const fetcher = options.fetcher || globalThis.fetch;
+  let nextAllowedAt = nowMs + MIN_POLL_MS;
+  try {
   let response;
   try {
     response = await fetcher(UPSTREAM, {
@@ -91,6 +99,15 @@ export async function refreshSnapshot(env, options={}) {
     return {status:"FETCH_FAILED"};
   }
   if (response.status === 429) {
+    const retry = Number(response.headers.get("retry-after"));
+    if (Number.isFinite(retry) && retry >= 60 && retry <= 86400) {
+      nextAllowedAt = nowMs + retry*1000;
+    } else {
+      const nextDay = new Date(nowMs);
+      nextDay.setUTCDate(nextDay.getUTCDate()+1);
+      nextDay.setUTCHours(0,0,0,0);
+      nextAllowedAt = +nextDay;
+    }
     await setHealth(env, "RATE_LIMITED", nowMs, {httpStatus:429});
     return {status:"RATE_LIMITED",httpStatus:429}; // Do not retry or evade provider throttling.
   }
@@ -124,6 +141,9 @@ export async function refreshSnapshot(env, options={}) {
   await env.ADSB_CACHE.put(SNAPSHOT_KEY, JSON.stringify(snapshot), {expirationTtl:3600});
   await setHealth(env, "OK", nowMs, {records:snapshot.ac.length, sourceTotal:snapshot.sourceTotal});
   return {status:"OK",records:snapshot.ac.length};
+  } finally {
+    await env.ADSB_CACHE.put(GATE_KEY,JSON.stringify({nextAllowedAt}),{expirationTtl:86400});
+  }
 }
 
 function ageSeconds(snapshot, nowMs) {
