@@ -1,0 +1,29 @@
+name: ADS-B staging smoke tests
+
+on:
+  pull_request:
+    paths:
+      - "cloudflare/adsb-lol-staging-smoke.mjs"
+      - "tests/adsb-lol-staging-smoke.test.mjs"
+      - ".github/workflows/adsb-staging-smoke.yml"
+  push:
+    paths:
+      - "cloudflare/adsb-lol-staging-smoke.mjs"
+      - "tests/adsb-lol-staging-smoke.test.mjs"
+      - ".github/workflows/adsb-staging-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check worker syntax
+        run: node --check cloudflare/adsb-lol-staging-smoke.mjs
+      - name: ADS-B staging regression tests (mocked, no API requests)
+        run: node --test tests/adsb-lol-staging-smoke.test.mjs
