@@ -11,7 +11,7 @@ export const DEFAULT_EXTERNAL_FEEDS = Object.freeze([
   "https://www.navalnews.com/feed/",
   // Staged candidates: publisher RSS only; production HTTP/licence smoke checks required.
   "https://www.defenseone.com/rss/all/",
-  "https://www.thedrive.com/the-war-zone/feed",
+  "https://www.twz.com/feed",
   "https://www.dr.dk/nyheder/service/feeds/allenyheder",
   "https://www.lrt.lt/naujienos/lietuvoje?rss="
 ]);
